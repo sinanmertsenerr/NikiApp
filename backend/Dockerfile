@@ -44,7 +44,7 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=40s \
 
 # Use dumb-init for proper signal handling
 ENTRYPOINT ["dumb-init", "--"]
-CMD ["node", "dist/main.js"]
+CMD ["node", "dist/src/main.js"]
 
 # Metadata
 LABEL org.opencontainers.image.title="Niki Coffee API" \
