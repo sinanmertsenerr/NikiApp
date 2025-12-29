@@ -1,70 +1,36 @@
-version: '3.9'
+version: '3.8'
 
 services:
-  # ==================== NESTJS API ====================
+  # ==================== API ====================
   api:
-    image: niki-coffee-api:latest
-    container_name: niki_api
     build:
       context: .
       dockerfile: Dockerfile
-      target: production
+    container_name: niki_api
     restart: unless-stopped
-
-    # Security: No root, read-only filesystem
-    user: "1001:1001"
-    read_only: true
-
-    # Resource limits
-    deploy:
-      resources:
-        limits:
-          cpus: '1.0'
-          memory: 512M
-        reservations:
-          memory: 256M
-
-    # Security: Drop all capabilities
-    cap_drop:
-      - ALL
-
-    security_opt:
-      - no-new-privileges:true
-
-    # Temporary folders (writable)
-    tmpfs:
-      - /tmp:noexec,nosuid,size=100M
-
-    volumes:
-      - uploads_data:/app/uploads
-
-    environment:
-      - NODE_ENV=production
-      - TZ=Europe/Istanbul
-
-    env_file:
-      - .env.production
-
-    # Expose to host (VM's Nginx will proxy)
     ports:
       - "3000:3000"
-
-    healthcheck:
-      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/api/v1/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
-
+    environment:
+      NODE_ENV: production
+      APP_PORT: 3000
+      DATABASE_URL: postgresql://nikiuser:NikiSecure2025!@postgres:5432/niki_coffee?schema=public
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      JWT_SECRET: ${JWT_SECRET:-change_this_in_production_64_chars_minimum_required}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-change_this_refresh_in_production_64_chars}
+      JWT_EXPIRES_IN: 15m
+      JWT_REFRESH_EXPIRES_IN: 7d
+      FRONTEND_URL: https://niki.ieu.app
+      PRODUCTION_APP_URL: https://api.niki.ieu.app
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
-
     networks:
-      - backend-network
-
+      - niki-network
+    volumes:
+      - uploads_data:/app/uploads
     logging:
       driver: "json-file"
       options:
@@ -76,37 +42,20 @@ services:
     image: postgres:16-alpine
     container_name: niki_postgres
     restart: unless-stopped
-
-    tmpfs:
-      - /tmp
-      - /run/postgresql
-
-    env_file:
-      - .env.production
-
     environment:
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_DB}
-      PGDATA: /var/lib/postgresql/data/pgdata
-
+      POSTGRES_USER: nikiuser
+      POSTGRES_PASSWORD: NikiSecure2025!
+      POSTGRES_DB: niki_coffee
     volumes:
       - postgres_data:/var/lib/postgresql/data
-
-    # Internal only - no external port exposure
-    expose:
-      - "5432"
-
+    networks:
+      - niki-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $POSTGRES_USER -d $POSTGRES_DB"]
+      test: ["CMD-SHELL", "pg_isready -U nikiuser -d niki_coffee"]
       interval: 10s
       timeout: 5s
       retries: 5
       start_period: 30s
-
-    networks:
-      - backend-network
-
     logging:
       driver: "json-file"
       options:
@@ -118,32 +67,16 @@ services:
     image: redis:7-alpine
     container_name: niki_redis
     restart: unless-stopped
-
-    # Security
-    user: "999:999"
-    read_only: true
-
-    tmpfs:
-      - /tmp
-
     command: redis-server --appendonly yes --maxmemory 128mb --maxmemory-policy allkeys-lru
-
     volumes:
       - redis_data:/data
-
-    # Internal only
-    expose:
-      - "6379"
-
+    networks:
+      - niki-network
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5
-
-    networks:
-      - backend-network
-
     logging:
       driver: "json-file"
       options:
@@ -152,14 +85,12 @@ services:
 
 # ==================== NETWORKS ====================
 networks:
-  backend-network:
+  niki-network:
     driver: bridge
 
 # ==================== VOLUMES ====================
 volumes:
   postgres_data:
-    driver: local
   redis_data:
-    driver: local
   uploads_data:
-    driver: local
+
