@@ -1,41 +1,6 @@
 version: '3.9'
 
 services:
-  # ==================== NGINX REVERSE PROXY ====================
-  nginx:
-    image: nginx:alpine
-    container_name: niki_nginx
-    restart: unless-stopped
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./nginx/conf.d:/etc/nginx/conf.d:ro
-      - ./certbot/conf:/etc/letsencrypt:ro
-      - ./certbot/www:/var/www/certbot:ro
-      - uploads_data:/var/www/uploads:ro
-    depends_on:
-      api:
-        condition: service_healthy
-    networks:
-      - frontend-network
-      - backend-network
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
-
-  # ==================== CERTBOT (SSL) ====================
-  certbot:
-    image: certbot/certbot
-    container_name: niki_certbot
-    volumes:
-      - ./certbot/conf:/etc/letsencrypt
-      - ./certbot/www:/var/www/certbot
-    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
-
   # ==================== NESTJS API ====================
   api:
     image: niki-coffee-api:latest
@@ -80,9 +45,9 @@ services:
     env_file:
       - .env.production
 
-    # Internal port only (nginx handles external)
-    expose:
-      - "3000"
+    # Expose to host (VM's Nginx will proxy)
+    ports:
+      - "3000:3000"
 
     healthcheck:
       test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/api/v1/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"]
@@ -188,11 +153,8 @@ services:
 
 # ==================== NETWORKS ====================
 networks:
-  frontend-network:
-    driver: bridge
   backend-network:
     driver: bridge
-    internal: true  # No external access
 
 # ==================== VOLUMES ====================
 volumes:
