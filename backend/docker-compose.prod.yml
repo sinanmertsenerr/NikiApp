@@ -77,18 +77,14 @@ services:
     container_name: niki_postgres
     restart: unless-stopped
 
-    # Security
-    user: "999:999"
-    read_only: true
-
     tmpfs:
       - /tmp
       - /run/postgresql
 
+    env_file:
+      - .env.production
+
     environment:
-      POSTGRES_USER: ${POSTGRES_USER:-nikiuser}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Database password required}
-      POSTGRES_DB: ${POSTGRES_DB:-niki_coffee}
       PGDATA: /var/lib/postgresql/data/pgdata
 
     volumes:
@@ -99,7 +95,7 @@ services:
       - "5432"
 
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-nikiuser} -d ${POSTGRES_DB:-niki_coffee}"]
+      test: ["CMD-SHELL", "pg_isready -U $POSTGRES_USER -d $POSTGRES_DB"]
       interval: 10s
       timeout: 5s
       retries: 5

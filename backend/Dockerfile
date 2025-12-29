@@ -3,17 +3,21 @@ FROM node:22-alpine AS base
 RUN apk add --no-cache dumb-init
 WORKDIR /app
 
-# Dependencies stage
-FROM base AS dependencies
-COPY package*.json ./
-RUN npm ci --only=production && npm cache clean --force
-
 # Build stage
 FROM base AS build
 COPY package*.json ./
+COPY prisma ./prisma/
 RUN npm ci
+RUN npx prisma generate
 COPY . .
-RUN npm run build && npm prune --production
+RUN npm run build
+
+# Production dependencies
+FROM base AS prod-deps
+COPY package*.json ./
+COPY prisma ./prisma/
+RUN npm ci --omit=dev
+RUN npx prisma generate
 
 # Production stage - distroless-like minimal image
 FROM node:22-alpine AS production
@@ -25,9 +29,10 @@ RUN addgroup -g 1001 -S nodejs && \
 WORKDIR /app
 
 # Copy only necessary files
-COPY --from=dependencies --chown=nestjs:nodejs /app/node_modules ./node_modules
+COPY --from=prod-deps --chown=nestjs:nodejs /app/node_modules ./node_modules
 COPY --from=build --chown=nestjs:nodejs /app/dist ./dist
 COPY --from=build --chown=nestjs:nodejs /app/package*.json ./
+COPY --from=prod-deps --chown=nestjs:nodejs /app/prisma ./prisma
 COPY --from=base /usr/bin/dumb-init /usr/bin/dumb-init
 
 # Security: Run as non-root

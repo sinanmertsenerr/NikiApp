@@ -16,5 +16,4 @@ test
 *.spec.ts
 .eslintrc.js
 .prettierrc
-tsconfig.json
 README.md
