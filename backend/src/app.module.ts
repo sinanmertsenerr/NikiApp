@@ -3,7 +3,7 @@ import { ConfigModule } from '@nestjs/config';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { ScheduleModule } from '@nestjs/schedule';
-import { APP_GUARD } from '@nestjs/core';
+import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { join } from 'path';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -23,6 +23,7 @@ import { GroupsModule } from './groups/groups.module';
 import { RafflesModule } from './raffles';
 import { HealthModule } from './health/health.module';
 import { JwtAuthGuard } from './auth/guards';
+import { AdminAuditInterceptor } from './common/interceptors/admin-audit.interceptor';
 
 @Module({
   imports: [
@@ -88,6 +89,11 @@ import { JwtAuthGuard } from './auth/guards';
     {
       provide: APP_GUARD,
       useClass: ThrottlerGuard,
+    },
+    // Global Admin Audit Interceptor - log all admin actions
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: AdminAuditInterceptor,
     },
   ],
 })

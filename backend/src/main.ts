@@ -5,6 +5,7 @@ import helmet from 'helmet';
 import * as Sentry from '@sentry/node';
 import { nodeProfilingIntegration } from '@sentry/profiling-node';
 import { AppModule } from './app.module';
+import { SanitizePipe } from './common/pipes/sanitize.pipe';
 
 async function bootstrap() {
   // Initialize Sentry FIRST (before app creation)
@@ -88,8 +89,9 @@ async function bootstrap() {
     allowedHeaders: ['Content-Type', 'Authorization'],
   });
 
-  // Validation
+  // Validation & Sanitization
   app.useGlobalPipes(
+    new SanitizePipe(), // XSS Protection - strip HTML from all inputs
     new ValidationPipe({
       whitelist: true,
       forbidNonWhitelisted: true,

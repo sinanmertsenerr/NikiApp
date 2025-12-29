@@ -43,6 +43,7 @@ const helmet_1 = __importDefault(require("helmet"));
 const Sentry = __importStar(require("@sentry/node"));
 const profiling_node_1 = require("@sentry/profiling-node");
 const app_module_1 = require("./app.module");
+const sanitize_pipe_1 = require("./common/pipes/sanitize.pipe");
 async function bootstrap() {
     if (process.env.SENTRY_DSN) {
         Sentry.init({
@@ -109,7 +110,7 @@ async function bootstrap() {
         methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
         allowedHeaders: ['Content-Type', 'Authorization'],
     });
-    app.useGlobalPipes(new common_1.ValidationPipe({
+    app.useGlobalPipes(new sanitize_pipe_1.SanitizePipe(), new common_1.ValidationPipe({
         whitelist: true,
         forbidNonWhitelisted: true,
         transform: true,

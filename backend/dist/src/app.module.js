@@ -32,6 +32,7 @@ const groups_module_1 = require("./groups/groups.module");
 const raffles_1 = require("./raffles");
 const health_module_1 = require("./health/health.module");
 const guards_1 = require("./auth/guards");
+const admin_audit_interceptor_1 = require("./common/interceptors/admin-audit.interceptor");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -80,6 +81,10 @@ exports.AppModule = AppModule = __decorate([
             {
                 provide: core_1.APP_GUARD,
                 useClass: throttler_1.ThrottlerGuard,
+            },
+            {
+                provide: core_1.APP_INTERCEPTOR,
+                useClass: admin_audit_interceptor_1.AdminAuditInterceptor,
             },
         ],
     })
