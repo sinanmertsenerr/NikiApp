@@ -29,7 +29,7 @@ const getDevServerHost = (): string => {
 
 const BACKEND_HOST = __DEV__
   ? getDevServerHost()
-  : 'https://api.nikicoffee.com';
+  : 'https://api.niki.ieu.app';
 
 export const API_BASE_URL = `${BACKEND_HOST}/api/v1`;
 
