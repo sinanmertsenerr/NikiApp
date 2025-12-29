@@ -1,5 +1,18 @@
 node_modules
+dist
+
 # Keep environment variables out of version control
 .env
+.env.production
 
 /generated/prisma
+
+# Logs
+logs
+*.log
+
+# OS files
+.DS_Store
+
+# SSL certificates (local)
+certbot/
