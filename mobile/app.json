@@ -1,0 +1,61 @@
+{
+  "expo": {
+    "name": "Niki The Cat",
+    "slug": "niki-coffee",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/brands/niki-logo-full.jpg",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "scheme": "niki-coffee",
+    "splash": {
+      "image": "./assets/images/brands/niki-logo-full.jpg",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.nikicoffee.app"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/brands/niki-logo-full.jpg",
+        "backgroundColor": "#ffffff"
+      },
+      "edgeToEdgeEnabled": true,
+      "package": "com.nikicoffee.app"
+    },
+    "web": {
+      "favicon": "./assets/images/brands/niki-logo-full.jpg",
+      "bundler": "metro"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "QR kod okumak için kamera izni gereklidir."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Profil fotoğrafı seçmek için galeri izni gereklidir."
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/images/brands/niki-logo-full.jpg",
+          "color": "#000000"
+        }
+      ],
+      "expo-localization",
+      "@react-native-community/datetimepicker"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}
