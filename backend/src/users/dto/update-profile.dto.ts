@@ -1,5 +1,6 @@
-import { IsString, IsOptional, MaxLength, MinLength, Matches } from 'class-validator';
+import { IsString, IsOptional, MaxLength, MinLength } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
+import { IsPhoneNumber } from '../../common/validators';
 
 export class UpdateProfileDto {
   @ApiPropertyOptional({ example: 'John', description: 'User first name' })
@@ -22,9 +23,9 @@ export class UpdateProfileDto {
   @MaxLength(200)
   bio?: string;
 
-  @ApiPropertyOptional({ example: '+905551234567', description: 'User phone number' })
+  @ApiPropertyOptional({ example: '+905551234567', description: 'User phone number in E.164 format' })
   @IsOptional()
   @IsString()
-  @Matches(/^\+?[0-9]{10,15}$/, { message: 'Phone number must be valid' })
+  @IsPhoneNumber({ message: 'Geçerli bir telefon numarası giriniz (örn: +905551234567)' })
   phone?: string;
 }

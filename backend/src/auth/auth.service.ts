@@ -400,7 +400,22 @@ export class AuthService {
 
   // ==================== LOGOUT ====================
 
-  async logout(userId: string, refreshToken?: string) {
+  async logout(userId: string, refreshToken?: string, logoutAll: boolean = false) {
+    if (logoutAll) {
+      // Logout from all devices - blacklist all tokens issued before now
+      // This will invalidate all access tokens immediately
+      const accessTokenTTL = this.parseExpiresIn(this.JWT_EXPIRES_IN);
+      await this.redisService.blacklistAllUserTokens(userId, accessTokenTTL + 60); // +60 for safety margin
+
+      // Delete all refresh tokens from database
+      await this.prisma.refreshToken.deleteMany({
+        where: { userId },
+      });
+
+      this.logger.log(`User logged out from all devices: ${userId}`);
+      return { success: true, message: 'Tüm cihazlardan çıkış yapıldı' };
+    }
+
     if (refreshToken) {
       // Delete specific refresh token
       await this.prisma.refreshToken.deleteMany({
@@ -413,6 +428,12 @@ export class AuthService {
       });
     }
 
+    // Blacklist all existing access tokens for this user
+    // This ensures immediate invalidation even for short-lived access tokens
+    const accessTokenTTL = this.parseExpiresIn(this.JWT_EXPIRES_IN);
+    await this.redisService.blacklistAllUserTokens(userId, accessTokenTTL + 60);
+
+    this.logger.log(`User logged out: ${userId}`);
     return { success: true, message: 'Çıkış yapıldı' };
   }
 
@@ -620,10 +641,14 @@ export class AuthService {
   }
 
   private async generateTokens(user: { id: string; email: string; role: any }): Promise<AuthTokens> {
+    // Generate unique JWT ID for blacklisting support
+    const jti = uuidv4();
+
     const payload: TokenPayload = {
       sub: user.id,
       email: user.email,
       role: user.role,
+      jti, // JWT ID for token revocation
     };
 
     const accessToken = this.jwtService.sign(payload as any, {
@@ -631,7 +656,7 @@ export class AuthService {
       expiresIn: this.JWT_EXPIRES_IN,
     } as any);
 
-    const refreshToken = this.jwtService.sign(payload as any, {
+    const refreshToken = this.jwtService.sign({ ...payload, jti: uuidv4() } as any, {
       secret: this.configService.get('JWT_REFRESH_SECRET'),
       expiresIn: this.JWT_REFRESH_EXPIRES_IN,
     } as any);

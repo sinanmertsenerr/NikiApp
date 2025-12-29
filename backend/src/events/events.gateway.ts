@@ -9,18 +9,41 @@ import {
     MessageBody,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
-import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
+import { RedisService } from '../redis';
 
 interface AuthenticatedSocket extends Socket {
     userId?: string;
     userRole?: string;
+    tokenIssuedAt?: number;
 }
 
 @WebSocketGateway({
     cors: {
-        origin: '*',
+        origin: (origin, callback) => {
+            // Allow connections with no origin (mobile apps, Postman)
+            if (!origin) {
+                callback(null, true);
+                return;
+            }
+
+            // Get allowed origins from environment
+            const allowedOrigins = [
+                process.env.FRONTEND_URL || 'http://localhost:19006',
+                process.env.PRODUCTION_APP_URL,
+                'http://localhost:3000',
+                'http://localhost:19006',
+            ].filter(Boolean);
+
+            if (allowedOrigins.includes(origin)) {
+                callback(null, true);
+            } else {
+                console.warn(`[Socket] Blocked connection from origin: ${origin}`);
+                callback(new Error('Not allowed by CORS'));
+            }
+        },
         credentials: true,
     },
     namespace: '/',
@@ -36,6 +59,7 @@ export class EventsGateway implements OnGatewayInit, OnGatewayConnection, OnGate
     constructor(
         private readonly jwtService: JwtService,
         private readonly configService: ConfigService,
+        private readonly redisService: RedisService,
     ) { }
 
     afterInit(server: Server) {
@@ -44,12 +68,13 @@ export class EventsGateway implements OnGatewayInit, OnGatewayConnection, OnGate
 
     async handleConnection(client: AuthenticatedSocket) {
         try {
-            // Get token from handshake auth or query
-            const token = client.handshake.auth?.token || client.handshake.query?.token;
+            // Only accept token from auth object (not query string for security)
+            const token = client.handshake.auth?.token;
 
             if (!token) {
                 this.logger.warn(`Client ${client.id} connected without token`);
-                // Allow connection but without authentication
+                client.emit('auth_error', { message: 'Authentication token required' });
+                client.disconnect();
                 return;
             }
 
@@ -58,14 +83,38 @@ export class EventsGateway implements OnGatewayInit, OnGatewayConnection, OnGate
                 secret: this.configService.get<string>('JWT_SECRET'),
             });
 
+            // Check if token is blacklisted (JWT Blacklist)
+            if (payload.jti) {
+                const isBlacklisted = await this.redisService.isTokenBlacklisted(payload.jti);
+                if (isBlacklisted) {
+                    this.logger.warn(`Client ${client.id} attempted connection with blacklisted token`);
+                    client.emit('auth_error', { message: 'Token has been revoked', code: 'TOKEN_REVOKED' });
+                    client.disconnect();
+                    return;
+                }
+            }
+
+            // Check if all user tokens are blacklisted (logout from all devices)
+            const blacklistTime = await this.redisService.getUserTokenBlacklistTime(payload.sub);
+            if (blacklistTime && payload.iat) {
+                const tokenIssuedAt = payload.iat * 1000; // Convert to milliseconds
+                if (tokenIssuedAt < blacklistTime) {
+                    this.logger.warn(`Client ${client.id} attempted connection with token issued before logout-all`);
+                    client.emit('auth_error', { message: 'Session expired, please login again', code: 'SESSION_EXPIRED' });
+                    client.disconnect();
+                    return;
+                }
+            }
+
             client.userId = payload.sub;
             client.userRole = payload.role;
+            client.tokenIssuedAt = payload.iat;
 
             // Join user-specific room
             client.join(`user:${payload.sub}`);
 
             // If admin, join admin room
-            if (payload.role === 'admin' || payload.role === 'super_admin') {
+            if (payload.role === 'ADMIN' || payload.role === 'SUPER_ADMIN') {
                 client.join('admin');
             }
 
@@ -81,8 +130,8 @@ export class EventsGateway implements OnGatewayInit, OnGatewayConnection, OnGate
 
         } catch (error) {
             this.logger.error(`Authentication failed for client ${client.id}: ${error.message}`);
-            client.emit('auth_error', { message: 'Invalid authentication token' });
-            // Don't disconnect - allow reconnection with valid token
+            client.emit('auth_error', { message: 'Invalid authentication token', code: 'INVALID_TOKEN' });
+            client.disconnect();
         }
     }
 
@@ -101,12 +150,29 @@ export class EventsGateway implements OnGatewayInit, OnGatewayConnection, OnGate
                 secret: this.configService.get<string>('JWT_SECRET'),
             });
 
+            // Check blacklist for re-authentication
+            if (payload.jti) {
+                const isBlacklisted = await this.redisService.isTokenBlacklisted(payload.jti);
+                if (isBlacklisted) {
+                    return { success: false, error: 'Token has been revoked', code: 'TOKEN_REVOKED' };
+                }
+            }
+
+            const blacklistTime = await this.redisService.getUserTokenBlacklistTime(payload.sub);
+            if (blacklistTime && payload.iat) {
+                const tokenIssuedAt = payload.iat * 1000;
+                if (tokenIssuedAt < blacklistTime) {
+                    return { success: false, error: 'Session expired', code: 'SESSION_EXPIRED' };
+                }
+            }
+
             client.userId = payload.sub;
             client.userRole = payload.role;
+            client.tokenIssuedAt = payload.iat;
 
             // Join rooms
             client.join(`user:${payload.sub}`);
-            if (payload.role === 'admin' || payload.role === 'super_admin') {
+            if (payload.role === 'ADMIN' || payload.role === 'SUPER_ADMIN') {
                 client.join('admin');
             }
 
@@ -114,8 +180,27 @@ export class EventsGateway implements OnGatewayInit, OnGatewayConnection, OnGate
 
             return { success: true, userId: payload.sub };
         } catch (error) {
-            return { success: false, error: 'Invalid token' };
+            return { success: false, error: 'Invalid token', code: 'INVALID_TOKEN' };
         }
+    }
+
+    // ==================== FORCE DISCONNECT USER ====================
+
+    /**
+     * Disconnect all sockets for a specific user (called on logout-all)
+     */
+    disconnectUser(userId: string): void {
+        this.connectedClients.forEach((client, clientId) => {
+            if (client.userId === userId) {
+                client.emit('force_disconnect', {
+                    message: 'You have been logged out from all devices',
+                    code: 'FORCE_LOGOUT'
+                });
+                client.disconnect();
+                this.connectedClients.delete(clientId);
+                this.logger.log(`Force disconnected client ${clientId} for user ${userId}`);
+            }
+        });
     }
 
     // ==================== EMIT METHODS ====================
@@ -255,5 +340,16 @@ export class EventsGateway implements OnGatewayInit, OnGatewayConnection, OnGate
      */
     getConnectedClientsCount(): number {
         return this.connectedClients.size;
+    }
+
+    /**
+     * Get connected clients for a specific user
+     */
+    getUserConnectionCount(userId: string): number {
+        let count = 0;
+        this.connectedClients.forEach((client) => {
+            if (client.userId === userId) count++;
+        });
+        return count;
     }
 }

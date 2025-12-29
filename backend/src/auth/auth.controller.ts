@@ -167,16 +167,31 @@ export class AuthController {
   @Post('logout')
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth('JWT-auth')
-  @ApiOperation({ summary: 'Logout user' })
+  @ApiOperation({ summary: 'Logout user (current device or all devices)' })
   @ApiResponse({
     status: 200,
     description: 'Logged out successfully',
   })
   async logout(
     @CurrentUser('id') userId: string,
-    @Body() body: { refreshToken?: string },
+    @Body() body: { refreshToken?: string; logoutAll?: boolean },
   ) {
-    return this.authService.logout(userId, body.refreshToken);
+    return this.authService.logout(userId, body.refreshToken, body.logoutAll);
+  }
+
+  // ==================== LOGOUT ALL DEVICES ====================
+
+  @UseGuards(JwtAuthGuard)
+  @Post('logout-all')
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({ summary: 'Logout from all devices' })
+  @ApiResponse({
+    status: 200,
+    description: 'Logged out from all devices',
+  })
+  async logoutAll(@CurrentUser('id') userId: string) {
+    return this.authService.logout(userId, undefined, true);
   }
 
   // ==================== GET CURRENT USER ====================

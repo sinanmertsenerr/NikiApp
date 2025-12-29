@@ -7,7 +7,6 @@ import {
   UploadedFile,
   UseGuards,
   Request,
-  BadRequestException,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiTags, ApiOperation, ApiConsumes, ApiBody, ApiBearerAuth } from '@nestjs/swagger';
@@ -15,6 +14,7 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
 import { UploadService } from './upload.service';
+import { FileValidationPipe } from '../common/pipes/file-validation.pipe';
 
 @ApiTags('Upload')
 @Controller('upload')
@@ -41,12 +41,8 @@ export class UploadController {
   @UseInterceptors(FileInterceptor('avatar'))
   async uploadAvatar(
     @Request() req,
-    @UploadedFile() file: Express.Multer.File,
+    @UploadedFile(FileValidationPipe) file: Express.Multer.File,
   ) {
-    if (!file) {
-      throw new BadRequestException('No file uploaded');
-    }
-
     const avatarUrl = await this.uploadService.updateUserAvatar(req.user.id, file.filename);
 
     return {
@@ -77,12 +73,8 @@ export class UploadController {
   @UseInterceptors(FileInterceptor('productImage'))
   async uploadProductImage(
     @Param('productId') productId: string,
-    @UploadedFile() file: Express.Multer.File,
+    @UploadedFile(FileValidationPipe) file: Express.Multer.File,
   ) {
-    if (!file) {
-      throw new BadRequestException('No file uploaded');
-    }
-
     const imageUrl = await this.uploadService.updateProductImage(productId, file.filename);
 
     return {

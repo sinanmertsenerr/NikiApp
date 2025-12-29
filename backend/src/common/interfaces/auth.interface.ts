@@ -14,6 +14,7 @@ export interface TokenPayload {
   sub: string;
   email: string;
   role: UserRole;
+  jti?: string; // JWT ID for token revocation/blacklisting
 }
 
 export interface AuthTokens {

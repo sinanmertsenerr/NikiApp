@@ -7,6 +7,7 @@ import {
   Matches,
 } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
+import { IsPhoneNumber } from '../../common/validators';
 
 export class RegisterDto {
   @ApiProperty({
@@ -50,10 +51,11 @@ export class RegisterDto {
   lastName: string;
 
   @ApiProperty({
-    example: '5551234567',
-    description: 'User phone number',
+    example: '+905551234567',
+    description: 'User phone number in E.164 format (e.g., +905551234567)',
   })
   @IsString()
   @IsNotEmpty({ message: 'Telefon numarası gereklidir' })
+  @IsPhoneNumber({ message: 'Geçerli bir telefon numarası giriniz (örn: +905551234567)' })
   phone: string;
 }

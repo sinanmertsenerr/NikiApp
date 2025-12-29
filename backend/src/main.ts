@@ -1,5 +1,5 @@
 import { NestFactory } from '@nestjs/core';
-import { ValidationPipe } from '@nestjs/common';
+import { ValidationPipe, Logger } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import helmet from 'helmet';
 import * as Sentry from '@sentry/node';
@@ -8,6 +8,9 @@ import { AppModule } from './app.module';
 import { SanitizePipe } from './common/pipes/sanitize.pipe';
 
 async function bootstrap() {
+  const logger = new Logger('Bootstrap');
+  const isProduction = process.env.NODE_ENV === 'production';
+
   // Initialize Sentry FIRST (before app creation)
   if (process.env.SENTRY_DSN) {
     Sentry.init({
@@ -36,21 +39,27 @@ async function bootstrap() {
   app.use((req, res, next) => {
     const protocol = req.headers['x-forwarded-proto'] || req.protocol;
 
-    if (process.env.NODE_ENV === 'production' && protocol !== 'https') {
+    if (isProduction && protocol !== 'https') {
       return res.redirect(301, `https://${req.headers.host}${req.url}`);
     }
 
     next();
   });
 
-  // Security Headers (Helmet) - Selective CSP
+  // Security Headers (Helmet) with HSTS
   app.use((req, res, next) => {
-    if (req.path.startsWith('/api/docs')) {
-      // Swagger needs relaxed CSP
+    // Skip helmet for Swagger in development only
+    if (!isProduction && req.path.startsWith('/api/docs')) {
       return next();
     }
 
     helmet({
+      // HSTS - Force HTTPS for 1 year, include subdomains
+      strictTransportSecurity: {
+        maxAge: 31536000, // 1 year in seconds
+        includeSubDomains: true,
+        preload: true,
+      },
       contentSecurityPolicy: {
         directives: {
           defaultSrc: ["'self'"],
@@ -64,6 +73,11 @@ async function bootstrap() {
         },
       },
       crossOriginEmbedderPolicy: false,
+      // Additional security headers
+      referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
+      noSniff: true, // X-Content-Type-Options: nosniff
+      xssFilter: true, // X-XSS-Protection
+      hidePoweredBy: true, // Remove X-Powered-By header
     })(req, res, next);
   });
 
@@ -102,34 +116,39 @@ async function bootstrap() {
     }),
   );
 
-  // Swagger Documentation
-  const config = new DocumentBuilder()
-    .setTitle('Niki Coffee API')
-    .setDescription('Niki Coffee & Sandwich Loyalty App API Documentation')
-    .setVersion('1.0')
-    .addBearerAuth(
-      {
-        type: 'http',
-        scheme: 'bearer',
-        bearerFormat: 'JWT',
-        name: 'JWT',
-        description: 'Enter JWT token',
-        in: 'header',
-      },
-      'JWT-auth',
-    )
-    .addTag('Auth', 'Authentication endpoints')
-    .addTag('Users', 'User management')
-    .addTag('Wallet', 'Niki Credits & QR')
-    .addTag('Menu', 'Products & Categories')
-    .addTag('Orders', 'Order/Receipt management')
-    .addTag('Campaigns', 'Loyalty campaigns')
-    .addTag('Wheel', 'Spin the wheel')
-    .addTag('Admin', 'Admin operations')
-    .build();
+  // Swagger Documentation - DISABLED in production for security
+  if (!isProduction) {
+    const config = new DocumentBuilder()
+      .setTitle('Niki Coffee API')
+      .setDescription('Niki Coffee & Sandwich Loyalty App API Documentation')
+      .setVersion('1.0')
+      .addBearerAuth(
+        {
+          type: 'http',
+          scheme: 'bearer',
+          bearerFormat: 'JWT',
+          name: 'JWT',
+          description: 'Enter JWT token',
+          in: 'header',
+        },
+        'JWT-auth',
+      )
+      .addTag('Auth', 'Authentication endpoints')
+      .addTag('Users', 'User management')
+      .addTag('Wallet', 'Niki Credits & QR')
+      .addTag('Menu', 'Products & Categories')
+      .addTag('Orders', 'Order/Receipt management')
+      .addTag('Campaigns', 'Loyalty campaigns')
+      .addTag('Wheel', 'Spin the wheel')
+      .addTag('Admin', 'Admin operations')
+      .build();
 
-  const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api/docs', app, document);
+    const document = SwaggerModule.createDocument(app, config);
+    SwaggerModule.setup('api/docs', app, document);
+    logger.log('Swagger documentation enabled at /api/docs');
+  } else {
+    logger.log('Swagger documentation DISABLED in production');
+  }
 
   const port = process.env.APP_PORT || 3000;
   // Bind to 0.0.0.0 to make it accessible from other devices on the network
@@ -148,12 +167,13 @@ async function bootstrap() {
     }
   }
 
-  console.log(`
+  logger.log(`
   🚀 Niki Coffee API is running!
 
+  📍 Environment: ${isProduction ? 'PRODUCTION' : 'development'}
   📍 Local:    http://localhost:${port}/api/v1
   📍 Network:  http://${localIp}:${port}/api/v1
-  📚 Swagger:  http://localhost:${port}/api/docs
+  ${!isProduction ? `📚 Swagger:  http://localhost:${port}/api/docs` : '🔒 Swagger:  DISABLED in production'}
   `);
 }
 bootstrap();
