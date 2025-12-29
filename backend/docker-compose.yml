@@ -43,7 +43,7 @@ services:
       - TZ=Europe/Istanbul
 
     env_file:
-      - .env.production
+      - .env
 
     # Expose to host (VM's Nginx will proxy)
     ports:
@@ -82,7 +82,7 @@ services:
       - /run/postgresql
 
     env_file:
-      - .env.production
+      - .env
 
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
