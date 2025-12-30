@@ -24,10 +24,15 @@ export class SanitizePipe implements PipeTransform {
             return obj.map(item => this.sanitizeValue(item));
         }
 
+        // Check if it's a plain object (not a class instance like Date, etc.)
+        if (Object.getPrototypeOf(obj) !== Object.prototype && Object.getPrototypeOf(obj) !== null) {
+            return obj; // Return non-plain objects as-is
+        }
+
         const sanitized: any = {};
 
         for (const key in obj) {
-            if (obj.hasOwnProperty(key)) {
+            if (Object.prototype.hasOwnProperty.call(obj, key)) {
                 sanitized[key] = this.sanitizeValue(obj[key]);
             }
         }

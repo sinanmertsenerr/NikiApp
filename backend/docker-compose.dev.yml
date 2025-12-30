@@ -11,17 +11,17 @@ services:
     ports:
       - "3000:3000"
     environment:
-      NODE_ENV: production
+      NODE_ENV: development
       APP_PORT: 3000
       DATABASE_URL: postgresql://nikiuser:NikiSecure2025!@postgres:5432/niki_coffee?schema=public
       REDIS_HOST: redis
       REDIS_PORT: 6379
-      JWT_SECRET: ${JWT_SECRET:-change_this_in_production_64_chars_minimum_required}
-      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-change_this_refresh_in_production_64_chars}
+      JWT_SECRET: local_dev_secret_key_for_testing_only_64_characters_long_here!
+      JWT_REFRESH_SECRET: local_dev_refresh_secret_for_testing_64_characters_long_here!
       JWT_EXPIRES_IN: 15m
       JWT_REFRESH_EXPIRES_IN: 7d
-      FRONTEND_URL: https://niki.ieu.app
-      PRODUCTION_APP_URL: https://api.niki.ieu.app
+      FRONTEND_URL: http://localhost:3000
+      PRODUCTION_APP_URL: http://localhost:3000
     depends_on:
       postgres:
         condition: service_healthy
