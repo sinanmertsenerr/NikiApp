@@ -8,6 +8,7 @@ export interface RegisterData {
   firstName: string;
   lastName: string;
   phone: string;
+  kvkkAccepted: boolean;
 }
 
 export interface LoginData {

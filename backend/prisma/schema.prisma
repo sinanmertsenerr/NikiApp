@@ -117,6 +117,10 @@ model User {
   emailVerified           Boolean   @default(false) @map("email_verified")
   emailVerifiedAt         DateTime? @map("email_verified_at")
 
+  // Consents
+  kvkkAccepted            Boolean   @default(false) @map("kvkk_accepted")
+  kvkkAcceptedAt          DateTime? @map("kvkk_accepted_at")
+
   // Push Notifications
   expoPushToken           String?   @map("expo_push_token")
 

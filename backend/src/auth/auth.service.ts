@@ -88,6 +88,8 @@ export class AuthService {
         lastName: dto.lastName,
         phone: dto.phone,
         emailVerified: false,
+        kvkkAccepted: dto.kvkkAccepted,
+        kvkkAcceptedAt: dto.kvkkAccepted ? new Date() : null,
       },
     });
 

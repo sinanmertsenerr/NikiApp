@@ -19,6 +19,7 @@ import { useTranslation } from 'react-i18next';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Input } from '../../src/components/ui/Input';
+import { Checkbox } from '../../src/components/ui/Checkbox';
 import { Button } from '../../src/components/ui/Button';
 import { useSettingsStore } from '../../src/stores/settingsStore';
 import { authService } from '../../src/services/authService';
@@ -27,6 +28,7 @@ import { Colors, DarkColors, Spacing, FontSizes, BorderRadius, Shadows, RSpacing
 import { screenWidth as SCREEN_WIDTH } from '../../src/utils/responsive';
 import { COUNTRIES, DEFAULT_COUNTRY, Country } from '../../src/constants/countries';
 import { CountryPickerModal } from '../../src/components/ui/CountryPickerModal';
+import { KvkkModal } from '../../src/components/ui/KvkkModal';
 
 const createRegisterSchema = (t: any, countryCode: string) => z
   .object({
@@ -51,6 +53,9 @@ const createRegisterSchema = (t: any, countryCode: string) => z
         /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
         t('validation.passwordRequirements')
       ),
+    kvkkAccepted: z.boolean().refine((val) => val === true, {
+      message: t('validation.kvkkRequired', 'KVKK onayı gereklidir'),
+    }),
     confirmPassword: z.string(),
   })
   .refine((data) => data.password === data.confirmPassword, {
@@ -71,6 +76,7 @@ export default function RegisterScreen() {
   const brand = BRANDS[selectedBrand];
 
   const [showCountryPicker, setShowCountryPicker] = useState(false);
+  const [showKvkkModal, setShowKvkkModal] = useState(false);
   const [selectedCountry, setSelectedCountry] = useState<Country>(DEFAULT_COUNTRY);
 
   // Format phone number as (555) 123 45 67 (3-3-2-2 pattern with parentheses)
@@ -105,6 +111,7 @@ export default function RegisterScreen() {
       email: '',
       password: '',
       confirmPassword: '',
+      kvkkAccepted: false,
     },
   });
 
@@ -117,6 +124,7 @@ export default function RegisterScreen() {
         phone: `${selectedCountry.dialCode}${data.phone}`,
         email: data.email,
         password: data.password,
+        kvkkAccepted: data.kvkkAccepted,
       });
 
       Alert.alert(
@@ -287,6 +295,47 @@ export default function RegisterScreen() {
                   onBlur={onBlur}
                   error={errors.confirmPassword?.message}
                 />
+              )}
+            />
+            <Controller
+              control={control}
+              name="kvkkAccepted"
+              render={({ field: { onChange, value } }) => (
+                <>
+                  <Checkbox
+                    checked={value}
+                    onChange={(checked) => {
+                      if (checked) {
+                        // Allowing direct check is disabled based on user requirement "okumadan işaretlemesine izin verme"
+                        // So if they try to check it, we open modal
+                        setShowKvkkModal(true);
+                      } else {
+                        onChange(false);
+                      }
+                    }}
+                    label={
+                      <Text style={{ fontSize: RFontSizes.sm, color: colors.text }}>
+                        {t('auth.kvkkConsent', 'Kişisel verilerimin işlenmesini onaylıyorum.')}{' '}
+                        <Text
+                          style={{ color: colors.primary, fontWeight: 'bold' }}
+                          onPress={() => setShowKvkkModal(true)}
+                        >
+                          {t('auth.kvkkLightingText', 'Aydınlatma Metni')}
+                        </Text>
+                      </Text>
+                    }
+                    error={errors.kvkkAccepted?.message}
+                    style={{ marginTop: RSpacing.sm }}
+                  />
+                  <KvkkModal
+                    visible={showKvkkModal}
+                    onClose={() => setShowKvkkModal(false)}
+                    onAccept={() => {
+                      onChange(true);
+                      setShowKvkkModal(false);
+                    }}
+                  />
+                </>
               )}
             />
 

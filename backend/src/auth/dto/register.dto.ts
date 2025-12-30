@@ -58,4 +58,11 @@ export class RegisterDto {
   @IsNotEmpty({ message: 'Telefon numarası gereklidir' })
   @IsPhoneNumber({ message: 'Geçerli bir telefon numarası giriniz (örn: +905551234567)' })
   phone: string;
+
+  @ApiProperty({
+    example: true,
+    description: 'KVKK consent acceptance'
+  })
+  @IsNotEmpty({ message: 'KVKK onayı gereklidir' })
+  kvkkAccepted: boolean;
 }
