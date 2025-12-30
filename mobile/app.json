@@ -4,14 +4,19 @@
     "slug": "niki-coffee",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/brands/niki-logo-full.jpg",
+    "icon": "./assets/images/brands/niki-logo-full.png",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "scheme": "niki-coffee",
     "splash": {
-      "image": "./assets/images/brands/niki-logo-full.jpg",
+      "image": "./assets/images/brands/niki-logo.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#ffffff",
+      "dark": {
+        "image": "./assets/images/brands/niki-logo-white.png",
+        "resizeMode": "contain",
+        "backgroundColor": "#121212"
+      }
     },
     "ios": {
       "supportsTablet": true,
@@ -19,14 +24,14 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/brands/niki-logo-full.jpg",
+        "foregroundImage": "./assets/images/brands/niki-logo-full.png",
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
       "package": "com.nikicoffee.app"
     },
     "web": {
-      "favicon": "./assets/images/brands/niki-logo-full.jpg",
+      "favicon": "./assets/images/brands/niki-logo-full.png",
       "bundler": "metro"
     },
     "plugins": [
@@ -47,7 +52,7 @@
       [
         "expo-notifications",
         {
-          "icon": "./assets/images/brands/niki-logo-full.jpg",
+          "icon": "./assets/images/brands/niki-logo-full.png",
           "color": "#000000"
         }
       ],
