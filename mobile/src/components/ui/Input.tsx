@@ -9,7 +9,7 @@ import {
   useColorScheme,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Colors, DarkColors, Spacing, FontSizes, BorderRadius } from '../../constants/theme';
+import { Colors, DarkColors, RSpacing, RFontSizes, BorderRadius } from '../../constants/theme';
 import { useSettingsStore } from '../../stores/settingsStore';
 
 interface InputProps extends TextInputProps {
@@ -113,47 +113,47 @@ export function Input({
 
 const styles = StyleSheet.create({
   container: {
-    marginBottom: Spacing.md,
+    marginBottom: RSpacing.md,
   },
   label: {
-    fontSize: FontSizes.md,
+    fontSize: RFontSizes.md,
     fontWeight: '500',
-    marginBottom: Spacing.xs,
+    marginBottom: RSpacing.xs,
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1,
     borderRadius: BorderRadius.lg,
-    paddingHorizontal: Spacing.md,
+    paddingHorizontal: RSpacing.md,
   },
   input: {
     flex: 1,
-    fontSize: FontSizes.lg,
-    paddingVertical: Spacing.md,
+    fontSize: RFontSizes.lg,
+    paddingVertical: RSpacing.md,
   },
   inputWithIcon: {
-    marginLeft: Spacing.sm,
+    marginLeft: RSpacing.sm,
   },
   leftIcon: {
-    marginRight: Spacing.xs,
+    marginRight: RSpacing.xs,
   },
   prefixContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginRight: Spacing.xs,
+    marginRight: RSpacing.xs,
   },
   prefix: {
-    fontSize: FontSizes.lg,
+    fontSize: RFontSizes.lg,
     fontWeight: '500',
     marginTop: 0,
     marginRight: 4,
   },
   eyeButton: {
-    padding: Spacing.xs,
+    padding: RSpacing.xs,
   },
   error: {
-    fontSize: FontSizes.sm,
-    marginTop: Spacing.xs,
+    fontSize: RFontSizes.sm,
+    marginTop: RSpacing.xs,
   },
 });

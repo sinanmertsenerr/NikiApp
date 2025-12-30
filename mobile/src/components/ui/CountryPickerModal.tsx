@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSettingsStore } from '../../stores/settingsStore';
-import { Colors, DarkColors, Spacing, FontSizes, BorderRadius, RSpacing, RFontSizes, isSmallDevice } from '../../constants/theme';
+import { Colors, DarkColors, BorderRadius, RSpacing, RFontSizes, isSmallDevice } from '../../constants/theme';
 import { COUNTRIES, Country } from '../../constants/countries';
 
 interface CountryPickerModalProps {
@@ -119,14 +119,14 @@ const styles = StyleSheet.create({
         height: '70%',
         borderTopLeftRadius: BorderRadius.xl,
         borderTopRightRadius: BorderRadius.xl,
-        paddingTop: Spacing.md,
+        paddingTop: RSpacing.md,
     },
     header: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        paddingHorizontal: Spacing.lg,
-        paddingBottom: Spacing.md,
+        paddingHorizontal: RSpacing.lg,
+        paddingBottom: RSpacing.md,
         borderBottomWidth: 1,
     },
     title: {
@@ -134,41 +134,41 @@ const styles = StyleSheet.create({
         fontWeight: '700',
     },
     closeButton: {
-        padding: Spacing.xs,
+        padding: RSpacing.xs,
     },
     searchContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        margin: Spacing.md,
-        paddingHorizontal: Spacing.md,
-        paddingVertical: Platform.OS === 'ios' ? Spacing.md : Spacing.xs,
+        margin: RSpacing.md,
+        paddingHorizontal: RSpacing.md,
+        paddingVertical: Platform.OS === 'ios' ? RSpacing.md : RSpacing.xs,
         borderRadius: BorderRadius.lg,
     },
     searchInput: {
         flex: 1,
-        marginLeft: Spacing.sm,
-        fontSize: FontSizes.md,
+        marginLeft: RSpacing.sm,
+        fontSize: RFontSizes.md,
     },
     listContent: {
-        paddingBottom: Spacing.xl,
+        paddingBottom: RSpacing.xl,
     },
     item: {
         flexDirection: 'row',
         alignItems: 'center',
-        paddingVertical: Spacing.md,
-        paddingHorizontal: Spacing.lg,
+        paddingVertical: RSpacing.md,
+        paddingHorizontal: RSpacing.lg,
         borderBottomWidth: 1,
     },
     flag: {
-        fontSize: 24,
-        marginRight: Spacing.md,
+        fontSize: isSmallDevice ? 20 : 24,
+        marginRight: RSpacing.md,
     },
     name: {
         flex: 1,
-        fontSize: FontSizes.md,
+        fontSize: RFontSizes.md,
     },
     dialCode: {
-        fontSize: FontSizes.md,
-        marginRight: Spacing.md,
+        fontSize: RFontSizes.md,
+        marginRight: RSpacing.md,
     },
 });

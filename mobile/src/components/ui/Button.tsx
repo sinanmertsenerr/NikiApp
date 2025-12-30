@@ -7,7 +7,7 @@ import {
   TextStyle,
   useColorScheme,
 } from 'react-native';
-import { Colors, DarkColors, Spacing, FontSizes, BorderRadius } from '../../constants/theme';
+import { Colors, DarkColors, RSpacing, RFontSizes, BorderRadius } from '../../constants/theme';
 import { useSettingsStore } from '../../stores/settingsStore';
 
 interface ButtonProps {
@@ -79,22 +79,22 @@ export function Button({
   const getPadding = () => {
     switch (size) {
       case 'sm':
-        return { paddingVertical: Spacing.sm, paddingHorizontal: Spacing.md };
+        return { paddingVertical: RSpacing.sm, paddingHorizontal: RSpacing.md };
       case 'lg':
-        return { paddingVertical: Spacing.lg, paddingHorizontal: Spacing.xl };
+        return { paddingVertical: RSpacing.lg, paddingHorizontal: RSpacing.xl };
       default:
-        return { paddingVertical: Spacing.md, paddingHorizontal: Spacing.lg };
+        return { paddingVertical: RSpacing.md, paddingHorizontal: RSpacing.lg };
     }
   };
 
   const getFontSize = () => {
     switch (size) {
       case 'sm':
-        return FontSizes.md;
+        return RFontSizes.md;
       case 'lg':
-        return FontSizes.xl;
+        return RFontSizes.xl;
       default:
-        return FontSizes.lg;
+        return RFontSizes.lg;
     }
   };
 

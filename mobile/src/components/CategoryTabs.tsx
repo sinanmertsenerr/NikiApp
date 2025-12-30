@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 
 import { useSettingsStore } from '../stores/settingsStore';
-import { Colors, DarkColors, Spacing, FontSizes, BorderRadius } from '../constants/theme';
+import { Colors, DarkColors, RSpacing, RFontSizes, BorderRadius, isSmallDevice } from '../constants/theme';
 
 export interface CategoryTabItem {
     id: string;
@@ -94,17 +94,17 @@ export function CategoryTabs({
     );
 }
 
-const TAB_HEIGHT = 40;
-const TAB_MIN_WIDTH = 100;
+const TAB_HEIGHT = isSmallDevice ? 36 : 40;
+const TAB_MIN_WIDTH = isSmallDevice ? 80 : 100;
 
 const styles = StyleSheet.create({
     wrapper: {
         // No elevation or zIndex - clean background
     },
     container: {
-        paddingHorizontal: Spacing.lg,
-        paddingVertical: Spacing.sm,
-        gap: Spacing.sm,
+        paddingHorizontal: RSpacing.lg,
+        paddingVertical: RSpacing.sm,
+        gap: RSpacing.sm,
     },
     tab: {
         flexDirection: 'row',
@@ -112,17 +112,17 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         height: TAB_HEIGHT,
         minWidth: TAB_MIN_WIDTH,
-        paddingHorizontal: Spacing.lg,
+        paddingHorizontal: RSpacing.lg,
         borderRadius: TAB_HEIGHT / 2,
         borderWidth: 1,
-        marginRight: Spacing.sm,
+        marginRight: RSpacing.sm,
     },
     tabIcon: {
-        fontSize: 16,
-        marginRight: Spacing.xs,
+        fontSize: isSmallDevice ? 14 : 16,
+        marginRight: RSpacing.xs,
     },
     tabLabel: {
-        fontSize: FontSizes.sm,
+        fontSize: RFontSizes.sm,
         fontWeight: '600',
     },
 });
