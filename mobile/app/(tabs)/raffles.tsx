@@ -292,7 +292,7 @@ export default function UserRafflesScreen() {
             </View>
 
             {/* Tabs */}
-            <View style={[styles.tabContainer, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
+            <View style={[styles.tabContainer, { backgroundColor: colors.backgroundSecondary, borderBottomColor: colors.border }]}>
                 <Pressable
                     style={[styles.tab, activeTab === 'active' && { borderBottomColor: colors.primary, borderBottomWidth: 2 }]}
                     onPress={() => setActiveTab('active')}

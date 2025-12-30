@@ -57,7 +57,7 @@ export function CategoryTabs({
                 {
                     backgroundColor: isSelected
                         ? colors.text
-                        : colors.backgroundSecondary,
+                        : 'transparent',
                     borderColor: isSelected ? colors.text : colors.border,
                 },
             ]}
@@ -79,7 +79,7 @@ export function CategoryTabs({
     );
 
     return (
-        <View style={[styles.wrapper, { backgroundColor: colors.background }]}>
+        <View style={styles.wrapper}>
             <ScrollView
                 horizontal
                 showsHorizontalScrollIndicator={false}
@@ -99,8 +99,7 @@ const TAB_MIN_WIDTH = 100;
 
 const styles = StyleSheet.create({
     wrapper: {
-        zIndex: 10,
-        elevation: 10,
+        // No elevation or zIndex - clean background
     },
     container: {
         paddingHorizontal: Spacing.lg,
