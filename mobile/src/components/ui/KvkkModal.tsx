@@ -136,7 +136,7 @@ export const KvkkModal: React.FC<KvkkModalProps> = ({
                             {'\n\n'}
                             <Text style={styles.bold}>6. Haklarınız</Text>
                             {'\n'}
-                            KVKK'nın 11. maddesi uyarınca veri sahipleri olarak; verilerinizin işlenip işlenmediğini öğrenme, işlenmişse bilgi talep etme, işlenme amacını öğrenme, verilerin düzeltilmesini isteme, silinmesini veya yok edilmesini talep etme, ve kanuna aykırı işleme nedeniyle zararın giderilmesini talep etme haklarına sahipsiniz. Taleplerinizi info@niki.ieu.app adresine iletebilirsiniz.
+                            KVKK'nın 11. maddesi uyarınca veri sahipleri olarak; verilerinizin işlenip işlenmediğini öğrenme, işlenmişse bilgi talep etme, işlenme amacını öğrenme, verilerin düzeltilmesini isteme, silinmesini veya yok edilmesini talep etme, ve kanuna aykırı işleme nedeniyle zararın giderilmesini talep etme haklarına sahipsiniz. Taleplerinizi niki@ieu.app adresine iletebilirsiniz.
                         </Text>
                     </ScrollView>
 
