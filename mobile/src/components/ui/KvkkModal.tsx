@@ -117,7 +117,7 @@ export const KvkkModal: React.FC<KvkkModalProps> = ({
                             <Text style={styles.bold}>3. İşlenen Kişisel Veri Kategorileri</Text>
                             {'\n'}
                             Uygulama kullanımınız sırasında toplanabilecek kişisel veri kategorileri aşağıda belirtilmiştir:
-                            {'\n'}• <Text style={styles.bold}>Kimlik Bilgileri:</Text> Ad, soyad.
+                            {'\n'}• <Text style={styles.bold}>Kimlik ve Profil Bilgileri:</Text> Ad, soyad, biyografi, profil fotoğrafı.
                             {'\n'}• <Text style={styles.bold}>İletişim Bilgileri:</Text> E-posta adresi, telefon numarası.
                             {'\n'}• <Text style={styles.bold}>İşlem Güvenliği Bilgileri:</Text> IP adresi, cihaz bilgileri, uygulama erişim logları (parola hash vb.).
                             {'\n'}• <Text style={styles.bold}>Finansal Bilgiler:</Text> Cüzdan bakiyesi, harcama bilgileri, yapılan ödeme tutarları.
