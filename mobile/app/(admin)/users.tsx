@@ -93,9 +93,23 @@ export default function AdminUsersScreen() {
             <Text style={[styles.userName, { color: colors.text }]}>
               {item.firstName} {item.lastName}
             </Text>
+
             {!item.isActive && (
               <View style={[styles.inactiveBadge, { backgroundColor: colors.error + '20' }]}>
                 <Text style={[styles.inactiveBadgeText, { color: colors.error }]}>{t('common.inactive')}</Text>
+              </View>
+            )}
+
+            {(item.role === 'admin' || item.role === 'super_admin') && (
+              <View style={[styles.roleBadge, { backgroundColor: isDark ? '#333333' : '#E0E0E0' }]}>
+                <Ionicons
+                  name={item.role === 'admin' ? 'build' : 'shield-checkmark'}
+                  size={10}
+                  color={colors.text}
+                />
+                <Text style={[styles.roleBadgeText, { color: colors.text }]}>
+                  {t(`admin.role_${item.role}`)}
+                </Text>
               </View>
             )}
           </View>
@@ -252,7 +266,7 @@ const styles = StyleSheet.create({
   },
   userName: {
     fontSize: RFontSizes.md,
-    fontWeight: '600',
+    fontWeight: '500',
   },
   inactiveBadge: {
     paddingHorizontal: 6,
@@ -262,6 +276,18 @@ const styles = StyleSheet.create({
   inactiveBadgeText: {
     fontSize: RFontSizes.xs,
     fontWeight: '500',
+  },
+  roleBadge: {
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  roleBadgeText: {
+    fontSize: RFontSizes.xs,
+    fontWeight: '600',
   },
   userEmail: {
     fontSize: RFontSizes.sm,

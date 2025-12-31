@@ -120,7 +120,7 @@ export class EventsGateway implements OnGatewayInit, OnGatewayConnection, OnGate
             client.join(`user:${payload.sub}`);
 
             // If admin, join admin room
-            if (payload.role === 'ADMIN' || payload.role === 'SUPER_ADMIN') {
+            if (payload.role === 'admin' || payload.role === 'super_admin') {
                 client.join('admin');
             }
 
@@ -178,7 +178,7 @@ export class EventsGateway implements OnGatewayInit, OnGatewayConnection, OnGate
 
             // Join rooms
             client.join(`user:${payload.sub}`);
-            if (payload.role === 'ADMIN' || payload.role === 'SUPER_ADMIN') {
+            if (payload.role === 'admin' || payload.role === 'super_admin') {
                 client.join('admin');
             }
 

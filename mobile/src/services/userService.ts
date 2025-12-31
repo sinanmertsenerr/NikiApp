@@ -147,6 +147,7 @@ export const adminUpdateUser = async (id: string, data: Partial<{
     lastName: string;
     phone: string;
     isActive: boolean;
+    role: 'customer' | 'admin' | 'super_admin';
 }>): Promise<AdminUser> => {
     // Backend expects /status for status updates
     // Note: If updating other fields is needed, backend needs a separate endpoint

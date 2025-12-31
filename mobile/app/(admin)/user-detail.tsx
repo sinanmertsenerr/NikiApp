@@ -41,6 +41,7 @@ interface UserData {
   createdAt: string;
   ieuQrCode: string;
   nikiQrCode: string;
+  role: 'customer' | 'admin' | 'super_admin';
   ieuWalletActive: boolean;
   // Negative balance settings
   ieuAllowNegative: boolean;
@@ -66,6 +67,7 @@ export default function AdminUserDetailScreen() {
   const [showCreditsModal, setShowCreditsModal] = useState(false);
   const [showDeductModal, setShowDeductModal] = useState(false);
   const [showNegativeModal, setShowNegativeModal] = useState(false);
+  const [showRoleModal, setShowRoleModal] = useState(false);
   const [selectedWalletType, setSelectedWalletType] = useState<WalletType>('ieu');
   const [pointsAmount, setPointsAmount] = useState('');
   const [creditsAmount, setCreditsAmount] = useState('');
@@ -97,6 +99,7 @@ export default function AdminUserDetailScreen() {
         createdAt: userData.createdAt,
         ieuQrCode: userData.wallets?.ieu?.qrCode || userData.wallet?.qrCode || '',
         nikiQrCode: userData.wallets?.niki?.qrCode || '',
+        role: userData.role,
         ieuWalletActive: (userData.wallets?.ieu as any)?.isActive ?? false,
         // Negative balance settings
         ieuAllowNegative: (userData.wallets?.ieu as any)?.allowNegative ?? false,
@@ -309,6 +312,17 @@ export default function AdminUserDetailScreen() {
               </Text>
             </View>
 
+            <View style={[styles.badge, { backgroundColor: user.role === 'customer' ? colors.primary + '20' : (isDark ? '#333333' : '#E0E0E0') }]}>
+              <Ionicons
+                name={user.role === 'customer' ? 'person-circle' : (user.role === 'admin' ? 'build' : 'shield-checkmark')}
+                size={14}
+                color={user.role === 'customer' ? colors.primary : colors.text}
+              />
+              <Text style={[styles.badgeText, { color: user.role === 'customer' ? colors.primary : colors.text }]}>
+                {t(`admin.role_${user.role}`)}
+              </Text>
+            </View>
+
           </View>
         </View>
 
@@ -385,6 +399,22 @@ export default function AdminUserDetailScreen() {
           >
             <Ionicons name="remove-circle" size={20} color="#FFFFFF" />
             <Text style={styles.actionButtonText}>{t('admin.deductCredits')}</Text>
+          </Pressable>
+        </View>
+
+        <View style={styles.actionsGrid}>
+          <Pressable
+            style={[styles.statusButton, { backgroundColor: '#FF9800' + '15', flex: 1, marginBottom: 0 }]}
+            onPress={() => setShowRoleModal(true)}
+          >
+            <Ionicons
+              name="shield-checkmark"
+              size={20}
+              color="#FF9800"
+            />
+            <Text style={[styles.statusButtonText, { color: '#FF9800' }]}>
+              {t('admin.changeRole')}
+            </Text>
           </Pressable>
         </View>
 
@@ -719,6 +749,79 @@ export default function AdminUserDetailScreen() {
           </View>
         </KeyboardAvoidingView>
       </Modal>
+
+      {/* Role Selection Modal */}
+      <Modal visible={showRoleModal} transparent animationType="slide">
+        <Pressable
+          style={styles.modalOverlay}
+          onPress={() => setShowRoleModal(false)}
+        >
+          <View style={[styles.modalContent, { backgroundColor: colors.card }]}>
+            <Text style={[styles.modalTitle, { color: colors.text }]}>
+              {t('admin.selectRole')}
+            </Text>
+
+            {(['customer', 'admin', 'super_admin'] as const).map((role) => (
+              <Pressable
+                key={role}
+                style={[
+                  styles.roleOption,
+                  {
+                    backgroundColor: user?.role === role ? colors.primary + '20' : colors.backgroundSecondary,
+                    borderColor: user?.role === role ? colors.primary : 'transparent',
+                    borderWidth: 1
+                  }
+                ]}
+                onPress={async () => {
+                  if (!user) return;
+                  if (user.role === role) {
+                    setShowRoleModal(false);
+                    return;
+                  }
+
+                  try {
+                    console.log(`[Admin] Updating role for user ${user.id} to ${role}`);
+                    await adminUpdateUser(user.id, { role });
+                    console.log(`[Admin] Role updated successfully for user ${user.id}`);
+                    setUser(prev => prev ? { ...prev, role } : null);
+                    Alert.alert(t('common.success'), t('admin.roleUpdated'));
+                    setShowRoleModal(false);
+                  } catch (error) {
+                    console.error('Failed to update role:', error);
+                    Alert.alert(t('common.error'), t('admin.updateFailed'));
+                  }
+                }}
+              >
+                <View style={[
+                  styles.roleIconContainer,
+                  { backgroundColor: isDark ? '#333333' : '#E0E0E0' }
+                ]}>
+                  <Ionicons
+                    name={role === 'customer' ? 'person-circle' : (role === 'admin' ? 'build' : 'shield-checkmark')}
+                    size={24}
+                    color={colors.text}
+                  />
+                </View>
+                <Text style={[styles.roleOptionText, { color: colors.text }]}>
+                  {t(`admin.role_${role}`)}
+                </Text>
+                {user?.role === role && (
+                  <Ionicons name="checkmark-circle" size={24} color={colors.primary} />
+                )}
+              </Pressable>
+            ))}
+
+            <View style={[styles.modalActions, { marginTop: RSpacing.lg }]}>
+              <Pressable
+                style={[styles.modalCancelButton, { backgroundColor: colors.backgroundSecondary }]}
+                onPress={() => setShowRoleModal(false)}
+              >
+                <Text style={[styles.modalCancelText, { color: colors.text }]}>{t('common.close')}</Text>
+              </Pressable>
+            </View>
+          </View>
+        </Pressable>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -798,8 +901,29 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: RFontSizes.lg,
-    fontWeight: '600',
+    fontWeight: '700',
+    marginTop: RSpacing.xl,
+    marginBottom: RSpacing.md,
+  },
+  roleOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: RSpacing.md,
+    borderRadius: BorderRadius.lg,
     marginBottom: RSpacing.sm,
+  },
+  roleIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: RSpacing.md,
+  },
+  roleOptionText: {
+    flex: 1,
+    fontSize: RFontSizes.md,
+    fontWeight: '600',
   },
   infoCard: {
     borderRadius: BorderRadius.lg,

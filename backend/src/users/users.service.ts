@@ -274,10 +274,11 @@ export class UsersService {
     const { page = 1, limit = 20, search, role, isActive, emailVerified } = query;
     const skip = (page - 1) * limit;
 
-    const where: any = {
-      // Only show customers by default (exclude admins and super_admins)
-      role: role || 'customer',
-    };
+    const where: any = {};
+
+    if (role) {
+      where.role = role;
+    }
 
     if (search) {
       where.OR = [
