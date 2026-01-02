@@ -288,6 +288,8 @@
     "prize": "Ödül"
   },
   "admin": {
+    "members": "Üyeler",
+    "admins": "Adminler",
     "active": "Aktif",
     "pending": "Bekliyor",
     "completed": "Tamamlandı",

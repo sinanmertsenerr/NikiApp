@@ -32,6 +32,7 @@ export default function AdminUsersScreen() {
   const { t } = useTranslation();
 
   const [searchQuery, setSearchQuery] = useState('');
+  const [activeTab, setActiveTab] = useState<'members' | 'admins'>('members');
 
   // Fetch users from API
   const {
@@ -65,17 +66,26 @@ export default function AdminUsersScreen() {
     };
   }, [refetch]);
 
-  // Filter users based on search query
+  // Filter users based on search query and role tab
   const filteredUsers = useMemo(() => {
-    if (!searchQuery) return users;
+    // First filter by role tab
+    let roleFiltered = users;
+    if (activeTab === 'members') {
+      roleFiltered = users.filter((user) => user.role === 'customer');
+    } else {
+      roleFiltered = users.filter((user) => user.role === 'admin' || user.role === 'super_admin');
+    }
+
+    // Then filter by search query
+    if (!searchQuery) return roleFiltered;
     const query = searchQuery.toLowerCase();
-    return users.filter(
+    return roleFiltered.filter(
       (user) =>
         user.firstName.toLowerCase().includes(query) ||
         user.lastName.toLowerCase().includes(query) ||
         user.email.toLowerCase().includes(query)
     );
-  }, [users, searchQuery]);
+  }, [users, searchQuery, activeTab]);
 
   const renderUser = ({ item }: { item: AdminUser }) => (
     <Pressable
@@ -152,6 +162,27 @@ export default function AdminUsersScreen() {
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['bottom']}>
       {/* Search Bar */}
+      {/* Role Filter Tabs */}
+      <View style={[styles.tabContainer, { backgroundColor: colors.backgroundSecondary, borderBottomColor: colors.border }]}>
+        <Pressable
+          style={[styles.tab, activeTab === 'members' && { borderBottomColor: colors.primary, borderBottomWidth: 2 }]}
+          onPress={() => setActiveTab('members')}
+        >
+          <Text style={[styles.tabText, { color: activeTab === 'members' ? colors.primary : colors.textSecondary }]}>
+            {t('admin.members')}
+          </Text>
+        </Pressable>
+        <Pressable
+          style={[styles.tab, activeTab === 'admins' && { borderBottomColor: colors.primary, borderBottomWidth: 2 }]}
+          onPress={() => setActiveTab('admins')}
+        >
+          <Text style={[styles.tabText, { color: activeTab === 'admins' ? colors.primary : colors.textSecondary }]}>
+            {t('admin.admins')}
+          </Text>
+        </Pressable>
+      </View>
+
+      {/* Search Bar */}
       <View style={[styles.searchContainer, { backgroundColor: colors.backgroundSecondary }]}>
         <Ionicons name="search-outline" size={20} color={colors.textTertiary} />
         <TextInput
@@ -171,10 +202,10 @@ export default function AdminUsersScreen() {
       {/* Stats Summary */}
       <View style={styles.summaryRow}>
         <Text style={[styles.summaryText, { color: colors.textSecondary }]}>
-          {t('admin.totalUsers', { count: users.length })}
+          {t('admin.totalUsers', { count: filteredUsers.length })}
         </Text>
         <Text style={[styles.summaryText, { color: colors.textSecondary }]}>
-          {t('admin.activeUsers', { count: users.filter((u) => u.isActive).length })}
+          {t('admin.activeUsers', { count: filteredUsers.filter((u) => u.isActive).length })}
         </Text>
       </View>
 
@@ -206,6 +237,19 @@ export default function AdminUsersScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  tabContainer: {
+    flexDirection: 'row',
+    borderBottomWidth: 1,
+  },
+  tab: {
+    flex: 1,
+    paddingVertical: RSpacing.md,
+    alignItems: 'center',
+  },
+  tabText: {
+    fontSize: RFontSizes.md,
+    fontWeight: '600',
   },
   searchContainer: {
     flexDirection: 'row',
