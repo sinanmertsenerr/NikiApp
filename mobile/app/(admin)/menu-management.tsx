@@ -540,30 +540,20 @@ export default function AdminMenuManagementScreen() {
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['bottom']}>
       {/* Tab Selector */}
-      <View style={[styles.tabContainer, { backgroundColor: colors.backgroundSecondary }]}>
+      <View style={[styles.tabContainer, { backgroundColor: colors.backgroundSecondary, borderBottomColor: colors.border }]}>
         <Pressable
-          style={[styles.tab, activeTab === 'products' && { backgroundColor: colors.card }]}
+          style={[styles.tab, activeTab === 'products' && { borderBottomColor: colors.primary, borderBottomWidth: 2 }]}
           onPress={() => setActiveTab('products')}
         >
-          <Text
-            style={[
-              styles.tabText,
-              { color: activeTab === 'products' ? colors.primary : colors.textSecondary },
-            ]}
-          >
+          <Text style={[styles.tabText, { color: activeTab === 'products' ? colors.primary : colors.textSecondary }]}>
             {t('admin.products')}
           </Text>
         </Pressable>
         <Pressable
-          style={[styles.tab, activeTab === 'categories' && { backgroundColor: colors.card }]}
+          style={[styles.tab, activeTab === 'categories' && { borderBottomColor: colors.primary, borderBottomWidth: 2 }]}
           onPress={() => setActiveTab('categories')}
         >
-          <Text
-            style={[
-              styles.tabText,
-              { color: activeTab === 'categories' ? colors.primary : colors.textSecondary },
-            ]}
-          >
+          <Text style={[styles.tabText, { color: activeTab === 'categories' ? colors.primary : colors.textSecondary }]}>
             {t('admin.categories')}
           </Text>
         </Pressable>
@@ -883,16 +873,12 @@ const styles = StyleSheet.create({
   },
   tabContainer: {
     flexDirection: 'row',
-    marginHorizontal: RSpacing.md,
-    marginTop: RSpacing.md,
-    padding: 4,
-    borderRadius: BorderRadius.lg,
+    borderBottomWidth: 1,
   },
   tab: {
     flex: 1,
-    paddingVertical: RSpacing.sm,
+    paddingVertical: RSpacing.md,
     alignItems: 'center',
-    borderRadius: BorderRadius.md,
   },
   tabText: {
     fontSize: RFontSizes.md,
