@@ -46,6 +46,7 @@ export default function AdminLayout() {
       <Stack.Screen name="group-detail" options={{ title: t('groups.editGroup') }} />
       <Stack.Screen name="menu-management" options={{ title: t('admin.menuManagement') }} />
       <Stack.Screen name="user-detail" options={{ title: t('admin.userDetail') }} />
+      <Stack.Screen name="raffles" options={{ title: t('admin.raffles') }} />
     </Stack>
   );
 }
