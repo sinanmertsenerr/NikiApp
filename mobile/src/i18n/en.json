@@ -83,7 +83,17 @@
     "updatePassword": "Update Password",
     "passwordUpdatedSuccess": "Your password has been updated. You can now login with your new password.",
     "sessionExpired": "Session Expired",
-    "sessionExpiredMessage": "Your session has expired. Please login again."
+    "sessionExpiredMessage": "Your session has expired. Please login again.",
+    "phoneVerification": "Phone Verification",
+    "phoneVerificationDesc": "We sent a verification code to your phone via SMS",
+    "sendSmsCode": "Send Code",
+    "enterSmsCode": "Enter SMS code",
+    "phoneVerified": "Phone verified",
+    "verifyPhone": "Verify Phone",
+    "resendSmsCode": "Resend Code",
+    "smsCodeSent": "SMS code sent",
+    "waitSeconds": "Wait {{seconds}} seconds",
+    "phoneNotVerified": "Please verify your phone number"
   },
   "validation": {
     "required": "This field is required",
@@ -198,7 +208,9 @@
     "points": "Points",
     "rewards": "Rewards",
     "emailCannotChange": "Email address cannot be changed",
-    "phone": "Phone"
+    "phone": "Phone",
+    "emailNotVerified": "Email not verified",
+    "verifyEmailDesc": "Tap to verify your email address"
   },
   "badges": {
     "earned": "Earned",

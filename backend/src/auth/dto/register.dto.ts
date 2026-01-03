@@ -5,8 +5,10 @@ import {
   MinLength,
   MaxLength,
   Matches,
+  IsOptional,
+  IsBoolean,
 } from 'class-validator';
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsPhoneNumber } from '../../common/validators';
 
 export class RegisterDto {
@@ -59,6 +61,14 @@ export class RegisterDto {
   @IsPhoneNumber({ message: 'Geçerli bir telefon numarası giriniz (örn: +905551234567)' })
   phone: string;
 
+  @ApiPropertyOptional({
+    example: true,
+    description: 'Whether phone number has been verified via SMS',
+  })
+  @IsOptional()
+  @IsBoolean()
+  phoneVerified?: boolean;
+
   @ApiProperty({
     example: true,
     description: 'KVKK consent acceptance'
@@ -66,3 +76,4 @@ export class RegisterDto {
   @IsNotEmpty({ message: 'KVKK onayı gereklidir' })
   kvkkAccepted: boolean;
 }
+

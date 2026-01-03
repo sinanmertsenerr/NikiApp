@@ -84,7 +84,17 @@
     "updatePassword": "Şifreyi Güncelle",
     "passwordUpdatedSuccess": "Şifreniz başarıyla güncellendi. Yeni şifrenizle giriş yapabilirsiniz.",
     "sessionExpired": "Oturum Süresi Doldu",
-    "sessionExpiredMessage": "Oturumunuzun süresi doldu. Lütfen tekrar giriş yapın."
+    "sessionExpiredMessage": "Oturumunuzun süresi doldu. Lütfen tekrar giriş yapın.",
+    "phoneVerification": "Telefon Doğrulama",
+    "phoneVerificationDesc": "Telefon numaranıza SMS ile doğrulama kodu gönderdik",
+    "sendSmsCode": "Kod Gönder",
+    "enterSmsCode": "SMS kodunu girin",
+    "phoneVerified": "Telefon doğrulandı",
+    "verifyPhone": "Telefonu Doğrula",
+    "resendSmsCode": "Tekrar Gönder",
+    "smsCodeSent": "SMS kodu gönderildi",
+    "waitSeconds": "{{seconds}} saniye bekleyin",
+    "phoneNotVerified": "Telefon numaranızı doğrulayın"
   },
   "validation": {
     "required": "Bu alan zorunludur",
@@ -199,7 +209,9 @@
     "points": "Puan",
     "rewards": "Ödül",
     "emailCannotChange": "E-posta adresi değiştirilemez",
-    "phone": "Telefon"
+    "phone": "Telefon",
+    "emailNotVerified": "Email doğrulanmadı",
+    "verifyEmailDesc": "Email adresinizi doğrulamak için tıklayın"
   },
   "badges": {
     "earned": "Kazanılan",

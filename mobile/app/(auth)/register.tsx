@@ -9,6 +9,7 @@ import {
   Pressable,
   useColorScheme,
   Alert,
+  TextInput,
 } from 'react-native';
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
@@ -17,6 +18,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useTranslation } from 'react-i18next';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 
 import { Input } from '../../src/components/ui/Input';
 import { Checkbox } from '../../src/components/ui/Checkbox';
@@ -29,6 +31,9 @@ import { screenWidth as SCREEN_WIDTH } from '../../src/utils/responsive';
 import { COUNTRIES, DEFAULT_COUNTRY, Country } from '../../src/constants/countries';
 import { CountryPickerModal } from '../../src/components/ui/CountryPickerModal';
 import { KvkkModal } from '../../src/components/ui/KvkkModal';
+import { usePhoneAuth } from '../../src/hooks/usePhoneAuth';
+
+type RegisterStep = 'form' | 'phone-verify';
 
 const createRegisterSchema = (t: any, countryCode: string) => z
   .object({
@@ -70,6 +75,9 @@ export default function RegisterScreen() {
   const colorScheme = useColorScheme();
   const { theme, selectedBrand } = useSettingsStore();
   const [loading, setLoading] = useState(false);
+  const [step, setStep] = useState<RegisterStep>('form');
+  const [smsCode, setSmsCode] = useState('');
+  const [formData, setFormData] = useState<RegisterForm | null>(null);
 
   const isDark = theme === 'dark' || (theme === 'system' && colorScheme === 'dark');
   const colors = isDark ? DarkColors : Colors;
@@ -78,6 +86,17 @@ export default function RegisterScreen() {
   const [showCountryPicker, setShowCountryPicker] = useState(false);
   const [showKvkkModal, setShowKvkkModal] = useState(false);
   const [selectedCountry, setSelectedCountry] = useState<Country>(DEFAULT_COUNTRY);
+
+  const {
+    isLoading: phoneAuthLoading,
+    error: phoneAuthError,
+    isCodeSent,
+    isVerified,
+    countdown,
+    sendVerificationCode,
+    verifyCode,
+    resetState: resetPhoneAuth,
+  } = usePhoneAuth();
 
   // Format phone number as (555) 123 45 67 (3-3-2-2 pattern with parentheses)
   const formatPhoneNumber = (text: string): string => {
@@ -102,6 +121,7 @@ export default function RegisterScreen() {
     control,
     handleSubmit,
     formState: { errors },
+    getValues,
   } = useForm<RegisterForm>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
@@ -115,39 +135,172 @@ export default function RegisterScreen() {
     },
   });
 
-  const onSubmit = async (data: RegisterForm) => {
-    setLoading(true);
-    try {
-      const result = await authService.register({
-        firstName: data.firstName,
-        lastName: data.lastName,
-        phone: `${selectedCountry.dialCode}${data.phone}`,
-        email: data.email,
-        password: data.password,
-        kvkkAccepted: data.kvkkAccepted,
-      });
+  // Step 1: Form submission -> Send SMS code
+  const onFormSubmit = async (data: RegisterForm) => {
+    setFormData(data);
 
-      Alert.alert(
-        t('auth.registerSuccess'),
-        t('auth.verificationCodeSent'),
-        [
-          {
-            text: t('auth.verify'),
-            onPress: () =>
-              router.push({
-                pathname: '/(auth)/verify-email',
-                params: { email: data.email },
-              }),
-          },
-        ]
-      );
-    } catch (error: any) {
-      Alert.alert(t('common.error'), error.message);
-    } finally {
-      setLoading(false);
+    const fullPhoneNumber = `${selectedCountry.dialCode}${data.phone}`;
+    const success = await sendVerificationCode(fullPhoneNumber);
+
+    if (success) {
+      setStep('phone-verify');
     }
   };
 
+  // Step 2: Verify SMS code -> Register with backend
+  const onVerifyCode = async () => {
+    if (smsCode.length !== 6) {
+      Alert.alert(t('common.error'), t('auth.enterSixDigitCode'));
+      return;
+    }
+
+    const verified = await verifyCode(smsCode);
+
+    if (verified && formData) {
+      // Phone verified, now register with backend
+      setLoading(true);
+      try {
+        await authService.register({
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          phone: `${selectedCountry.dialCode}${formData.phone}`,
+          email: formData.email,
+          password: formData.password,
+          kvkkAccepted: formData.kvkkAccepted,
+          phoneVerified: true,
+        });
+
+        // Success - go to login screen
+        Alert.alert(
+          t('auth.registerSuccess'),
+          t('auth.phoneVerified'),
+          [
+            {
+              text: t('auth.login'),
+              onPress: () => router.replace('/(auth)/login'),
+            },
+          ]
+        );
+      } catch (error: any) {
+        Alert.alert(t('common.error'), error.message);
+      } finally {
+        setLoading(false);
+      }
+    }
+  };
+
+  // Resend SMS code
+  const onResendCode = async () => {
+    if (countdown > 0 || !formData) return;
+
+    const fullPhoneNumber = `${selectedCountry.dialCode}${formData.phone}`;
+    await sendVerificationCode(fullPhoneNumber);
+  };
+
+  // Go back to form step
+  const goBackToForm = () => {
+    setStep('form');
+    setSmsCode('');
+    resetPhoneAuth();
+  };
+
+  // Render phone verification step
+  if (step === 'phone-verify') {
+    return (
+      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={styles.keyboardView}
+        >
+          <ScrollView
+            contentContainerStyle={styles.scrollContent}
+            keyboardShouldPersistTaps="handled"
+          >
+            {/* Back Button */}
+            <Pressable onPress={goBackToForm} style={styles.backButton}>
+              <Text style={[styles.backText, { color: colors.primary }]}>← {t('common.back')}</Text>
+            </Pressable>
+
+            {/* Icon */}
+            <View style={styles.verifyIconContainer}>
+              <View style={[styles.verifyIconCircle, { backgroundColor: colors.primary + '20' }]}>
+                <Ionicons name="phone-portrait-outline" size={48} color={colors.primary} />
+              </View>
+            </View>
+
+            {/* Title */}
+            <Text style={[styles.title, { color: colors.text }]}>
+              {t('auth.phoneVerification')}
+            </Text>
+            <Text style={[styles.subtitle, { color: colors.textSecondary, textAlign: 'center' }]}>
+              {t('auth.phoneVerificationDesc')}
+            </Text>
+            <Text style={[styles.phoneDisplay, { color: colors.primary }]}>
+              {selectedCountry.dialCode} {formData?.phone ? formatPhoneNumber(formData.phone) : ''}
+            </Text>
+
+            {/* SMS Code Input */}
+            <View style={styles.codeInputContainer}>
+              <TextInput
+                style={[
+                  styles.codeInput,
+                  {
+                    backgroundColor: colors.backgroundSecondary,
+                    color: colors.text,
+                    borderColor: phoneAuthError ? colors.error : colors.border,
+                  },
+                ]}
+                value={smsCode}
+                onChangeText={(text) => setSmsCode(text.replace(/\D/g, '').slice(0, 6))}
+                keyboardType="number-pad"
+                maxLength={6}
+                placeholder="000000"
+                placeholderTextColor={colors.textSecondary}
+                textAlign="center"
+              />
+            </View>
+
+            {/* Error Message */}
+            {phoneAuthError && (
+              <Text style={[styles.errorText, { color: colors.error }]}>
+                {phoneAuthError}
+              </Text>
+            )}
+
+            {/* Verify Button */}
+            <Button
+              title={t('auth.verifyPhone')}
+              onPress={onVerifyCode}
+              loading={phoneAuthLoading || loading}
+              size="lg"
+              style={styles.submitButton}
+              disabled={smsCode.length !== 6}
+            />
+
+            {/* Resend Code */}
+            <View style={styles.resendContainer}>
+              <Text style={[styles.resendText, { color: colors.textSecondary }]}>
+                {t('auth.didNotReceiveCode')}{' '}
+              </Text>
+              {countdown > 0 ? (
+                <Text style={[styles.countdownText, { color: colors.textSecondary }]}>
+                  {t('auth.waitSeconds', { seconds: countdown })}
+                </Text>
+              ) : (
+                <Pressable onPress={onResendCode}>
+                  <Text style={[styles.resendLink, { color: colors.primary }]}>
+                    {t('auth.resendSmsCode')}
+                  </Text>
+                </Pressable>
+              )}
+            </View>
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </SafeAreaView>
+    );
+  }
+
+  // Render form step
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <KeyboardAvoidingView
@@ -339,10 +492,17 @@ export default function RegisterScreen() {
               )}
             />
 
+            {/* Phone Auth Error */}
+            {phoneAuthError && (
+              <Text style={[styles.errorText, { color: colors.error }]}>
+                {phoneAuthError}
+              </Text>
+            )}
+
             <Button
-              title={t('auth.register')}
-              onPress={handleSubmit(onSubmit)}
-              loading={loading}
+              title={t('auth.sendSmsCode')}
+              onPress={handleSubmit(onFormSubmit)}
+              loading={phoneAuthLoading}
               size="lg"
               style={styles.submitButton}
             />
@@ -433,5 +593,60 @@ const styles = StyleSheet.create({
   linkText: {
     fontSize: RFontSizes.md,
     fontWeight: '600',
+  },
+  // Phone verification styles
+  verifyIconContainer: {
+    alignItems: 'center',
+    marginVertical: RSpacing.xl,
+  },
+  verifyIconCircle: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  phoneDisplay: {
+    fontSize: RFontSizes.lg,
+    fontWeight: '600',
+    textAlign: 'center',
+    marginBottom: RSpacing.xl,
+  },
+  codeInputContainer: {
+    alignItems: 'center',
+    marginBottom: RSpacing.lg,
+  },
+  codeInput: {
+    width: 200,
+    height: 60,
+    fontSize: 28,
+    fontWeight: '700',
+    letterSpacing: 8,
+    borderWidth: 2,
+    borderRadius: 12,
+    paddingHorizontal: RSpacing.lg,
+  },
+  errorText: {
+    fontSize: RFontSizes.sm,
+    textAlign: 'center',
+    marginBottom: RSpacing.md,
+  },
+  resendContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: RSpacing.lg,
+    flexWrap: 'wrap',
+  },
+  resendText: {
+    fontSize: RFontSizes.md,
+  },
+  resendLink: {
+    fontSize: RFontSizes.md,
+    fontWeight: '600',
+  },
+  countdownText: {
+    fontSize: RFontSizes.md,
+    fontWeight: '500',
   },
 });

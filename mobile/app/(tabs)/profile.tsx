@@ -143,6 +143,30 @@ export default function ProfileScreen() {
           </Pressable>
         </View>
 
+        {/* Email Verification Banner */}
+        {user && !user.emailVerified && (
+          <Pressable
+            style={[styles.emailBanner, { backgroundColor: colors.warning + '20' }]}
+            onPress={() => router.push({
+              pathname: '/(auth)/verify-email',
+              params: { email: user.email },
+            })}
+          >
+            <View style={styles.emailBannerContent}>
+              <Ionicons name="mail-unread-outline" size={24} color={colors.warning} />
+              <View style={styles.emailBannerText}>
+                <Text style={[styles.emailBannerTitle, { color: colors.text }]}>
+                  {t('profile.emailNotVerified', 'Email doğrulanmadı')}
+                </Text>
+                <Text style={[styles.emailBannerDesc, { color: colors.textSecondary }]}>
+                  {t('profile.verifyEmailDesc', 'Email adresinizi doğrulamak için tıklayın')}
+                </Text>
+              </View>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color={colors.warning} />
+          </Pressable>
+        )}
+
         {/* Stats */}
         <View style={styles.statsContainer}>
           <StatItem
@@ -483,5 +507,30 @@ const styles = StyleSheet.create({
   brandSwitchAction: {
     fontSize: RFontSizes.md,
     fontWeight: '500',
+  },
+  emailBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: RSpacing.md,
+    borderRadius: BorderRadius.lg,
+    marginBottom: RSpacing.lg,
+  },
+  emailBannerContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+    gap: RSpacing.md,
+  },
+  emailBannerText: {
+    flex: 1,
+  },
+  emailBannerTitle: {
+    fontSize: RFontSizes.md,
+    fontWeight: '600',
+  },
+  emailBannerDesc: {
+    fontSize: RFontSizes.sm,
+    marginTop: 2,
   },
 });

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "254425632452",
+    "project_id": "nikithecatapp",
+    "storage_bucket": "nikithecatapp.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:254425632452:android:98acc7e831b7138dd7c391",
+        "android_client_info": {
+          "package_name": "com.nikicoffee.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCSe7wXQ7SWN5NW711QboVit7_h9NvEAws"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

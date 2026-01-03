@@ -9,6 +9,7 @@ export interface RegisterData {
   lastName: string;
   phone: string;
   kvkkAccepted: boolean;
+  phoneVerified?: boolean;
 }
 
 export interface LoginData {

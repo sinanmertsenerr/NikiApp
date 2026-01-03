@@ -83,7 +83,7 @@ export class AuthService {
     const userCount = await this.prisma.user.count();
     const isFirstUser = userCount === 0;
 
-    // Create user (unverified)
+    // Create user (phone verified via Firebase, email unverified)
     const user = await this.prisma.user.create({
       data: {
         email: dto.email.toLowerCase(),
@@ -91,6 +91,8 @@ export class AuthService {
         firstName: dto.firstName,
         lastName: dto.lastName,
         phone: dto.phone,
+        phoneVerified: dto.phoneVerified || false,
+        phoneVerifiedAt: dto.phoneVerified ? new Date() : null,
         emailVerified: false,
         kvkkAccepted: dto.kvkkAccepted,
         kvkkAcceptedAt: dto.kvkkAccepted ? new Date() : null,
@@ -345,12 +347,12 @@ export class AuthService {
       });
     }
 
-    // Check if email is verified
-    if (!user.emailVerified) {
-      this.logger.warn(`Login attempt with unverified email: ${user.email} (ID: ${user.id})`);
+    // Check if phone is verified (phone is now the primary verification method)
+    if (!user.phoneVerified) {
+      this.logger.warn(`Login attempt with unverified phone: ${user.email} (ID: ${user.id})`);
       throw new UnauthorizedException({
-        code: 'EMAIL_NOT_VERIFIED',
-        message: 'Lütfen önce email adresinizi doğrulayın',
+        code: 'PHONE_NOT_VERIFIED',
+        message: 'Lütfen önce telefon numaranızı doğrulayın',
         userId: user.id,
       });
     }
