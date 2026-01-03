@@ -28,12 +28,12 @@ const getDevServerHost = (): string => {
 };
 
 // ========== LIVE SERVER TESTING ==========
-const BACKEND_HOST = 'https://niki.ieu.app';
+//const BACKEND_HOST = 'https://niki.ieu.app';
 
 // ========== LOCAL DEVELOPMENT ==========
-// const BACKEND_HOST = __DEV__
-//   ? getDevServerHost()
-//   : 'https://niki.ieu.app';
+const BACKEND_HOST = __DEV__
+  ? getDevServerHost()
+  : 'https://niki.ieu.app';
 
 export const API_BASE_URL = `${BACKEND_HOST}/api/v1`;
 
@@ -58,6 +58,8 @@ export const API_ENDPOINTS = {
     REFRESH: '/auth/refresh',
     LOGOUT: '/auth/logout',
     ME: '/auth/me',
+    SEND_PHONE_CODE: '/auth/send-phone-code',
+    VERIFY_PHONE_CODE: '/auth/verify-phone-code',
   },
 
   // Users

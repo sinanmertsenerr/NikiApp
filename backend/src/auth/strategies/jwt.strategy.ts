@@ -72,9 +72,7 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
       throw new UnauthorizedException('Hesabınız devre dışı bırakılmış');
     }
 
-    if (!user.emailVerified) {
-      throw new UnauthorizedException('Email adresinizi doğrulayın');
-    }
+
 
     return user;
   }

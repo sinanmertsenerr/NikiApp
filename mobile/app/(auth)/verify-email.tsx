@@ -192,7 +192,7 @@ export default function VerifyEmailScreen() {
       {/* Info */}
       <View style={[styles.infoBox, { backgroundColor: colors.backgroundSecondary }]}>
         <Text style={[styles.infoText, { color: colors.textSecondary }]}>
-          ⏱️ {t('auth.codeExpires')}
+          ⏱️ {t('auth.codeExpires', { minutes: 3 })}
         </Text>
       </View>
     </SafeAreaView>

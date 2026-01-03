@@ -22,6 +22,7 @@ import { EventsModule } from './events';
 import { GroupsModule } from './groups/groups.module';
 import { RafflesModule } from './raffles';
 import { HealthModule } from './health/health.module';
+import { SmsModule } from './sms/sms.module';
 import { JwtAuthGuard } from './auth/guards';
 import { AdminAuditInterceptor } from './common/interceptors/admin-audit.interceptor';
 
@@ -75,6 +76,7 @@ import { AdminAuditInterceptor } from './common/interceptors/admin-audit.interce
     GroupsModule,
     RafflesModule,
     HealthModule,
+    SmsModule,
     // OrdersModule,
   ],
   controllers: [AppController],

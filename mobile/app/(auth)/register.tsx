@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import {
   View,
   Text,
@@ -31,7 +31,6 @@ import { screenWidth as SCREEN_WIDTH } from '../../src/utils/responsive';
 import { COUNTRIES, DEFAULT_COUNTRY, Country } from '../../src/constants/countries';
 import { CountryPickerModal } from '../../src/components/ui/CountryPickerModal';
 import { KvkkModal } from '../../src/components/ui/KvkkModal';
-import { usePhoneAuth } from '../../src/hooks/usePhoneAuth';
 
 type RegisterStep = 'form' | 'phone-verify';
 
@@ -70,13 +69,18 @@ const createRegisterSchema = (t: any, countryCode: string) => z
 
 type RegisterForm = z.infer<ReturnType<typeof createRegisterSchema>>;
 
+const CODE_LENGTH = 6;
+
 export default function RegisterScreen() {
   const { t } = useTranslation();
   const colorScheme = useColorScheme();
   const { theme, selectedBrand } = useSettingsStore();
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState<RegisterStep>('form');
-  const [smsCode, setSmsCode] = useState('');
+  // Replaced single string smsCode with array for 6-digit input UI
+  const [code, setCode] = useState<string[]>(Array(CODE_LENGTH).fill(''));
+  const inputRefs = useRef<(TextInput | null)[]>([]);
+
   const [formData, setFormData] = useState<RegisterForm | null>(null);
 
   const isDark = theme === 'dark' || (theme === 'system' && colorScheme === 'dark');
@@ -87,18 +91,12 @@ export default function RegisterScreen() {
   const [showKvkkModal, setShowKvkkModal] = useState(false);
   const [selectedCountry, setSelectedCountry] = useState<Country>(DEFAULT_COUNTRY);
 
-  const {
-    isLoading: phoneAuthLoading,
-    error: phoneAuthError,
-    isCodeSent,
-    isVerified,
-    countdown,
-    sendVerificationCode,
-    verifyCode,
-    resetState: resetPhoneAuth,
-  } = usePhoneAuth();
+  // Phone verification state
+  const [phoneAuthLoading, setPhoneAuthLoading] = useState(false);
+  const [phoneAuthError, setPhoneAuthError] = useState<string | null>(null);
+  const [countdown, setCountdown] = useState(0);
 
-  // Format phone number as (555) 123 45 67 (3-3-2-2 pattern with parentheses)
+  // Format phone number as (555) 123 45 67
   const formatPhoneNumber = (text: string): string => {
     const digits = text.replace(/\D/g, '');
     let formatted = '';
@@ -110,7 +108,6 @@ export default function RegisterScreen() {
     return formatted;
   };
 
-  // Remove formatting to get raw phone number for submission
   const unformatPhoneNumber = (text: string): string => {
     return text.replace(/\D/g, '');
   };
@@ -135,73 +132,151 @@ export default function RegisterScreen() {
     },
   });
 
-  // Step 1: Form submission -> Send SMS code
-  const onFormSubmit = async (data: RegisterForm) => {
-    setFormData(data);
+  // Handle OTP Code Changes (Copied from verify-email.tsx logic)
+  const handleCodeChange = (text: string, index: number) => {
+    const newCode = [...code];
 
-    const fullPhoneNumber = `${selectedCountry.dialCode}${data.phone}`;
-    const success = await sendVerificationCode(fullPhoneNumber);
+    // Handle paste
+    if (text.length > 1) {
+      const pastedCode = text.slice(0, CODE_LENGTH).split('');
+      pastedCode.forEach((char, i) => {
+        if (i < CODE_LENGTH) {
+          newCode[i] = char;
+        }
+      });
+      setCode(newCode);
+      inputRefs.current[Math.min(pastedCode.length, CODE_LENGTH - 1)]?.focus();
+      return;
+    }
 
-    if (success) {
-      setStep('phone-verify');
+    newCode[index] = text;
+    setCode(newCode);
+
+    // Auto-focus next input
+    if (text && index < CODE_LENGTH - 1) {
+      inputRefs.current[index + 1]?.focus();
     }
   };
 
-  // Step 2: Verify SMS code -> Register with backend
+  const handleKeyPress = (e: any, index: number) => {
+    if (e.nativeEvent.key === 'Backspace' && !code[index] && index > 0) {
+      inputRefs.current[index - 1]?.focus();
+    }
+  };
+
+  // Step 1: Form submission -> Send SMS code via backend
+  const onFormSubmit = async (data: RegisterForm) => {
+    setFormData(data);
+    setPhoneAuthLoading(true);
+    setPhoneAuthError(null);
+
+    try {
+      const fullPhoneNumber = `${selectedCountry.dialCode}${data.phone}`;
+      await authService.sendPhoneCode(fullPhoneNumber);
+      setStep('phone-verify');
+      setCode(Array(CODE_LENGTH).fill('')); // Reset code on new send
+      setCountdown(60);
+      // Start countdown timer
+      const interval = setInterval(() => {
+        setCountdown((prev) => {
+          if (prev <= 1) {
+            clearInterval(interval);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    } catch (error: any) {
+      setPhoneAuthError(error.message);
+      Alert.alert(t('common.error'), error.message);
+    } finally {
+      setPhoneAuthLoading(false);
+    }
+  };
+
+  // Step 2: Verify SMS code via backend -> Register
   const onVerifyCode = async () => {
-    if (smsCode.length !== 6) {
+    const fullCode = code.join('');
+    if (fullCode.length !== CODE_LENGTH) {
       Alert.alert(t('common.error'), t('auth.enterSixDigitCode'));
       return;
     }
 
-    const verified = await verifyCode(smsCode);
+    if (!formData) return;
 
-    if (verified && formData) {
+    setPhoneAuthLoading(true);
+    setPhoneAuthError(null);
+
+    try {
+      const fullPhoneNumber = `${selectedCountry.dialCode}${formData.phone}`;
+
+      // Verify phone code
+      await authService.verifyPhoneCode(fullPhoneNumber, fullCode);
+
       // Phone verified, now register with backend
       setLoading(true);
-      try {
-        await authService.register({
-          firstName: formData.firstName,
-          lastName: formData.lastName,
-          phone: `${selectedCountry.dialCode}${formData.phone}`,
-          email: formData.email,
-          password: formData.password,
-          kvkkAccepted: formData.kvkkAccepted,
-          phoneVerified: true,
-        });
+      await authService.register({
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        phone: fullPhoneNumber,
+        email: formData.email,
+        password: formData.password,
+        kvkkAccepted: formData.kvkkAccepted,
+        phoneVerified: true,
+      });
 
-        // Success - go to login screen
-        Alert.alert(
-          t('auth.registerSuccess'),
-          t('auth.phoneVerified'),
-          [
-            {
-              text: t('auth.login'),
-              onPress: () => router.replace('/(auth)/login'),
-            },
-          ]
-        );
-      } catch (error: any) {
-        Alert.alert(t('common.error'), error.message);
-      } finally {
-        setLoading(false);
-      }
+      // Success - go to login screen
+      Alert.alert(
+        t('auth.registerSuccess'),
+        t('auth.phoneVerified'),
+        [
+          {
+            text: t('auth.login'),
+            onPress: () => router.replace('/(auth)/login'),
+          },
+        ]
+      );
+    } catch (error: any) {
+      setPhoneAuthError(error.message);
+      Alert.alert(t('common.error'), error.message);
+      // Clear code on error if needed, but usually better to let user correct it
+    } finally {
+      setPhoneAuthLoading(false);
+      setLoading(false);
     }
   };
 
-  // Resend SMS code
+  // Resend SMS code via backend
   const onResendCode = async () => {
     if (countdown > 0 || !formData) return;
 
-    const fullPhoneNumber = `${selectedCountry.dialCode}${formData.phone}`;
-    await sendVerificationCode(fullPhoneNumber);
+    setPhoneAuthLoading(true);
+    try {
+      const fullPhoneNumber = `${selectedCountry.dialCode}${formData.phone}`;
+      await authService.sendPhoneCode(fullPhoneNumber);
+      setCountdown(60);
+      const interval = setInterval(() => {
+        setCountdown((prev) => {
+          if (prev <= 1) {
+            clearInterval(interval);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    } catch (error: any) {
+      Alert.alert(t('common.error'), error.message);
+    } finally {
+      setPhoneAuthLoading(false);
+    }
   };
 
   // Go back to form step
   const goBackToForm = () => {
     setStep('form');
-    setSmsCode('');
-    resetPhoneAuth();
+    setCode(Array(CODE_LENGTH).fill(''));
+    setPhoneAuthError(null);
+    setCountdown(0);
   };
 
   // Render phone verification step
@@ -229,7 +304,7 @@ export default function RegisterScreen() {
             </View>
 
             {/* Title */}
-            <Text style={[styles.title, { color: colors.text }]}>
+            <Text style={[styles.title, { color: colors.text, textAlign: 'center' }]}>
               {t('auth.phoneVerification')}
             </Text>
             <Text style={[styles.subtitle, { color: colors.textSecondary, textAlign: 'center' }]}>
@@ -239,25 +314,28 @@ export default function RegisterScreen() {
               {selectedCountry.dialCode} {formData?.phone ? formatPhoneNumber(formData.phone) : ''}
             </Text>
 
-            {/* SMS Code Input */}
-            <View style={styles.codeInputContainer}>
-              <TextInput
-                style={[
-                  styles.codeInput,
-                  {
-                    backgroundColor: colors.backgroundSecondary,
-                    color: colors.text,
-                    borderColor: phoneAuthError ? colors.error : colors.border,
-                  },
-                ]}
-                value={smsCode}
-                onChangeText={(text) => setSmsCode(text.replace(/\D/g, '').slice(0, 6))}
-                keyboardType="number-pad"
-                maxLength={6}
-                placeholder="000000"
-                placeholderTextColor={colors.textSecondary}
-                textAlign="center"
-              />
+            {/* OTP Input (Split Boxes) */}
+            <View style={styles.codeContainer}>
+              {code.map((digit, index) => (
+                <TextInput
+                  key={index}
+                  ref={(ref) => { inputRefs.current[index] = ref; }}
+                  style={[
+                    styles.codeInput,
+                    {
+                      backgroundColor: colors.backgroundSecondary,
+                      borderColor: digit ? colors.primary : colors.border,
+                      color: colors.text,
+                    },
+                  ]}
+                  value={digit}
+                  onChangeText={(text) => handleCodeChange(text, index)}
+                  onKeyPress={(e) => handleKeyPress(e, index)}
+                  keyboardType="number-pad"
+                  maxLength={1}
+                  selectTextOnFocus
+                />
+              ))}
             </View>
 
             {/* Error Message */}
@@ -273,8 +351,8 @@ export default function RegisterScreen() {
               onPress={onVerifyCode}
               loading={phoneAuthLoading || loading}
               size="lg"
-              style={styles.submitButton}
-              disabled={smsCode.length !== 6}
+              style={styles.verifyButton}
+              disabled={code.join('').length !== CODE_LENGTH}
             />
 
             {/* Resend Code */}
@@ -597,7 +675,7 @@ const styles = StyleSheet.create({
   // Phone verification styles
   verifyIconContainer: {
     alignItems: 'center',
-    marginVertical: RSpacing.xl,
+    marginBottom: RSpacing.lg, // Changed to match verify-email spacing
   },
   verifyIconCircle: {
     width: 100,
@@ -612,19 +690,24 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: RSpacing.xl,
   },
-  codeInputContainer: {
-    alignItems: 'center',
-    marginBottom: RSpacing.lg,
+  // Updated Code Input Styles to match verify-email.tsx
+  codeContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: RSpacing.sm,
+    marginBottom: RSpacing.xl,
   },
   codeInput: {
-    width: 200,
-    height: 60,
-    fontSize: 28,
-    fontWeight: '700',
-    letterSpacing: 8,
+    width: 48,
+    height: 56,
     borderWidth: 2,
-    borderRadius: 12,
-    paddingHorizontal: RSpacing.lg,
+    borderRadius: BorderRadius.lg,
+    textAlign: 'center',
+    fontSize: RFontSizes.xxl,
+    fontWeight: '700',
+  },
+  verifyButton: {
+    marginBottom: RSpacing.lg,
   },
   errorText: {
     fontSize: RFontSizes.sm,
@@ -635,7 +718,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: RSpacing.lg,
+    marginBottom: RSpacing.xl, // Updated spacing
     flexWrap: 'wrap',
   },
   resendText: {

@@ -104,18 +104,24 @@ export class AuthService {
       this.logger.log(`First user registered as super_admin: ${user.email} (ID: ${user.id})`);
     }
 
-    // Generate and send verification code
-    await this.sendVerificationCode(user.id, user.email, user.firstName);
+    // Only send email verification if phone is not verified
+    // If phone is verified, user can login directly
+    if (!dto.phoneVerified) {
+      await this.sendVerificationCode(user.id, user.email, user.firstName);
+    }
 
-    this.logger.log(`New user registered: ${user.email} (ID: ${user.id})`);
+    this.logger.log(`New user registered: ${user.email} (ID: ${user.id}), phoneVerified: ${dto.phoneVerified}`);
 
     return {
       success: true,
       data: {
         userId: user.id,
         email: user.email,
+        phoneVerified: dto.phoneVerified || false,
         emailVerified: false,
-        message: 'Doğrulama kodu email adresinize gönderildi',
+        message: dto.phoneVerified
+          ? 'Kayıt başarılı! Giriş yapabilirsiniz.'
+          : 'Doğrulama kodu email adresinize gönderildi',
       },
     };
   }
@@ -235,6 +241,7 @@ export class AuthService {
         role: verifiedUser.role,
         emailVerified: true,
         isActive: verifiedUser.isActive,
+        phone: verifiedUser.phone,
       },
       tokens,
     };
@@ -386,6 +393,7 @@ export class AuthService {
         role: user.role,
         emailVerified: user.emailVerified,
         isActive: user.isActive,
+        phone: user.phone,
       },
       tokens,
     };
@@ -403,7 +411,7 @@ export class AuthService {
     }
 
     // Delete old refresh token
-    await this.prisma.refreshToken.delete({
+    await this.prisma.refreshToken.deleteMany({
       where: { token: refreshToken },
     });
 
@@ -742,5 +750,79 @@ export class AuthService {
     } catch (error) {
       this.logger.error(`[Cleanup] Failed to delete expired tokens: ${error.message}`);
     }
+  }
+
+  // ==================== PHONE VERIFICATION ====================
+
+  async sendPhoneCode(phone: string): Promise<{ success: boolean; message: string }> {
+    // Normalize phone number
+    const normalizedPhone = phone.startsWith('+') ? phone : `+${phone}`;
+
+    // Check if phone already registered and verified
+    const existingUser = await this.prisma.user.findFirst({
+      where: {
+        phone: normalizedPhone,
+        phoneVerified: true,
+      },
+    });
+
+    if (existingUser) {
+      throw new ConflictException('Bu telefon numarası zaten kayıtlı');
+    }
+
+    // Check cooldown
+    const cooldownKey = `phone_cooldown:${normalizedPhone}`;
+    const onCooldown = await this.redisService.get(cooldownKey);
+
+    if (onCooldown) {
+      const remainingSeconds = await this.redisService.ttl(cooldownKey);
+      throw new BadRequestException(
+        `Lütfen ${remainingSeconds} saniye bekleyin`,
+      );
+    }
+
+    // Generate 6-digit code
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
+
+    // Store code in Redis (5 min TTL)
+    const phoneCodeKey = `phone_code:${normalizedPhone}`;
+    await this.redisService.set(phoneCodeKey, code, 300);
+
+    // Set cooldown (60 seconds)
+    await this.redisService.set(cooldownKey, '1', 60);
+
+    // Log the code - in production, SmsService will be injected and send SMS
+    this.logger.log(`[DEV] Phone verification code for ${normalizedPhone}: ${code}`);
+
+    return {
+      success: true,
+      message: 'Doğrulama kodu gönderildi',
+    };
+  }
+
+  async verifyPhoneCode(phone: string, code: string): Promise<{ success: boolean; verified: boolean }> {
+    const normalizedPhone = phone.startsWith('+') ? phone : `+${phone}`;
+
+    // Get stored code from Redis
+    const phoneCodeKey = `phone_code:${normalizedPhone}`;
+    const storedCode = await this.redisService.get(phoneCodeKey);
+
+    if (!storedCode) {
+      throw new BadRequestException('Doğrulama kodu süresi doldu veya bulunamadı');
+    }
+
+    if (storedCode !== code) {
+      throw new BadRequestException('Geçersiz doğrulama kodu');
+    }
+
+    // Delete the code after successful verification
+    await this.redisService.del(phoneCodeKey);
+
+    this.logger.log(`Phone verified: ${normalizedPhone}`);
+
+    return {
+      success: true,
+      verified: true,
+    };
   }
 }

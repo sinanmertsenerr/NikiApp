@@ -47,6 +47,38 @@ export class AuthController {
     return this.authService.register(dto);
   }
 
+  // ==================== SEND PHONE CODE ====================
+
+  @Public()
+  @Throttle({ default: { limit: 3, ttl: 180000 } }) // 3 attempts per 3 minutes
+  @Post('send-phone-code')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Send phone verification code via SMS' })
+  @ApiResponse({
+    status: 200,
+    description: 'Verification code sent',
+  })
+  @ApiResponse({ status: 409, description: 'Phone already registered' })
+  async sendPhoneCode(@Body() dto: { phone: string }) {
+    return this.authService.sendPhoneCode(dto.phone);
+  }
+
+  // ==================== VERIFY PHONE CODE ====================
+
+  @Public()
+  @Throttle({ default: { limit: 5, ttl: 60000 } }) // 5 attempts per minute
+  @Post('verify-phone-code')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Verify phone with 6-digit code' })
+  @ApiResponse({
+    status: 200,
+    description: 'Phone verified',
+  })
+  @ApiResponse({ status: 400, description: 'Invalid or expired code' })
+  async verifyPhoneCode(@Body() dto: { phone: string; code: string }) {
+    return this.authService.verifyPhoneCode(dto.phone, dto.code);
+  }
+
   // ==================== VERIFY EMAIL ====================
 
   @Public()

@@ -250,7 +250,7 @@ export default function LoginScreen() {
                     placeholder={
                       loginMethod === 'email'
                         ? "ornek@email.com"
-                        : selectedCountry.code === 'TR' ? "555 123 45 67" : "123..."
+                        : selectedCountry.code === 'TR' ? "(555) 123 45 67" : "123..."
                     }
                     prefix={loginMethod === 'phone' ? `${selectedCountry.flag} ${selectedCountry.dialCode}` : undefined}
                     onPressPrefix={loginMethod === 'phone' ? () => setShowCountryPicker(true) : undefined}

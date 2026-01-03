@@ -131,6 +131,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: RFontSizes.lg,
     paddingVertical: RSpacing.md,
+    letterSpacing: 0,
   },
   inputWithIcon: {
     marginLeft: RSpacing.sm,

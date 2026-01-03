@@ -8,6 +8,7 @@ export interface AuthUser {
   role: UserRole;
   emailVerified: boolean;
   isActive: boolean;
+  phone?: string | null;
 }
 
 export interface TokenPayload {

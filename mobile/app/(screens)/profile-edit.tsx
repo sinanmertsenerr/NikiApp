@@ -23,6 +23,7 @@ import { Colors, DarkColors, Spacing, FontSizes, BorderRadius, Shadows, RSpacing
 import { screenWidth as SCREEN_WIDTH } from '../../src/utils/responsive';
 import { uploadService, getImageUrl } from '../../src/services/uploadService';
 import { userService } from '../../src/services/userService';
+import { formatPhoneNumber } from '../../src/utils/phoneFormat';
 import { Input } from '../../src/components/ui/Input';
 import { COUNTRIES, DEFAULT_COUNTRY, Country } from '../../src/constants/countries';
 import { CountryPickerModal } from '../../src/components/ui/CountryPickerModal';
@@ -75,17 +76,7 @@ export default function ProfileEditScreen() {
   const [selectedCountry, setSelectedCountry] = useState<Country>(initialPhoneData.country);
   const [showCountryPicker, setShowCountryPicker] = useState(false);
 
-  // Format phone number as (555) 123 45 67 (3-3-2-2 pattern with parentheses)
-  const formatPhoneNumber = (text: string): string => {
-    const digits = text.replace(/\D/g, '');
-    let formatted = '';
-    if (digits.length > 0) formatted += '(' + digits.substring(0, 3);
-    if (digits.length >= 3) formatted += ') ';
-    if (digits.length > 3) formatted += digits.substring(3, 6);
-    if (digits.length > 6) formatted += ' ' + digits.substring(6, 8);
-    if (digits.length > 8) formatted += ' ' + digits.substring(8, 10);
-    return formatted;
-  };
+
 
   // Remove formatting to get raw phone number
   const unformatPhoneNumber = (text: string): string => {
@@ -300,22 +291,17 @@ export default function ProfileEditScreen() {
           </View>
 
           <View style={styles.inputGroup}>
-            <Input
-              label={t('profile.phone')}
-              placeholder={selectedCountry.code === 'TR' ? "555 123 45 67" : "123..."}
-              prefix={`${selectedCountry.flag} ${selectedCountry.dialCode}`}
-              onPressPrefix={() => setShowCountryPicker(true)}
-              value={selectedCountry.code === 'TR' ? formatPhoneNumber(phone) : phone}
-              onChangeText={(text) => {
-                if (selectedCountry.code === 'TR') {
-                  setPhone(unformatPhoneNumber(text));
-                } else {
-                  setPhone(text);
-                }
-              }}
-              keyboardType="phone-pad"
-              maxLength={selectedCountry.code === 'TR' ? 13 : 15}
+            <Text style={[styles.label, { color: colors.textSecondary }]}>{t('profile.phone')}</Text>
+            <TextInput
+              style={[styles.input, { backgroundColor: colors.backgroundTertiary, color: colors.textTertiary }]}
+              value={user?.phone ? formatPhoneNumber(user.phone) : ''}
+              editable={false}
+              placeholder={t('profile.phone')}
+              placeholderTextColor={colors.textTertiary}
             />
+            <Text style={[styles.hint, { color: colors.textTertiary }]}>
+              {t('profile.phoneCannotChange', 'Telefon numarası değiştirilemez')}
+            </Text>
           </View>
         </View>
 
@@ -338,7 +324,7 @@ export default function ProfileEditScreen() {
         onSelect={setSelectedCountry}
         selectedCountryCode={selectedCountry.code}
       />
-    </SafeAreaView>
+    </SafeAreaView >
   );
 }
 

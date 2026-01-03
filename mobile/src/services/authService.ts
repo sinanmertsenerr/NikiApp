@@ -115,6 +115,24 @@ class AuthService {
       throw new Error(getErrorMessage(error));
     }
   }
+
+  async sendPhoneCode(phone: string): Promise<{ success: boolean; message: string }> {
+    try {
+      const response = await api.post(API_ENDPOINTS.AUTH.SEND_PHONE_CODE, { phone });
+      return response.data;
+    } catch (error) {
+      throw new Error(getErrorMessage(error));
+    }
+  }
+
+  async verifyPhoneCode(phone: string, code: string): Promise<{ success: boolean; verified: boolean }> {
+    try {
+      const response = await api.post(API_ENDPOINTS.AUTH.VERIFY_PHONE_CODE, { phone, code });
+      return response.data;
+    } catch (error) {
+      throw new Error(getErrorMessage(error));
+    }
+  }
 }
 
 export const authService = new AuthService();

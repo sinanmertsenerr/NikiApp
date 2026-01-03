@@ -1,6 +1,7 @@
 {
   "common": {
     "loading": "Yükleniyor...",
+    "info": "Bilgi",
     "error": "Hata",
     "success": "Başarılı",
     "cancel": "İptal",
