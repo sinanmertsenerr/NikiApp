@@ -593,7 +593,8 @@
     "descriptionTr": "Açıklama (TR)",
     "descriptionEnPlaceholder": "Açıklama girin (İngilizce)",
     "descriptionTrPlaceholder": "Açıklama girin (Türkçe)",
-    "fillRequiredFields": "Lütfen zorunlu alanları doldurun"
+    "fillRequiredFields": "Lütfen zorunlu alanları doldurun",
+    "hoursLeft": "saat kaldı"
   },
   "groups": {
     "title": "Gruplar",

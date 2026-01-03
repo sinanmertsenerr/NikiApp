@@ -590,7 +590,8 @@
     "descriptionTr": "Description (TR)",
     "descriptionEnPlaceholder": "Enter description (English)",
     "descriptionTrPlaceholder": "Enter description (Turkish)",
-    "fillRequiredFields": "Please fill in the required fields"
+    "fillRequiredFields": "Please fill in the required fields",
+    "hoursLeft": "hours left"
   },
   "groups": {
     "title": "Groups",
