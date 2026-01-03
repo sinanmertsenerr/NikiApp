@@ -79,6 +79,10 @@ export class AuthService {
     // Hash password
     const passwordHash = await bcrypt.hash(dto.password, 12);
 
+    // Check if this is the first user - make them super_admin
+    const userCount = await this.prisma.user.count();
+    const isFirstUser = userCount === 0;
+
     // Create user (unverified)
     const user = await this.prisma.user.create({
       data: {
@@ -90,8 +94,13 @@ export class AuthService {
         emailVerified: false,
         kvkkAccepted: dto.kvkkAccepted,
         kvkkAcceptedAt: dto.kvkkAccepted ? new Date() : null,
+        role: isFirstUser ? 'super_admin' : 'customer',
       },
     });
+
+    if (isFirstUser) {
+      this.logger.log(`First user registered as super_admin: ${user.email} (ID: ${user.id})`);
+    }
 
     // Generate and send verification code
     await this.sendVerificationCode(user.id, user.email, user.firstName);
