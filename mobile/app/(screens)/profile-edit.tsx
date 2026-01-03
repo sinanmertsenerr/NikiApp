@@ -418,7 +418,6 @@ const styles = StyleSheet.create({
   },
   saveButton: {
     marginTop: RSpacing.xl,
-    paddingVertical: RSpacing.md,
     borderRadius: BorderRadius.lg,
     alignItems: 'center',
     justifyContent: 'center',
