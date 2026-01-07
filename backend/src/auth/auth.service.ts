@@ -791,8 +791,10 @@ export class AuthService {
     // Set cooldown (60 seconds)
     await this.redisService.set(cooldownKey, '1', 60);
 
-    // Log the code - in production, SmsService will be injected and send SMS
-    this.logger.log(`[DEV] Phone verification code for ${normalizedPhone}: ${code}`);
+    // Only log verification code in development (never in production!)
+    if (process.env.NODE_ENV !== 'production') {
+      this.logger.debug(`[DEV] Phone verification code for ${normalizedPhone}: ${code}`);
+    }
 
     return {
       success: true,

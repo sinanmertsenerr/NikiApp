@@ -4,14 +4,7 @@ import Constants from 'expo-constants';
 // ============================================================
 // AUTOMATIC IP DETECTION FOR DEVELOPMENT
 // ============================================================
-// This automatically detects your computer's IP address
-// from the Expo dev server, so you don't need to hardcode it!
-// 
-// OLD APPROACH (commented out - fallback if needed):
-// const BACKEND_HOST = __DEV__
-//   ? 'http://172.20.10.8:3000'
-//   : 'https://api.nikicoffee.com';
-// ============================================================
+
 
 const getDevServerHost = (): string => {
   // Try to get the debuggerHost from Expo Constants (works with expo start)

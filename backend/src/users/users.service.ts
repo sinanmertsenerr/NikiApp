@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma';
 import { EventsGateway } from '../events';
 import { CampaignStatus, UserRole, WalletType } from '@prisma/client';
@@ -11,6 +11,8 @@ import {
 
 @Injectable()
 export class UsersService {
+  private readonly logger = new Logger(UsersService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly eventsGateway: EventsGateway,
@@ -45,7 +47,7 @@ export class UsersService {
   }
 
   async updateProfile(userId: string, dto: UpdateProfileDto) {
-    console.log('UpdateProfile Request:', { userId, dto });
+    this.logger.debug(`UpdateProfile Request: userId=${userId}`);
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
     });
