@@ -84,7 +84,8 @@ async function bootstrap() {
   // CORS - Whitelisted origins
   const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:19006';
   const productionUrl = process.env.PRODUCTION_APP_URL;
-  const allowedOrigins = [frontendUrl];
+  const dashboardUrl = process.env.DASHBOARD_URL || 'http://localhost:5173';
+  const allowedOrigins = [frontendUrl, dashboardUrl];
   if (productionUrl) {
     allowedOrigins.push(productionUrl);
   }
