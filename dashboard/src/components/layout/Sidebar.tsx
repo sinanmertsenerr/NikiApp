@@ -16,6 +16,7 @@ import {
 } from 'react-icons/lu';
 import { useAuthStore } from '../../store';
 import { authApi } from '../../api';
+import { useColorMode } from '../ui/ColorModeProvider';
 
 interface NavItem {
     label: string;
@@ -35,7 +36,10 @@ const navItems: NavItem[] = [
 export function Sidebar() {
     const location = useLocation();
     const logout = useAuthStore((state) => state.logout);
+    const { colorMode } = useColorMode();
     const [isOpen, setIsOpen] = useState(false);
+
+    const isDark = colorMode === 'dark';
 
     const handleLogout = async () => {
         await authApi.logout();
@@ -57,14 +61,14 @@ export function Sidebar() {
                 w={10}
                 h={10}
                 borderRadius="lg"
-                bg="white"
+                bg={isDark ? '#2D2D2D' : 'white'}
                 shadow="md"
                 align="center"
                 justify="center"
                 cursor="pointer"
                 onClick={toggleSidebar}
             >
-                <Icon as={isOpen ? LuX : LuMenu} boxSize={5} color="#1A1A1A" />
+                <Icon as={isOpen ? LuX : LuMenu} boxSize={5} color={isDark ? '#FFFFFF' : '#1A1A1A'} />
             </Flex>
 
             {/* Mobile Overlay */}
@@ -87,7 +91,7 @@ export function Sidebar() {
                 as="aside"
                 w={{ base: '280px', lg: '260px' }}
                 minH="100vh"
-                bg="#F5F5F5"
+                bg={isDark ? '#1E1E1E' : '#F5F5F5'}
                 position="fixed"
                 left={{ base: isOpen ? 0 : '-280px', lg: 0 }}
                 top={0}
@@ -95,20 +99,24 @@ export function Sidebar() {
                 display="flex"
                 flexDirection="column"
                 zIndex={1000}
-                transition="left 0.3s ease"
+                transition="left 0.3s ease, background 0.2s"
             >
                 {/* Logo */}
                 <Flex align="center" px={6} mb={8}>
                     <img
                         src="/images/brands/niki-logo.png"
                         alt="NikiTheCat"
-                        style={{ height: '36px', marginRight: '10px' }}
+                        style={{
+                            height: '36px',
+                            marginRight: '10px',
+                            filter: isDark ? 'invert(1)' : 'none'
+                        }}
                     />
                     <Box>
-                        <Text fontWeight="bold" fontSize="md" color="#1A1A1A">
+                        <Text fontWeight="bold" fontSize="md" color={isDark ? '#FFFFFF' : '#1A1A1A'}>
                             NikiTheCat
                         </Text>
-                        <Text fontSize="xs" color="#666666">
+                        <Text fontSize="xs" color={isDark ? '#B0B0B0' : '#666666'}>
                             Analytics Portal
                         </Text>
                     </Box>
@@ -127,10 +135,10 @@ export function Sidebar() {
                                         py={3}
                                         borderRadius="lg"
                                         fontWeight={isActive ? '600' : '400'}
-                                        color={isActive ? '#1A1A1A' : '#666666'}
-                                        bg={isActive ? '#FFFFFF' : 'transparent'}
+                                        color={isActive ? (isDark ? '#FFFFFF' : '#1A1A1A') : (isDark ? '#B0B0B0' : '#666666')}
+                                        bg={isActive ? (isDark ? '#2D2D2D' : '#FFFFFF') : 'transparent'}
                                         shadow={isActive ? 'sm' : 'none'}
-                                        _hover={{ bg: '#FFFFFF', color: '#1A1A1A' }}
+                                        _hover={{ bg: isDark ? '#2D2D2D' : '#FFFFFF', color: isDark ? '#FFFFFF' : '#1A1A1A' }}
                                         transition="all 0.2s"
                                     >
                                         <Icon as={item.icon} boxSize={5} mr={3} />
@@ -151,7 +159,7 @@ export function Sidebar() {
                         borderRadius="lg"
                         color="#F44336"
                         cursor="pointer"
-                        _hover={{ bg: '#FFEBEE' }}
+                        _hover={{ bg: isDark ? 'rgba(244, 67, 54, 0.1)' : '#FFEBEE' }}
                         transition="all 0.2s"
                         onClick={handleLogout}
                     >
@@ -165,3 +173,4 @@ export function Sidebar() {
 }
 
 export default Sidebar;
+

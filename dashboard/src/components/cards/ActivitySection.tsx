@@ -3,6 +3,7 @@
 import { useState, useMemo } from 'react';
 import { Box, Text, Flex, Grid, GridItem, Icon } from '@chakra-ui/react';
 import { LuCoffee, LuSandwich } from 'react-icons/lu';
+import { useColorMode } from '../ui/ColorModeProvider';
 
 // Define type locally to avoid import issues
 type WalletType = 'IEU' | 'NIKI';
@@ -65,6 +66,8 @@ interface WeeklyActivityChartProps {
 export function WeeklyActivityChart({ title, icon, accentColor, bgColor, walletType, isActive }: WeeklyActivityChartProps) {
     const [selectedDay, setSelectedDay] = useState<number | null>(null);
     const [hoveredDay, setHoveredDay] = useState<number | null>(null);
+    const { colorMode } = useColorMode();
+    const isDark = colorMode === 'dark';
 
     // Use mock data
     const weekData = useMemo(() => generateMockData(walletType), [walletType]);
@@ -89,13 +92,14 @@ export function WeeklyActivityChart({ title, icon, accentColor, bgColor, walletT
     return (
         <>
             <Box
-                bg="white"
+                bg={isDark ? '#1E1E1E' : 'white'}
                 borderRadius="xl"
                 border="1px solid"
-                borderColor="#E8E8E8"
-                p={4} // Reduced padding from 5 to 4
+                borderColor={isDark ? '#333333' : '#E8E8E8'}
+                p={4}
                 h="100%"
                 opacity={isActive ? 1 : 0.6}
+                transition="all 0.2s"
             >
                 {/* Header */}
                 <Flex align="center" justify="space-between" mb={3}> {/* Reduced margin from 5 to 3 */}
@@ -104,8 +108,8 @@ export function WeeklyActivityChart({ title, icon, accentColor, bgColor, walletT
                             <Icon as={icon} boxSize={5} color={accentColor} />
                         </Flex>
                         <Box>
-                            <Text fontWeight="600" color="#1A1A1A" fontSize="md">{title}</Text>
-                            <Text fontSize="xs" color="#888">Haftalık Aktivite</Text>
+                            <Text fontWeight="600" color={isDark ? '#FFFFFF' : '#1A1A1A'} fontSize="md">{title}</Text>
+                            <Text fontSize="xs" color={isDark ? '#808080' : '#888'}>Haftalık Aktivite</Text>
                         </Box>
                     </Flex>
                     {!isActive && (
@@ -117,11 +121,11 @@ export function WeeklyActivityChart({ title, icon, accentColor, bgColor, walletT
 
                 {/* Chart Container */}
                 <Box
-                    bg="#FAFAFA"
+                    bg={isDark ? '#2D2D2D' : '#FAFAFA'}
                     borderRadius="lg"
-                    p={3} // Reduced padding from 4 to 3
+                    p={3}
                     border="1px solid"
-                    borderColor="#F0F0F0"
+                    borderColor={isDark ? '#333333' : '#F0F0F0'}
                 >
                     {/* Bars */}
                     <Flex gap={2} align="flex-end" h="70px" mb={2}> {/* Reduced height from 90px to 70px, margin from 3 to 2 */}
@@ -201,7 +205,7 @@ export function WeeklyActivityChart({ title, icon, accentColor, bgColor, walletT
                             <Flex key={index} flex={1} justify="center">
                                 <Text
                                     fontSize="xs"
-                                    color={hoveredDay === index ? '#333' : '#888'}
+                                    color={hoveredDay === index ? (isDark ? '#FFFFFF' : '#333') : (isDark ? '#B0B0B0' : '#888')}
                                     fontWeight={hoveredDay === index ? '600' : '500'}
                                     transition="all 0.15s"
                                 >
@@ -213,15 +217,15 @@ export function WeeklyActivityChart({ title, icon, accentColor, bgColor, walletT
                 </Box>
 
                 {/* Footer */}
-                <Flex justify="space-between" align="center" mt={3}> {/* Reduced margin from 4 to 3 */}
+                <Flex justify="space-between" align="center" mt={3}>
                     <Flex align="center" gap={2}>
-                        <Text fontSize="sm" color="#888">Toplam</Text>
+                        <Text fontSize="sm" color={isDark ? '#B0B0B0' : '#888'}>Toplam</Text>
                     </Flex>
                     <Box textAlign="right">
-                        <Text fontWeight="700" fontSize="lg" color={isActive ? '#1A1A1A' : '#AAA'}>
+                        <Text fontWeight="700" fontSize="lg" color={isActive ? (isDark ? '#FFFFFF' : '#1A1A1A') : '#AAA'}>
                             {formatCurrency(weekData.reduce((sum, d) => sum + d.totalAmount, 0))}
                         </Text>
-                        <Text fontSize="xs" color="#888">
+                        <Text fontSize="xs" color={isDark ? '#808080' : '#888'}>
                             {weekData.reduce((sum, d) => sum + d.transactions, 0)} işlem
                         </Text>
                     </Box>

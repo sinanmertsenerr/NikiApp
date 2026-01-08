@@ -1,16 +1,6 @@
 // Users API
 import apiClient from './client';
-import type { User, PaginatedResponse } from '../types';
-
-export interface UsersQuery {
-    page?: number;
-    limit?: number;
-    search?: string;
-    role?: string;
-    isActive?: boolean;
-    sortBy?: string;
-    sortOrder?: 'asc' | 'desc';
-}
+import type { User, PaginatedResponse, UsersQuery } from '../types';
 
 export const usersApi = {
     // Get users list (admin)

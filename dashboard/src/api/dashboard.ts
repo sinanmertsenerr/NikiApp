@@ -1,18 +1,6 @@
 // Dashboard API - Overview & Campaigns
 import apiClient from './client';
-import type { DashboardOverview, Campaign, PaginatedResponse } from '../types';
-
-export interface DashboardQuery {
-    startDate?: string;
-    endDate?: string;
-}
-
-export interface CampaignsQuery {
-    page?: number;
-    limit?: number;
-    type?: 'auto' | 'manual';
-    isActive?: boolean;
-}
+import type { DashboardOverview, Campaign, PaginatedResponse, DashboardQuery, CampaignsQuery } from '../types';
 
 // Backend response wrapper
 interface ApiResponse<T> {

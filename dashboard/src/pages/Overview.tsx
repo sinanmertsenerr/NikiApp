@@ -9,9 +9,12 @@ import { ActivitySection } from '../components/cards/ActivitySection';
 import { dashboardApi, walletApi } from '../api';
 import { formatCurrency, formatNumber } from '../utils';
 import { useAuthStore } from '../store';
+import { useColorMode } from '../components/ui/ColorModeProvider';
 
 export function OverviewPage() {
     const user = useAuthStore((state) => state.user);
+    const { colorMode } = useColorMode();
+    const isDark = colorMode === 'dark';
 
     // Fetch dashboard overview
     const { data: overview, isLoading: overviewLoading } = useQuery({
@@ -31,54 +34,60 @@ export function OverviewPage() {
 
     if (isLoading) {
         return (
-            <Box h="100vh" overflow="hidden">
+            <Box h="100vh" overflow="hidden" bg={isDark ? '#121212' : '#FFFFFF'}>
                 <Header />
                 <Center h="calc(100vh - 60px)" flexDir="column" gap={4}>
-                    <Spinner size="xl" color="black" />
-                    <Text color="gray.500">Veriler yükleniyor...</Text>
+                    <Spinner size="xl" color={isDark ? 'white' : 'black'} />
+                    <Text color={isDark ? '#B0B0B0' : 'gray.500'}>Veriler yükleniyor...</Text>
                 </Center>
             </Box>
         );
     }
 
     return (
-        <Box h="100vh" overflow="hidden" display="flex" flexDirection="column">
+        <Box h="100vh" overflow="hidden" display="flex" flexDirection="column" bg={isDark ? '#121212' : '#FFFFFF'} transition="background 0.2s">
             <Header />
 
-            <Box p={4} flex={1} overflow="hidden"> {/* Reduced padding from 5 to 4 */}
+            <Box p={4} flex={1} overflow="hidden">
                 {/* Welcome Banner */}
                 <Flex
-                    bg="#EEEEEE"
+                    bg={isDark ? '#1E1E1E' : '#EEEEEE'}
                     borderRadius="xl"
-                    p={3} /* Reduced padding from 5 to 3 */
-                    mb={3} /* Reduced margin from 4 to 3 */
+                    p={3}
+                    mb={3}
                     align="center"
                     justify="space-between"
                     overflow="hidden"
                     position="relative"
                     border="1px solid"
-                    borderColor="#E0E0E0"
+                    borderColor={isDark ? '#333333' : '#E0E0E0'}
+                    transition="all 0.2s"
                 >
                     <Box zIndex={1}>
-                        <Text fontSize="lg" fontWeight="bold" color="#1A1A1A"> {/* Reduced font from xl to lg */}
+                        <Text fontSize="lg" fontWeight="bold" color={isDark ? '#FFFFFF' : '#1A1A1A'}>
                             Hoş Geldin, {user?.firstName}! 👋
                         </Text>
-                        <Text color="#666666" fontSize="xs"> {/* Reduced font from sm to xs */}
+                        <Text color={isDark ? '#B0B0B0' : '#666666'} fontSize="xs">
                             İşletme performansını tek bakışta görüntüle
                         </Text>
                     </Box>
                     <img
                         src="/images/brands/niki-logo.png"
                         alt="NikiTheCat"
-                        style={{ height: '40px', opacity: 0.8, objectFit: 'contain' }} /* Reduced height from 50px */
+                        style={{
+                            height: '40px',
+                            opacity: 0.8,
+                            objectFit: 'contain',
+                            filter: isDark ? 'invert(1)' : 'none'
+                        }}
                     />
                 </Flex>
 
                 {/* Top Stats Row */}
                 <Grid
                     templateColumns={{ base: '1fr', md: 'repeat(3, 1fr)' }}
-                    gap={3} /* Reduced gap to 3 */
-                    mb={3} /* Reduced margin from 4 to 3 */
+                    gap={3}
+                    mb={3}
                 >
                     <GridItem>
                         <StatCard
@@ -113,12 +122,12 @@ export function OverviewPage() {
                 <ActivitySection />
 
                 {/* Performans Özeti */}
-                <Text fontWeight="bold" fontSize="sm" mb={2} color="#1A1A1A"> {/* Reduced font to sm, margin to 2 */}
+                <Text fontWeight="bold" fontSize="sm" mb={2} color={isDark ? '#FFFFFF' : '#1A1A1A'}>
                     📊 Performans Özeti
                 </Text>
                 <Grid
                     templateColumns={{ base: 'repeat(2, 1fr)', lg: 'repeat(4, 1fr)' }}
-                    gap={3} /* Reduced gap to 3 */
+                    gap={3}
                 >
                     <GridItem>
                         <StatCard
@@ -163,3 +172,4 @@ export function OverviewPage() {
 }
 
 export default OverviewPage;
+

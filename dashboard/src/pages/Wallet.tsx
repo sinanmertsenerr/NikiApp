@@ -8,7 +8,6 @@ import {
     Grid,
     GridItem,
     Badge,
-    Table,
     Icon,
     Button,
 } from '@chakra-ui/react';
@@ -22,6 +21,9 @@ import {
 } from 'react-icons/lu';
 import { Header } from '../components/layout';
 import { StatCard } from '../components/cards/StatCard';
+import { useColorMode } from '../components/ui/ColorModeProvider';
+import { PageHeader } from '../components/shared/PageHeader';
+import { DataTable } from '../components/shared/DataTable';
 
 // Mock Data
 const mockIEUStats = {
@@ -75,14 +77,15 @@ const mockTransactions = [
 type CardType = 'IEU' | 'NIKI';
 
 export function WalletPage() {
+    const { colorMode } = useColorMode();
+    const isDark = colorMode === 'dark';
     const [activeTab, setActiveTab] = useState<CardType>('IEU');
 
     const stats = activeTab === 'IEU' ? mockIEUStats : mockNIKIStats;
     const filteredTransactions = mockTransactions.filter(t => t.cardType === activeTab);
 
     // IEU: Orange, NIKI: Black
-    const accentColor = activeTab === 'IEU' ? '#FF9800' : '#000000';
-    const accentBg = activeTab === 'IEU' ? '#FFF3E0' : '#F5F5F5';
+    const accentColor = activeTab === 'IEU' ? '#FF9800' : (isDark ? '#FFFFFF' : '#000000');
 
     const formatCurrency = (value: number) => {
         return new Intl.NumberFormat('tr-TR', {
@@ -104,30 +107,25 @@ export function WalletPage() {
     };
 
     return (
-        <Box h="100vh" overflow="hidden" display="flex" flexDirection="column">
+        <Box h="100vh" overflow="hidden" display="flex" flexDirection="column" bg={isDark ? '#121212' : '#FFFFFF'} transition="background 0.2s">
             <Header />
 
             <Box p={4} flex={1} overflow="hidden" display="flex" flexDirection="column">
-                {/* Page Title */}
-                <Box mb={3}>
-                    <Text fontSize="lg" fontWeight="bold" color="#1A1A1A">
-                        Cüzdan
-                    </Text>
-                    <Text fontSize="xs" color="#666666">
-                        IEU & NIKI Kart işlemleri
-                    </Text>
-                </Box>
+                <PageHeader
+                    title="Cüzdan"
+                    subtitle="IEU & NIKI Kart işlemleri"
+                />
 
                 {/* Card Type Tabs */}
                 <Flex gap={3} mb={3}>
                     <Button
                         size="md"
                         variant={activeTab === 'IEU' ? 'solid' : 'outline'}
-                        bg={activeTab === 'IEU' ? '#FF9800' : 'white'}
+                        bg={activeTab === 'IEU' ? '#FF9800' : (isDark ? '#1E1E1E' : 'white')}
                         color={activeTab === 'IEU' ? 'white' : '#FF9800'}
                         borderColor="#FF9800"
                         borderWidth="2px"
-                        _hover={{ bg: activeTab === 'IEU' ? '#fb8c00' : '#FFF3E0' }}
+                        _hover={{ bg: activeTab === 'IEU' ? '#fb8c00' : (isDark ? '#333' : '#FFF3E0') }}
                         onClick={() => setActiveTab('IEU')}
                         px={5}
                     >
@@ -140,17 +138,17 @@ export function WalletPage() {
                     <Button
                         size="md"
                         variant={activeTab === 'NIKI' ? 'solid' : 'outline'}
-                        bg={activeTab === 'NIKI' ? '#000000' : 'white'}
-                        color={activeTab === 'NIKI' ? 'white' : '#000000'}
-                        borderColor="#000000"
+                        bg={activeTab === 'NIKI' ? (isDark ? '#FFFFFF' : '#000000') : (isDark ? '#1E1E1E' : 'white')}
+                        color={activeTab === 'NIKI' ? (isDark ? '#000000' : 'white') : (isDark ? '#FFFFFF' : '#000000')}
+                        borderColor={isDark ? '#FFFFFF' : '#000000'}
                         borderWidth="2px"
-                        _hover={{ bg: activeTab === 'NIKI' ? '#333' : '#F5F5F5' }}
+                        _hover={{ bg: activeTab === 'NIKI' ? (isDark ? '#E0E0E0' : '#333') : (isDark ? '#333' : '#F5F5F5') }}
                         onClick={() => setActiveTab('NIKI')}
                         px={5}
                     >
                         <Icon as={LuCreditCard} mr={2} />
                         NIKI Card
-                        <Badge ml={2} bg={activeTab === 'NIKI' ? 'white' : '#000000'} color={activeTab === 'NIKI' ? '#000000' : 'white'}>
+                        <Badge ml={2} bg={activeTab === 'NIKI' ? (isDark ? '#000000' : 'white') : (isDark ? '#FFFFFF' : '#000000')} color={activeTab === 'NIKI' ? (isDark ? '#FFFFFF' : '#000000') : (isDark ? '#000000' : 'white')}>
                             %10
                         </Badge>
                     </Button>
@@ -201,107 +199,98 @@ export function WalletPage() {
                 </Grid>
 
                 {/* Section Title - Outside the table */}
+                {/* Section Title - Outside the table */}
                 <Flex justify="space-between" align="center" mb={2}>
-                    <Text fontWeight="semibold" color="#1A1A1A" fontSize="sm">
+                    <Text fontWeight="semibold" color={isDark ? '#FFFFFF' : '#1A1A1A'} fontSize="sm">
                         Son İşlemler
                     </Text>
-                    <Flex align="center" gap={2} bg="#F5F5F5" px={3} py={1} borderRadius="full">
-                        <Icon as={LuCalendar} color="#666666" boxSize={3} />
-                        <Text fontSize="xs" color="#666666" fontWeight="500">
+                    <Flex align="center" gap={2} bg={isDark ? '#2D2D2D' : '#F5F5F5'} px={3} py={1} borderRadius="full">
+                        <Icon as={LuCalendar} color={isDark ? '#B0B0B0' : '#666666'} boxSize={3} />
+                        <Text fontSize="xs" color={isDark ? '#B0B0B0' : '#666666'} fontWeight="500">
                             Bugün
                         </Text>
                     </Flex>
                 </Flex>
 
-                {/* Transactions Table */}
-                <Box
-                    bg="white"
-                    borderRadius="xl"
-                    border="1px solid"
-                    borderColor="#E0E0E0"
-                    flex={1}
-                    overflow="hidden"
-                    display="flex"
-                    flexDirection="column"
-                >
-                    <Box flex={1} overflow="auto">
-                        <Table.Root size="sm">
-                            <Table.Header>
-                                <Table.Row position="sticky" top={0} zIndex={1} bg="#FAFAFA">
-                                    <Table.ColumnHeader fontWeight="600" color="#555" fontSize="xs" bg="#FAFAFA" py={3} borderBottom="1px solid" borderColor="#E0E0E0" pl={4}>Kullanıcı</Table.ColumnHeader>
-                                    <Table.ColumnHeader fontWeight="600" color="#555" fontSize="xs" bg="#FAFAFA" py={3} px={4} borderBottom="1px solid" borderColor="#E0E0E0" textAlign="center">İşlem Tipi</Table.ColumnHeader>
-                                    <Table.ColumnHeader fontWeight="600" color="#555" fontSize="xs" bg="#FAFAFA" py={3} px={4} borderBottom="1px solid" borderColor="#E0E0E0" textAlign="center">Tutar</Table.ColumnHeader>
-                                    <Table.ColumnHeader fontWeight="600" color="#555" fontSize="xs" bg="#FAFAFA" py={3} px={4} borderBottom="1px solid" borderColor="#E0E0E0" textAlign="center">Tarih</Table.ColumnHeader>
-                                    <Table.ColumnHeader fontWeight="600" color="#555" fontSize="xs" bg="#FAFAFA" py={3} px={4} borderBottom="1px solid" borderColor="#E0E0E0" textAlign="center">İşlemi Yapan</Table.ColumnHeader>
-                                </Table.Row>
-                            </Table.Header>
-                            <Table.Body>
-                                {filteredTransactions.map((tx) => (
-                                    <Table.Row
-                                        key={tx.id}
-                                        _hover={{ bg: '#FAFAFA' }}
-                                        transition="all 0.1s"
+                <DataTable
+                    data={filteredTransactions}
+                    keyExtractor={(tx) => tx.id}
+                    columns={[
+                        {
+                            header: 'Kullanıcı',
+                            cell: (tx) => (
+                                <Flex align="center" gap={3}>
+                                    <Flex
+                                        w={8} h={8} borderRadius="full"
+                                        bg={isDark ? '#333333' : '#F5F5F5'}
+                                        align="center"
+                                        justify="center"
+                                        flexShrink={0}
                                     >
-                                        <Table.Cell px={4}>
-                                            <Flex align="center" gap={3}>
-                                                <Flex
-                                                    w={8}
-                                                    h={8}
-                                                    borderRadius="full"
-                                                    bg={accentBg}
-                                                    align="center"
-                                                    justify="center"
-                                                    flexShrink={0}
-                                                >
-                                                    <Text fontWeight="600" color={accentColor} fontSize="xs">
-                                                        {tx.user.split(' ').map(n => n[0]).join('')}
-                                                    </Text>
-                                                </Flex>
-                                                <Text fontWeight="500" color="#1A1A1A" fontSize="sm">
-                                                    {tx.user}
-                                                </Text>
-                                            </Flex>
-                                        </Table.Cell>
-                                        <Table.Cell textAlign="center" px={4}>
-                                            <Badge
-                                                colorPalette={tx.type === 'topup' ? 'green' : 'orange'}
-                                                variant="subtle"
-                                                fontSize="xs"
-                                            >
-                                                <Flex align="center" gap={1}>
-                                                    <Icon
-                                                        as={tx.type === 'topup' ? LuCircleArrowUp : LuCircleArrowDown}
-                                                        boxSize={3}
-                                                    />
-                                                    {tx.type === 'topup' ? 'Yükleme' : 'Ödeme'}
-                                                </Flex>
-                                            </Badge>
-                                        </Table.Cell>
-                                        <Table.Cell textAlign="center" px={4}>
-                                            <Text
-                                                fontWeight="600"
-                                                color={tx.type === 'topup' ? '#4CAF50' : '#1A1A1A'}
-                                                fontSize="sm"
-                                            >
-                                                {tx.type === 'topup' ? '+' : '-'}{formatCurrency(tx.amount)}
-                                            </Text>
-                                        </Table.Cell>
-                                        <Table.Cell textAlign="center" px={4}>
-                                            <Text fontSize="xs" color="#666666">
-                                                {formatDate(tx.date)}
-                                            </Text>
-                                        </Table.Cell>
-                                        <Table.Cell textAlign="center" px={4}>
-                                            <Text fontSize="xs" color="#555" fontWeight="500">
-                                                {tx.admin}
-                                            </Text>
-                                        </Table.Cell>
-                                    </Table.Row>
-                                ))}
-                            </Table.Body>
-                        </Table.Root>
-                    </Box>
-                </Box>
+                                        <Text fontWeight="600" color={accentColor} fontSize="xs">
+                                            {tx.user.split(' ').map(n => n[0]).join('')}
+                                        </Text>
+                                    </Flex>
+                                    <Text fontWeight="500" color={isDark ? '#FFFFFF' : '#1A1A1A'} fontSize="sm">
+                                        {tx.user}
+                                    </Text>
+                                </Flex>
+                            )
+                        },
+                        {
+                            header: 'İşlem Tipi',
+                            textAlign: 'center',
+                            cell: (tx) => (
+                                <Flex justify="center">
+                                    <Badge
+                                        colorPalette={tx.type === 'topup' ? 'green' : 'orange'}
+                                        variant="subtle"
+                                        fontSize="xs"
+                                    >
+                                        <Flex align="center" gap={1}>
+                                            <Icon
+                                                as={tx.type === 'topup' ? LuCircleArrowUp : LuCircleArrowDown}
+                                                boxSize={3}
+                                            />
+                                            {tx.type === 'topup' ? 'Yükleme' : 'Ödeme'}
+                                        </Flex>
+                                    </Badge>
+                                </Flex>
+                            )
+                        },
+                        {
+                            header: 'Tutar',
+                            textAlign: 'center',
+                            cell: (tx) => (
+                                <Text
+                                    fontWeight="600"
+                                    color={tx.type === 'topup' ? '#4CAF50' : '#1A1A1A'}
+                                    fontSize="sm"
+                                >
+                                    {tx.type === 'topup' ? '+' : '-'}{formatCurrency(tx.amount)}
+                                </Text>
+                            )
+                        },
+                        {
+                            header: 'Tarih',
+                            textAlign: 'center',
+                            cell: (tx) => (
+                                <Text fontSize="xs" color={isDark ? '#808080' : '#666666'}>
+                                    {formatDate(tx.date)}
+                                </Text>
+                            )
+                        },
+                        {
+                            header: 'İşlemi Yapan',
+                            textAlign: 'center',
+                            cell: (tx) => (
+                                <Text fontSize="xs" color="#555" fontWeight="500">
+                                    {tx.admin}
+                                </Text>
+                            )
+                        }
+                    ]}
+                />
             </Box>
         </Box>
     );

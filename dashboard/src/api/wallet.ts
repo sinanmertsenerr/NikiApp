@@ -1,21 +1,6 @@
 // Wallet API - Dashboard Stats & Transactions
 import apiClient from './client';
-import type { WalletStats, Transaction, PaginatedResponse, WalletType } from '../types';
-
-export interface TransactionsQuery {
-    page?: number;
-    limit?: number;
-    startDate?: string;
-    endDate?: string;
-    type?: string;
-    walletType?: WalletType;
-    search?: string;
-}
-
-export interface WalletStatsQuery {
-    startDate?: string;
-    endDate?: string;
-}
+import type { WalletStats, Transaction, PaginatedResponse, WalletType, TransactionsQuery, WalletStatsQuery } from '../types';
 
 export const walletApi = {
     // Get dashboard stats (totals, breakdowns)

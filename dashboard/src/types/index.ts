@@ -1,4 +1,5 @@
 // API Types - NikiTheCat Dashboard
+import React from 'react';
 
 // ==================== ENUMS ====================
 
@@ -183,6 +184,16 @@ export interface Raffle {
     };
 }
 
+// ==================== TABLES ====================
+
+export interface ColumnDef<T> {
+    header: React.ReactNode;
+    accessorKey?: keyof T;
+    cell?: (item: T) => React.ReactNode;
+    width?: string;
+    textAlign?: 'left' | 'center' | 'right';
+}
+
 // ==================== API RESPONSES ====================
 
 export interface PaginatedResponse<T> {
@@ -217,4 +228,64 @@ export interface AuthState {
     accessToken: string | null;
     isAuthenticated: boolean;
     isLoading: boolean;
+}
+
+// ==================== API QUERIES ====================
+
+export interface UsersQuery {
+    page?: number;
+    limit?: number;
+    search?: string;
+    role?: string;
+    isActive?: boolean;
+    sortBy?: string;
+    sortOrder?: 'asc' | 'desc';
+}
+
+export interface TransactionsQuery {
+    page?: number;
+    limit?: number;
+    startDate?: string;
+    endDate?: string;
+    type?: string;
+    walletType?: WalletType;
+    search?: string;
+}
+
+export interface WalletStatsQuery {
+    startDate?: string;
+    endDate?: string;
+}
+
+export interface RafflesQuery {
+    page?: number;
+    limit?: number;
+    status?: string;
+}
+
+export interface DashboardQuery {
+    startDate?: string;
+    endDate?: string;
+}
+
+export interface CampaignsQuery {
+    page?: number;
+    limit?: number;
+    type?: 'auto' | 'manual';
+    isActive?: boolean;
+}
+
+// ==================== SHARED COMPONENTS ====================
+
+export interface FilterOption {
+    key: string;
+    label: React.ReactNode;
+}
+
+export interface FilterTabsProps {
+    options: FilterOption[];
+    activeFilter: string;
+    onChange: (key: any) => void;
+    size?: 'xs' | 'sm' | 'md';
+    bg?: string;
 }

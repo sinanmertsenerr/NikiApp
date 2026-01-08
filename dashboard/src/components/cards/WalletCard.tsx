@@ -13,7 +13,11 @@ interface WalletCardProps {
     isActive?: boolean;
 }
 
+import { useColorMode } from '../ui/ColorModeProvider';
+
 export function WalletCard({ type, balance, transactionCount, discount, isActive = true }: WalletCardProps) {
+    const { colorMode } = useColorMode();
+    const isDark = colorMode === 'dark';
     const isIeu = type === 'IEU';
 
     const bgGradient = isIeu
@@ -33,6 +37,8 @@ export function WalletCard({ type, balance, transactionCount, discount, isActive
             position="relative"
             overflow="hidden"
             transition="all 0.2s"
+            border="1px solid"
+            borderColor={isDark ? 'rgba(255,255,255,0.1)' : 'transparent'}
             _hover={{ transform: 'scale(1.02)' }}
             opacity={isActive ? 1 : 0.6}
         >

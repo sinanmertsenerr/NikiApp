@@ -1,12 +1,6 @@
 // Raffles API
 import apiClient from './client';
-import type { Raffle, PaginatedResponse } from '../types';
-
-export interface RafflesQuery {
-    page?: number;
-    limit?: number;
-    status?: string;
-}
+import type { Raffle, PaginatedResponse, RafflesQuery } from '../types';
 
 export const rafflesApi = {
     // Get raffles list
