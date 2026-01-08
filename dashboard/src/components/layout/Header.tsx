@@ -68,23 +68,46 @@ export function Header() {
             <Flex align="center" gap={3}>
                 {/* Theme Toggle */}
                 <Flex
-                    w={9}
+                    w="72px"
                     h={9}
                     align="center"
-                    justify="center"
                     borderRadius="lg"
-                    bg={isDark ? '#2D2D2D' : 'white'}
+                    bg={isDark ? '#2D2D2D' : '#E8E8E8'}
                     cursor="pointer"
                     onClick={toggleColorMode}
-                    _hover={{ bg: isDark ? '#333333' : '#EEEEEE' }}
+                    p="4px"
+                    position="relative"
                     transition="all 0.2s"
                 >
-                    <Icon
-                        as={isDark ? LuSun : LuMoon}
-                        boxSize={4}
-                        color={isDark ? '#FFB300' : '#666666'}
-                        transition="all 0.2s"
+                    {/* Sliding indicator */}
+                    <Box
+                        position="absolute"
+                        left={isDark ? 'calc(100% - 32px - 4px)' : '4px'}
+                        w="32px"
+                        h="28px"
+                        borderRadius="md"
+                        bg={isDark ? '#3D3D3D' : 'white'}
+                        boxShadow="sm"
+                        transition="left 0.2s ease-in-out"
                     />
+                    {/* Sun icon - Left */}
+                    <Flex w="32px" h="28px" align="center" justify="center" zIndex={1}>
+                        <Icon
+                            as={LuSun}
+                            boxSize={4}
+                            color={!isDark ? '#FFB300' : '#666666'}
+                            transition="color 0.2s"
+                        />
+                    </Flex>
+                    {/* Moon icon - Right */}
+                    <Flex w="32px" h="28px" align="center" justify="center" zIndex={1}>
+                        <Icon
+                            as={LuMoon}
+                            boxSize={4}
+                            color={isDark ? '#FFB300' : '#999999'}
+                            transition="color 0.2s"
+                        />
+                    </Flex>
                 </Flex>
 
                 {/* User */}

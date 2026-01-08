@@ -7,7 +7,6 @@ import {
     Text,
     Input,
     Badge,
-    Table,
     Icon,
     Button,
     Grid,
@@ -38,9 +37,7 @@ import { Header } from '../components/layout';
 import { StatCard } from '../components/cards/StatCard';
 import { PageHeader } from '../components/shared/PageHeader';
 import { FilterTabs } from '../components/shared/FilterTabs';
-import {
-    SharedTableRow,
-} from '../components/shared/CustomTable';
+import type { ColumnDef } from '../types';
 import { DataTable } from '../components/shared/DataTable';
 
 // Extended Mock Data with dual wallets
@@ -424,79 +421,94 @@ function UserDetailModal({ user, onClose }: { user: User; onClose: () => void })
                                         bg="transparent"
                                     />
                                 </Flex>
-                                <Box h="170px" overflow="auto">
-                                    {filteredTransactions.length === 0 ? (
-                                        <Flex justify="center" py={4}>
-                                            <Text color={isDark ? '#808080' : '#999'} fontSize="sm">İşlem bulunamadı</Text>
-                                        </Flex>
-                                    ) : (
-                                        <Table.Root size="sm">
-                                            <Table.Body>
-                                                {filteredTransactions.map((tx) => (
-                                                    <SharedTableRow key={tx.id}>
-                                                        <Table.Cell w="50px" px={3}>
-                                                            <Badge
-                                                                bg={tx.wallet === 'IEU' ? '#FF9800' : (isDark ? '#FFFFFF' : '#1A1A1A')}
-                                                                color={tx.wallet === 'IEU' ? 'white' : (isDark ? '#1A1A1A' : 'white')}
-                                                                fontSize="2xs"
-                                                            >
-                                                                {tx.wallet}
-                                                            </Badge>
-                                                        </Table.Cell>
-                                                        <Table.Cell w="120px">
-                                                            <Flex align="center" gap={2}>
-                                                                <Icon
-                                                                    as={tx.type === 'topup' ? LuCircleArrowUp : LuCircleArrowDown}
-                                                                    color={tx.type === 'topup' ? '#4CAF50' : '#FF5722'}
-                                                                    boxSize={4}
-                                                                />
-                                                                <Text fontWeight="medium" fontSize="sm" color={isDark ? '#FFFFFF' : '#1A1A1A'}>
-                                                                    {tx.type === 'topup' ? 'Yükleme' : 'Ödeme'}
-                                                                </Text>
-                                                            </Flex>
-                                                        </Table.Cell>
-                                                        <Table.Cell w="110px">
-                                                            <Text
-                                                                fontWeight="semibold"
-                                                                color={tx.type === 'topup' ? '#4CAF50' : '#1A1A1A'}
-                                                                fontSize="sm"
-                                                            >
-                                                                {tx.type === 'topup' ? '+' : '-'}{formatCurrency(tx.amount)}
-                                                            </Text>
-                                                        </Table.Cell>
-                                                        <Table.Cell w="100px">
-                                                            <Box>
-                                                                <Text fontSize="xs" color="#666">{formatDate(tx.date)}</Text>
-                                                                <Text fontSize="xs" color="#999">{formatTime(tx.date)}</Text>
-                                                            </Box>
-                                                        </Table.Cell>
-                                                        <Table.Cell w="160px">
-                                                            <Flex align="center" gap={2}>
-                                                                <Flex
-                                                                    w={6}
-                                                                    h={6}
-                                                                    borderRadius="full"
-                                                                    bg="#E3F2FD"
-                                                                    color="#1976D2"
-                                                                    align="center"
-                                                                    justify="center"
-                                                                    fontSize="2xs"
-                                                                    fontWeight="bold"
-                                                                >
-                                                                    {tx.admin.split(' ').map(n => n[0]).join('')}
-                                                                </Flex>
-                                                                <Box>
-                                                                    <Text fontSize="2xs" color="#999">İşlemi Yapan</Text>
-                                                                    <Text fontSize="xs" color="#555" fontWeight="medium">{tx.admin}</Text>
-                                                                </Box>
-                                                            </Flex>
-                                                        </Table.Cell>
-                                                    </SharedTableRow>
-                                                ))}
-                                            </Table.Body>
-                                        </Table.Root>
-                                    )}
-                                </Box>
+                                <DataTable
+                                    data={filteredTransactions}
+                                    keyExtractor={(tx) => tx.id}
+                                    showHeader={false}
+                                    noWrapper
+                                    maxHeight="170px"
+                                    emptyMessage="İşlem bulunamadı"
+                                    columns={[
+                                        {
+                                            header: '',
+                                            width: '50px',
+                                            px: 3,
+                                            cell: (tx) => (
+                                                <Badge
+                                                    bg={tx.wallet === 'IEU' ? '#FF9800' : (isDark ? '#FFFFFF' : '#1A1A1A')}
+                                                    color={tx.wallet === 'IEU' ? 'white' : (isDark ? '#1A1A1A' : 'white')}
+                                                    fontSize="2xs"
+                                                >
+                                                    {tx.wallet}
+                                                </Badge>
+                                            )
+                                        },
+                                        {
+                                            header: '',
+                                            width: '120px',
+                                            cell: (tx) => (
+                                                <Flex align="center" gap={2}>
+                                                    <Icon
+                                                        as={tx.type === 'topup' ? LuCircleArrowUp : LuCircleArrowDown}
+                                                        color={tx.type === 'topup' ? '#4CAF50' : '#E57373'}
+                                                        boxSize={4}
+                                                    />
+                                                    <Text fontWeight="medium" fontSize="sm" color={isDark ? '#FFFFFF' : '#1A1A1A'}>
+                                                        {tx.type === 'topup' ? 'Yükleme' : 'Ödeme'}
+                                                    </Text>
+                                                </Flex>
+                                            )
+                                        },
+                                        {
+                                            header: '',
+                                            width: '110px',
+                                            cell: (tx) => (
+                                                <Text
+                                                    fontWeight="semibold"
+                                                    color={tx.type === 'topup' ? '#4CAF50' : '#E57373'}
+                                                    fontSize="sm"
+                                                >
+                                                    {tx.type === 'topup' ? '+' : '-'}{formatCurrency(tx.amount)}
+                                                </Text>
+                                            )
+                                        },
+                                        {
+                                            header: '',
+                                            width: '100px',
+                                            cell: (tx) => (
+                                                <Box>
+                                                    <Text fontSize="xs" color={isDark ? '#D0D0D0' : '#555'}>{formatDate(tx.date)}</Text>
+                                                    <Text fontSize="xs" color={isDark ? '#A0A0A0' : '#888'}>{formatTime(tx.date)}</Text>
+                                                </Box>
+                                            )
+                                        },
+                                        {
+                                            header: '',
+                                            width: '160px',
+                                            cell: (tx) => (
+                                                <Flex align="center" gap={2}>
+                                                    <Flex
+                                                        w={6}
+                                                        h={6}
+                                                        borderRadius="full"
+                                                        bg="#E3F2FD"
+                                                        color="#1976D2"
+                                                        align="center"
+                                                        justify="center"
+                                                        fontSize="2xs"
+                                                        fontWeight="bold"
+                                                    >
+                                                        {tx.admin.split(' ').map(n => n[0]).join('')}
+                                                    </Flex>
+                                                    <Box>
+                                                        <Text fontSize="2xs" color={isDark ? '#A0A0A0' : '#999'}>İşlemi Yapan</Text>
+                                                        <Text fontSize="xs" color={isDark ? '#D0D0D0' : '#555'} fontWeight="medium">{tx.admin}</Text>
+                                                    </Box>
+                                                </Flex>
+                                            )
+                                        }
+                                    ]}
+                                />
                             </>
                         )}
 
@@ -513,74 +525,100 @@ function UserDetailModal({ user, onClose }: { user: User; onClose: () => void })
                                         bg="transparent"
                                     />
                                 </Flex>
-                                <Box h="170px" overflow="auto">
-                                    {filteredCampaigns.length === 0 ? (
-                                        <Flex justify="center" py={4}>
-                                            <Text color={isDark ? '#808080' : '#999'} fontSize="sm">Kampanya bulunamadı</Text>
-                                        </Flex>
-                                    ) : (
-                                        <Table.Root size="sm">
-                                            <Table.Body>
-                                                {filteredCampaigns.map((c) => (
-                                                    <SharedTableRow key={c.id}>
-                                                        <Table.Cell w="50px" px={3}>
-                                                            <Icon as={LuGift} color="#9C27B0" boxSize={4} />
-                                                        </Table.Cell>
-                                                        <Table.Cell w="120px">
-                                                            <Text fontWeight="medium" fontSize="sm" color={isDark ? '#FFFFFF' : '#1A1A1A'}>
-                                                                {c.name}
-                                                            </Text>
-                                                        </Table.Cell>
-                                                        <Table.Cell w="110px">
-                                                            <Badge
-                                                                colorPalette={c.status === 'used' ? 'green' : c.status === 'active' ? 'blue' : 'gray'}
-                                                                variant="subtle"
-                                                                fontSize="2xs"
-                                                            >
-                                                                {c.status === 'used' ? 'Kullanıldı' : c.status === 'active' ? 'Aktif' : 'Süresi Doldu'}
-                                                            </Badge>
-                                                        </Table.Cell>
-                                                        <Table.Cell w="100px">
-                                                            <Box>
-                                                                <Text fontSize="xs" color={isDark ? '#808080' : '#666'}>
-                                                                    {c.usedAt ? formatDate(c.usedAt) : '-'}
-                                                                </Text>
-                                                                <Text fontSize="xs" color={isDark ? '#808080' : '#999'}>
-                                                                    {c.usedAt ? formatTime(c.usedAt) : ''}
-                                                                </Text>
-                                                            </Box>
-                                                        </Table.Cell>
-                                                        <Table.Cell w="160px">
-                                                            {c.admin ? (
-                                                                <Flex align="center" gap={2}>
-                                                                    <Flex
-                                                                        w={6}
-                                                                        h={6}
-                                                                        borderRadius="full"
-                                                                        bg="#E3F2FD"
-                                                                        color="#1976D2"
-                                                                        align="center"
-                                                                        justify="center"
-                                                                        fontSize="2xs"
-                                                                        fontWeight="bold"
-                                                                    >
-                                                                        {c.admin.split(' ').map(n => n[0]).join('')}
-                                                                    </Flex>
-                                                                    <Box>
-                                                                        <Text fontSize="2xs" color="#999">İşlemi Yapan</Text>
-                                                                        <Text fontSize="xs" color="#555" fontWeight="medium">{c.admin}</Text>
-                                                                    </Box>
-                                                                </Flex>
-                                                            ) : (
-                                                                <Text fontSize="xs" color="#999">-</Text>
-                                                            )}
-                                                        </Table.Cell>
-                                                    </SharedTableRow>
-                                                ))}
-                                            </Table.Body>
-                                        </Table.Root>
-                                    )}
-                                </Box>
+                                <DataTable
+                                    data={filteredCampaigns}
+                                    keyExtractor={(c) => c.id}
+                                    showHeader={false}
+                                    noWrapper
+                                    maxHeight="170px"
+                                    emptyMessage="Kampanya bulunamadı"
+                                    columns={[
+                                        {
+                                            header: '',
+                                            width: '50px',
+                                            px: 3,
+                                            cell: () => (
+                                                <Icon as={LuGift} color="#9C27B0" boxSize={4} />
+                                            )
+                                        },
+                                        {
+                                            header: '',
+                                            width: '120px',
+                                            cell: (c) => (
+                                                <Text fontWeight="medium" fontSize="sm" color={isDark ? '#FFFFFF' : '#1A1A1A'}>
+                                                    {c.name}
+                                                </Text>
+                                            )
+                                        },
+                                        {
+                                            header: '',
+                                            width: '110px',
+                                            cell: (c) => (
+                                                <Badge
+                                                    bg={c.status === 'used'
+                                                        ? (isDark ? 'rgba(76, 175, 80, 0.15)' : '#E8F5E9')
+                                                        : c.status === 'active'
+                                                            ? (isDark ? 'rgba(33, 150, 243, 0.15)' : '#E3F2FD')
+                                                            : (isDark ? 'rgba(158, 158, 158, 0.15)' : '#F5F5F5')}
+                                                    color={c.status === 'used'
+                                                        ? (isDark ? '#81C784' : '#66BB6A')
+                                                        : c.status === 'active'
+                                                            ? (isDark ? '#64B5F6' : '#42A5F5')
+                                                            : (isDark ? '#9E9E9E' : '#757575')}
+                                                    fontSize="2xs"
+                                                    px={2}
+                                                    py={1}
+                                                    borderRadius="md"
+                                                >
+                                                    {c.status === 'used' ? 'Kullanıldı' : c.status === 'active' ? 'Aktif' : 'Süresi Doldu'}
+                                                </Badge>
+                                            )
+                                        },
+                                        {
+                                            header: '',
+                                            width: '100px',
+                                            cell: (c) => (
+                                                <Box>
+                                                    <Text fontSize="xs" color={isDark ? '#D0D0D0' : '#555'}>
+                                                        {c.usedAt ? formatDate(c.usedAt) : '-'}
+                                                    </Text>
+                                                    <Text fontSize="xs" color={isDark ? '#A0A0A0' : '#888'}>
+                                                        {c.usedAt ? formatTime(c.usedAt) : ''}
+                                                    </Text>
+                                                </Box>
+                                            )
+                                        },
+                                        {
+                                            header: '',
+                                            width: '160px',
+                                            cell: (c) => (
+                                                c.admin ? (
+                                                    <Flex align="center" gap={2}>
+                                                        <Flex
+                                                            w={6}
+                                                            h={6}
+                                                            borderRadius="full"
+                                                            bg="#E3F2FD"
+                                                            color="#1976D2"
+                                                            align="center"
+                                                            justify="center"
+                                                            fontSize="2xs"
+                                                            fontWeight="bold"
+                                                        >
+                                                            {c.admin.split(' ').map(n => n[0]).join('')}
+                                                        </Flex>
+                                                        <Box>
+                                                            <Text fontSize="2xs" color={isDark ? '#A0A0A0' : '#999'}>İşlemi Yapan</Text>
+                                                            <Text fontSize="xs" color={isDark ? '#D0D0D0' : '#555'} fontWeight="medium">{c.admin}</Text>
+                                                        </Box>
+                                                    </Flex>
+                                                ) : (
+                                                    <Text fontSize="xs" color={isDark ? '#808080' : '#999'}>-</Text>
+                                                )
+                                            )
+                                        }
+                                    ]}
+                                />
                             </>
                         )}
 
@@ -597,60 +635,88 @@ function UserDetailModal({ user, onClose }: { user: User; onClose: () => void })
                                         bg="transparent"
                                     />
                                 </Flex>
-                                <Box h="170px" overflow="auto">
-                                    {filteredWheelSpins.length === 0 ? (
-                                        <Flex justify="center" py={4}>
-                                            <Text color={isDark ? '#808080' : '#999'} fontSize="sm">Gizemli kutu geçmişi bulunamadı</Text>
-                                        </Flex>
-                                    ) : (
-                                        <Table.Root size="sm">
-                                            <Table.Body>
-                                                {filteredWheelSpins.map((spin) => (
-                                                    <SharedTableRow key={spin.id}>
-                                                        <Table.Cell w="50px" px={3}>
-                                                            <Icon as={LuCircleDot} color="#FF6B35" boxSize={4} />
-                                                        </Table.Cell>
-                                                        <Table.Cell w="140px">
-                                                            <Text fontWeight="medium" fontSize="sm" color={isDark ? '#FFFFFF' : '#1A1A1A'}>
-                                                                {spin.rewardValue}
-                                                            </Text>
-                                                            <Text fontSize="2xs" color={isDark ? '#808080' : '#888'}>
-                                                                Hafta {spin.weekNumber} / {spin.year}
-                                                            </Text>
-                                                        </Table.Cell>
-                                                        <Table.Cell w="90px">
-                                                            <Badge
-                                                                colorPalette={spin.used ? 'green' : spin.rewardType === 'nothing' ? 'gray' : 'orange'}
-                                                                variant="subtle"
-                                                                fontSize="2xs"
-                                                            >
-                                                                {spin.used ? 'Kullanıldı' : spin.rewardType === 'nothing' ? 'Boş' : 'Bekliyor'}
-                                                            </Badge>
-                                                        </Table.Cell>
-                                                        <Table.Cell w="100px">
-                                                            <Box>
-                                                                <Text fontSize="xs" color="#666">{formatDate(spin.spunAt)}</Text>
-                                                                <Text fontSize="xs" color="#999">{formatTime(spin.spunAt)}</Text>
-                                                            </Box>
-                                                        </Table.Cell>
-                                                        <Table.Cell w="160px">
-                                                            {spin.usedAt ? (
-                                                                <Box>
-                                                                    <Text fontSize="2xs" color={isDark ? '#808080' : '#888'}>Kullanım Tarihi</Text>
-                                                                    <Text fontSize="xs" color={isDark ? '#B0B0B0' : '#555'} fontWeight="medium">
-                                                                        {formatDateTime(spin.usedAt)}
-                                                                    </Text>
-                                                                </Box>
-                                                            ) : (
-                                                                <Text fontSize="xs" color="#999">-</Text>
-                                                            )}
-                                                        </Table.Cell>
-                                                    </SharedTableRow>
-                                                ))}
-                                            </Table.Body>
-                                        </Table.Root>
-                                    )}
-                                </Box>
+                                <DataTable
+                                    data={filteredWheelSpins}
+                                    keyExtractor={(spin) => spin.id}
+                                    showHeader={false}
+                                    noWrapper
+                                    maxHeight="170px"
+                                    emptyMessage="Gizemli kutu geçmişi bulunamadı"
+                                    columns={[
+                                        {
+                                            header: '',
+                                            width: '50px',
+                                            px: 3,
+                                            cell: () => (
+                                                <Icon as={LuCircleDot} color="#FF6B35" boxSize={4} />
+                                            )
+                                        },
+                                        {
+                                            header: '',
+                                            width: '140px',
+                                            cell: (spin) => (
+                                                <Box>
+                                                    <Text fontWeight="medium" fontSize="sm" color={isDark ? '#FFFFFF' : '#1A1A1A'}>
+                                                        {spin.rewardValue}
+                                                    </Text>
+                                                    <Text fontSize="2xs" color={isDark ? '#A0A0A0' : '#888'}>
+                                                        Hafta {spin.weekNumber} / {spin.year}
+                                                    </Text>
+                                                </Box>
+                                            )
+                                        },
+                                        {
+                                            header: '',
+                                            width: '90px',
+                                            cell: (spin) => (
+                                                <Badge
+                                                    bg={spin.used
+                                                        ? (isDark ? 'rgba(76, 175, 80, 0.15)' : '#E8F5E9')
+                                                        : spin.rewardType === 'nothing'
+                                                            ? (isDark ? 'rgba(158, 158, 158, 0.15)' : '#F5F5F5')
+                                                            : (isDark ? 'rgba(255, 152, 0, 0.15)' : '#FFF3E0')}
+                                                    color={spin.used
+                                                        ? (isDark ? '#81C784' : '#66BB6A')
+                                                        : spin.rewardType === 'nothing'
+                                                            ? (isDark ? '#9E9E9E' : '#757575')
+                                                            : (isDark ? '#FFB74D' : '#FFA726')}
+                                                    fontSize="2xs"
+                                                    px={2}
+                                                    py={1}
+                                                    borderRadius="md"
+                                                >
+                                                    {spin.used ? 'Kullanıldı' : spin.rewardType === 'nothing' ? 'Boş' : 'Bekliyor'}
+                                                </Badge>
+                                            )
+                                        },
+                                        {
+                                            header: '',
+                                            width: '100px',
+                                            cell: (spin) => (
+                                                <Box>
+                                                    <Text fontSize="xs" color={isDark ? '#D0D0D0' : '#555'}>{formatDate(spin.spunAt)}</Text>
+                                                    <Text fontSize="xs" color={isDark ? '#A0A0A0' : '#888'}>{formatTime(spin.spunAt)}</Text>
+                                                </Box>
+                                            )
+                                        },
+                                        {
+                                            header: '',
+                                            width: '160px',
+                                            cell: (spin) => (
+                                                spin.usedAt ? (
+                                                    <Box>
+                                                        <Text fontSize="2xs" color={isDark ? '#A0A0A0' : '#888'}>Kullanım Tarihi</Text>
+                                                        <Text fontSize="xs" color={isDark ? '#D0D0D0' : '#555'} fontWeight="medium">
+                                                            {formatDateTime(spin.usedAt)}
+                                                        </Text>
+                                                    </Box>
+                                                ) : (
+                                                    <Text fontSize="xs" color={isDark ? '#808080' : '#999'}>-</Text>
+                                                )
+                                            )
+                                        }
+                                    ]}
+                                />
                             </>
                         )}
                     </Box>
@@ -780,12 +846,12 @@ export function UsersPage() {
                             cell: (user) => (
                                 <Flex flexDir="column" gap={0}>
                                     <Flex align="center" gap={1}>
-                                        <Icon as={LuMail} boxSize={3} color={isDark ? '#808080' : '#666666'} />
-                                        <Text fontSize="xs" color={isDark ? '#B0B0B0' : '#666666'}>{user.email}</Text>
+                                        <Icon as={LuMail} boxSize={3} color={isDark ? '#A0A0A0' : '#666666'} />
+                                        <Text fontSize="xs" color={isDark ? '#D0D0D0' : '#555555'}>{user.email}</Text>
                                     </Flex>
                                     <Flex align="center" gap={1}>
-                                        <Icon as={LuPhone} boxSize={3} color={isDark ? '#808080' : '#666666'} />
-                                        <Text fontSize="xs" color={isDark ? '#B0B0B0' : '#666666'}>{user.phone}</Text>
+                                        <Icon as={LuPhone} boxSize={3} color={isDark ? '#A0A0A0' : '#666666'} />
+                                        <Text fontSize="xs" color={isDark ? '#D0D0D0' : '#555555'}>{user.phone}</Text>
                                     </Flex>
                                 </Flex>
                             )
@@ -819,7 +885,18 @@ export function UsersPage() {
                             header: 'Durum',
                             width: 'auto',
                             cell: (user) => (
-                                <Badge colorPalette={user.isActive ? 'green' : 'red'} variant="subtle" fontSize="xs">
+                                <Badge
+                                    bg={user.isActive
+                                        ? (isDark ? 'rgba(76, 175, 80, 0.15)' : '#E8F5E9')
+                                        : (isDark ? 'rgba(239, 83, 80, 0.15)' : '#FFEBEE')}
+                                    color={user.isActive
+                                        ? (isDark ? '#81C784' : '#66BB6A')
+                                        : (isDark ? '#EF9A9A' : '#E57373')}
+                                    fontSize="xs"
+                                    px={2}
+                                    py={1}
+                                    borderRadius="md"
+                                >
                                     {user.isActive ? 'Aktif' : 'Pasif'}
                                 </Badge>
                             )

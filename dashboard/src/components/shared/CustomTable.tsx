@@ -22,6 +22,7 @@ export function SharedTableCard({ title, headerActions, footer, children, ...pro
             display="flex"
             flexDirection="column"
             overflow="hidden"
+            color={isDark ? 'white' : 'inherit'}
             {...props}
         >
             {(title || headerActions) && (
@@ -111,6 +112,7 @@ export function SharedTableRow({ children, onClick, ...props }: SharedTableRowPr
 
     return (
         <Table.Row
+            bg={isDark ? '#1E1E1E' : 'transparent'}
             _hover={{ bg: isDark ? '#2D2D2D' : '#FAFAFA' }}
             cursor={onClick ? 'pointer' : 'default'}
             onClick={onClick}

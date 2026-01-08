@@ -192,6 +192,7 @@ export interface ColumnDef<T> {
     cell?: (item: T) => React.ReactNode;
     width?: string;
     textAlign?: 'left' | 'center' | 'right';
+    px?: number | string;
 }
 
 // ==================== API RESPONSES ====================

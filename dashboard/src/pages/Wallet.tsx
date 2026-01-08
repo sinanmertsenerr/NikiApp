@@ -243,9 +243,16 @@ export function WalletPage() {
                             cell: (tx) => (
                                 <Flex justify="center">
                                     <Badge
-                                        colorPalette={tx.type === 'topup' ? 'green' : 'orange'}
-                                        variant="subtle"
+                                        bg={tx.type === 'topup'
+                                            ? (isDark ? 'rgba(76, 175, 80, 0.15)' : '#E8F5E9')
+                                            : (isDark ? 'rgba(239, 83, 80, 0.15)' : '#FFEBEE')}
+                                        color={tx.type === 'topup'
+                                            ? (isDark ? '#81C784' : '#66BB6A')
+                                            : (isDark ? '#EF9A9A' : '#E57373')}
                                         fontSize="xs"
+                                        px={2}
+                                        py={1}
+                                        borderRadius="md"
                                     >
                                         <Flex align="center" gap={1}>
                                             <Icon
@@ -264,7 +271,7 @@ export function WalletPage() {
                             cell: (tx) => (
                                 <Text
                                     fontWeight="600"
-                                    color={tx.type === 'topup' ? '#4CAF50' : '#1A1A1A'}
+                                    color={tx.type === 'topup' ? '#4CAF50' : '#E57373'}
                                     fontSize="sm"
                                 >
                                     {tx.type === 'topup' ? '+' : '-'}{formatCurrency(tx.amount)}
@@ -275,7 +282,7 @@ export function WalletPage() {
                             header: 'Tarih',
                             textAlign: 'center',
                             cell: (tx) => (
-                                <Text fontSize="xs" color={isDark ? '#808080' : '#666666'}>
+                                <Text fontSize="xs" color={isDark ? '#D0D0D0' : '#555555'}>
                                     {formatDate(tx.date)}
                                 </Text>
                             )
@@ -284,7 +291,7 @@ export function WalletPage() {
                             header: 'İşlemi Yapan',
                             textAlign: 'center',
                             cell: (tx) => (
-                                <Text fontSize="xs" color="#555" fontWeight="500">
+                                <Text fontSize="xs" color={isDark ? '#D0D0D0' : '#555555'} fontWeight="500">
                                     {tx.admin}
                                 </Text>
                             )

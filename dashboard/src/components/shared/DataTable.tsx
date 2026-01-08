@@ -16,6 +16,9 @@ interface DataTableProps<T> extends Omit<BoxProps, 'columns'> {
     onRowClick?: (item: T) => void;
     emptyMessage?: string;
     keyExtractor: (item: T) => string | number;
+    showHeader?: boolean;
+    noWrapper?: boolean;
+    maxHeight?: string;
 }
 
 export function DataTable<T>({
@@ -24,25 +27,30 @@ export function DataTable<T>({
     onRowClick,
     emptyMessage = "Veri bulunamadı",
     keyExtractor,
+    showHeader = true,
+    noWrapper = false,
+    maxHeight,
     ...props
 }: DataTableProps<T>) {
     const { colorMode } = useColorMode();
     const isDark = colorMode === 'dark';
 
-    return (
-        <SharedTableCard {...props}>
-            <Table.Root size="sm" stickyHeader>
-                <SharedTableHeader>
-                    {columns.map((col, index) => (
-                        <SharedColumnHeader
-                            key={index}
-                            width={col.width || 'auto'}
-                            textAlign={col.textAlign || 'left'}
-                        >
-                            {col.header}
-                        </SharedColumnHeader>
-                    ))}
-                </SharedTableHeader>
+    const tableContent = (
+        <Box maxH={maxHeight} overflow={maxHeight ? 'auto' : undefined}>
+            <Table.Root size="sm" stickyHeader={showHeader}>
+                {showHeader && (
+                    <SharedTableHeader>
+                        {columns.map((col, index) => (
+                            <SharedColumnHeader
+                                key={index}
+                                width={col.width || 'auto'}
+                                textAlign={col.textAlign || 'left'}
+                            >
+                                {col.header}
+                            </SharedColumnHeader>
+                        ))}
+                    </SharedTableHeader>
+                )}
                 <Table.Body>
                     {data.length === 0 ? (
                         <SharedTableRow>
@@ -64,6 +72,8 @@ export function DataTable<T>({
                                     <Table.Cell
                                         key={index}
                                         textAlign={col.textAlign || 'left'}
+                                        width={col.width}
+                                        px={col.px}
                                     >
                                         {col.cell
                                             ? col.cell(item)
@@ -78,6 +88,16 @@ export function DataTable<T>({
                     )}
                 </Table.Body>
             </Table.Root>
+        </Box>
+    );
+
+    if (noWrapper) {
+        return tableContent;
+    }
+
+    return (
+        <SharedTableCard {...props}>
+            {tableContent}
         </SharedTableCard>
     );
 }
