@@ -36,7 +36,9 @@ export const authApi = {
     logout: async (): Promise<void> => {
         try {
             const refreshToken = localStorage.getItem('refreshToken');
-            await apiClient.post('/auth/logout', { refreshToken });
+            await apiClient.post('/auth/logout', { refreshToken }, {
+                skipAuthRefresh: true, // Don't try to refresh token on logout
+            } as any);
         } catch {
             // Ignore logout errors
         }

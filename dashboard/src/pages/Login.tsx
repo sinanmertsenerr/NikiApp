@@ -15,6 +15,7 @@ import { useNavigate } from 'react-router-dom';
 import { authApi } from '../api';
 import { useAuthStore } from '../store';
 import { useColorMode } from '../components/ui/ColorModeProvider';
+import { connectSocket } from '../socket';
 
 export function LoginPage() {
     const [identifier, setIdentifier] = useState('');
@@ -41,7 +42,12 @@ export function LoginPage() {
                 return;
             }
 
+            // Store login info
             login(response.user, response.accessToken, response.refreshToken);
+
+            // Connect socket immediately with new token
+            connectSocket(response.accessToken);
+
             navigate('/');
         } catch (err: any) {
             setError(err.response?.data?.message || 'Giriş başarısız. Lütfen bilgilerinizi kontrol edin.');

@@ -29,6 +29,11 @@ apiClient.interceptors.response.use(
     async (error: AxiosError) => {
         const originalRequest = error.config;
 
+        // Skip refresh for logout requests or requests that already have skipAuthRefresh flag
+        if ((originalRequest as any)?.skipAuthRefresh) {
+            return Promise.reject(error);
+        }
+
         // If 401 and not already retrying
         if (error.response?.status === 401 && originalRequest && !(originalRequest as any)._retry) {
             (originalRequest as any)._retry = true;

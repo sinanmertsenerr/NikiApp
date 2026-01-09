@@ -1,0 +1,34 @@
+// Socket Connection State Store
+import { create } from 'zustand';
+
+interface SocketStore {
+    isConnected: boolean;
+    lastEvent: {
+        type: string;
+        message: string;
+        timestamp: Date;
+    } | null;
+    setConnected: (connected: boolean) => void;
+    setLastEvent: (type: string, message: string) => void;
+    clearLastEvent: () => void;
+}
+
+export const useSocketStore = create<SocketStore>((set) => ({
+    isConnected: false,
+    lastEvent: null,
+
+    setConnected: (connected) => set({ isConnected: connected }),
+
+    setLastEvent: (type, message) =>
+        set({
+            lastEvent: {
+                type,
+                message,
+                timestamp: new Date(),
+            },
+        }),
+
+    clearLastEvent: () => set({ lastEvent: null }),
+}));
+
+export default useSocketStore;

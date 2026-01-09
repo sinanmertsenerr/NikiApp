@@ -1,6 +1,7 @@
 // Router configuration
 import { createBrowserRouter, Navigate } from 'react-router-dom';
 import { DashboardLayout } from './components/layout';
+import { useAuthStore } from './store';
 import {
     LoginPage,
     OverviewPage,
@@ -11,11 +12,15 @@ import {
     ReportsPage,
 } from './pages';
 
-// Protected route wrapper
+// Protected route wrapper - uses Zustand state for reactivity
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
-    const token = localStorage.getItem('accessToken');
+    const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+    const accessToken = useAuthStore((state) => state.accessToken);
 
-    if (!token) {
+    // Check both Zustand state and localStorage (for initial page load)
+    const hasToken = isAuthenticated || !!accessToken || !!localStorage.getItem('accessToken');
+
+    if (!hasToken) {
         return <Navigate to="/login" replace />;
     }
 
@@ -24,9 +29,9 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
 // Public route wrapper (redirects to dashboard if logged in)
 function PublicRoute({ children }: { children: React.ReactNode }) {
-    const token = localStorage.getItem('accessToken');
+    const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
 
-    if (token) {
+    if (isAuthenticated) {
         return <Navigate to="/" replace />;
     }
 

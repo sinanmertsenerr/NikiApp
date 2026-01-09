@@ -3,8 +3,12 @@
 import { Box, Flex } from '@chakra-ui/react';
 import { Outlet } from 'react-router-dom';
 import Sidebar from './Sidebar';
+import { useSocket } from '../../hooks/useSocket';
 
 export function DashboardLayout() {
+    // Initialize socket connection when layout mounts (user is authenticated)
+    useSocket();
+
     return (
         <Flex minH="100vh" bg="#F5F5F5">
             {/* Sidebar */}
@@ -25,3 +29,4 @@ export function DashboardLayout() {
 }
 
 export default DashboardLayout;
+

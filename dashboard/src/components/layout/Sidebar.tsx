@@ -10,12 +10,9 @@ import {
     LuGift,
     LuDices,
     LuFileText,
-    LuLogOut,
     LuMenu,
     LuX,
 } from 'react-icons/lu';
-import { useAuthStore } from '../../store';
-import { authApi } from '../../api';
 import { useColorMode } from '../ui/ColorModeProvider';
 
 interface NavItem {
@@ -35,16 +32,10 @@ const navItems: NavItem[] = [
 
 export function Sidebar() {
     const location = useLocation();
-    const logout = useAuthStore((state) => state.logout);
     const { colorMode } = useColorMode();
     const [isOpen, setIsOpen] = useState(false);
 
     const isDark = colorMode === 'dark';
-
-    const handleLogout = async () => {
-        await authApi.logout();
-        logout();
-    };
 
     const toggleSidebar = () => setIsOpen(!isOpen);
     const closeSidebar = () => setIsOpen(false);
@@ -149,24 +140,6 @@ export function Sidebar() {
                         );
                     })}
                 </VStack>
-
-                {/* Logout */}
-                <Box px={3} mt="auto">
-                    <Flex
-                        align="center"
-                        px={4}
-                        py={3}
-                        borderRadius="lg"
-                        color="#F44336"
-                        cursor="pointer"
-                        _hover={{ bg: isDark ? 'rgba(244, 67, 54, 0.1)' : '#FFEBEE' }}
-                        transition="all 0.2s"
-                        onClick={handleLogout}
-                    >
-                        <Icon as={LuLogOut} boxSize={5} mr={3} />
-                        <Text fontSize="sm" fontWeight="500">Çıkış Yap</Text>
-                    </Flex>
-                </Box>
             </Box>
         </>
     );
