@@ -236,13 +236,81 @@ class SocketService {
         this.appStateSubscription = AppState.addEventListener('change', async (nextAppState: AppStateStatus) => {
             if (nextAppState === 'active') {
                 // App came to foreground
-                console.log('[Socket] App came to foreground, checking connection...');
+                console.log('[Socket] App came to foreground, refreshing token and checking connection...');
+
+                // Always try to refresh token when coming to foreground
+                await this.refreshTokenAndReconnect();
+            }
+        });
+    }
+
+    /**
+     * Refresh token and reconnect socket
+     * This ensures we always have a fresh token when reconnecting
+     */
+    private async refreshTokenAndReconnect(): Promise<void> {
+        if (this.isRefreshing) {
+            console.log('[Socket] Already refreshing, skipping...');
+            return;
+        }
+
+        this.isRefreshing = true;
+
+        try {
+            const refreshToken = await SecureStore.getItemAsync(STORAGE_KEYS.REFRESH_TOKEN);
+
+            if (!refreshToken) {
+                console.log('[Socket] No refresh token available');
+                this.isRefreshing = false;
+                return;
+            }
+
+            console.log('[Socket] Refreshing token before reconnect...');
+            const response = await api.post('/auth/refresh', { refreshToken });
+
+            if (response.data?.accessToken) {
+                // Save new tokens
+                await SecureStore.setItemAsync(STORAGE_KEYS.ACCESS_TOKEN, response.data.accessToken);
+                if (response.data.refreshToken) {
+                    await SecureStore.setItemAsync(STORAGE_KEYS.REFRESH_TOKEN, response.data.refreshToken);
+                }
+
+                console.log('[Socket] Token refreshed successfully, reconnecting...');
+
+                // Disconnect existing socket
+                if (this.socket) {
+                    this.socket.disconnect();
+                    this.socket = null;
+                }
+
+                this.isRefreshing = false;
+
+                // Connect with new token
+                await this.connect();
+            } else {
+                console.log('[Socket] Token refresh returned no access token');
+                this.isRefreshing = false;
+
+                // Try connecting anyway with existing token
                 if (!this.socket?.connected) {
-                    console.log('[Socket] Reconnecting after foreground...');
                     await this.connect();
                 }
             }
-        });
+        } catch (error: any) {
+            console.error('[Socket] Token refresh failed on foreground:', error);
+            this.isRefreshing = false;
+
+            // Check if it's a 401 error - trigger auto logout
+            if (error?.response?.status === 401 || error?.status === 401) {
+                console.log('[Socket] Token refresh returned 401 - triggering auth failure');
+                this.notifyAuthFailureListeners();
+            } else {
+                // Try connecting anyway with existing token
+                if (!this.socket?.connected) {
+                    await this.connect();
+                }
+            }
+        }
     }
 
     /**
