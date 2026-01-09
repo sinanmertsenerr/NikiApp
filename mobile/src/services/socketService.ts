@@ -182,10 +182,8 @@ class SocketService {
             this.socket = io(socketUrl, {
                 auth: { token },
                 transports: ['websocket'],
-                reconnection: true,
-                reconnectionAttempts: this.maxReconnectAttempts,
-                reconnectionDelay: 1000,
-                reconnectionDelayMax: 5000,
+                // Disable auto-reconnection - we handle it manually with fresh tokens
+                reconnection: false,
             });
 
             this.setupListeners();
@@ -335,8 +333,17 @@ class SocketService {
             console.log('[Socket] Authentication confirmed:', data);
         });
 
-        this.socket.on('disconnect', (reason) => {
+        this.socket.on('disconnect', async (reason) => {
             console.log('[Socket] Disconnected:', reason);
+
+            // Auto-reconnect with fresh token for unexpected disconnects
+            if (reason === 'ping timeout' || reason === 'transport close' || reason === 'transport error') {
+                console.log('[Socket] Unexpected disconnect, will refresh token and reconnect...');
+                // Small delay to avoid rapid reconnection attempts
+                setTimeout(() => {
+                    this.refreshTokenAndReconnect();
+                }, 1000);
+            }
         });
 
         this.socket.on('auth_error', async (error) => {
