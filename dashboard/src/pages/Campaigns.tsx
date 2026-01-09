@@ -1,8 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { Box, Grid, GridItem } from '@chakra-ui/react';
-import { LuGift, LuUsers, LuPercent, LuTrendingUp } from 'react-icons/lu';
+import { Box, Grid, GridItem, Flex, IconButton, Icon } from '@chakra-ui/react';
+import { LuGift, LuUsers, LuPercent, LuTrendingUp, LuChevronLeft, LuChevronRight } from 'react-icons/lu';
 import { Header } from '../components/layout';
 import { StatCard } from '../components/cards/StatCard';
 import { CampaignCard } from '../components/cards/CampaignCard';
@@ -10,7 +10,7 @@ import { PageHeader } from '../components/shared/PageHeader';
 import { FilterTabs } from '../components/shared/FilterTabs';
 import { useColorMode } from '../components/ui/ColorModeProvider';
 
-// Mock Data
+// Mock Data - Extended for Slider Testing
 const mockCampaigns = [
     { id: 1, name: 'Yeni Üye Hoş Geldin', description: 'İlk kayıt yapan kullanıcılara özel', type: 'welcome', discount: 20, discountType: 'percent' as const, status: 'active' as const, endDate: '2026-01-31', totalAssigned: 156, totalUsed: 89, totalSavings: 2340.50 },
     { id: 2, name: 'Hafta Sonu Kahve', description: 'Cumartesi-Pazar kahve siparişlerinde', type: 'weekend', discount: 15, discountType: 'percent' as const, status: 'active' as const, endDate: '2026-03-31', totalAssigned: 412, totalUsed: 287, totalSavings: 4580.00 },
@@ -18,15 +18,20 @@ const mockCampaigns = [
     { id: 4, name: 'Doğum Günü Hediyesi', description: 'Doğum gününde ücretsiz içecek', type: 'birthday', discount: 50, discountType: 'fixed' as const, status: 'active' as const, endDate: '2026-12-31', totalAssigned: 45, totalUsed: 32, totalSavings: 1600.00 },
     { id: 5, name: 'Kış Kampanyası', description: 'Sıcak içeceklerde özel indirim', type: 'seasonal', discount: 10, discountType: 'percent' as const, status: 'ended' as const, endDate: '2025-12-31', totalAssigned: 320, totalUsed: 298, totalSavings: 3560.00 },
     { id: 6, name: 'Happy Hour', description: '14:00-16:00 arası tüm içecekler', type: 'timebased', discount: 30, discountType: 'percent' as const, status: 'paused' as const, endDate: '2026-02-28', totalAssigned: 0, totalUsed: 0, totalSavings: 0 },
+    // Duplicates for testing slider
+    { id: 7, name: 'Yaz Fırsatı', description: 'Soğuk içeceklerde %20', type: 'seasonal', discount: 20, discountType: 'percent' as const, status: 'active' as const, endDate: '2026-08-31', totalAssigned: 500, totalUsed: 120, totalSavings: 5600.00 },
+    { id: 8, name: 'Arkadaşını Getir', description: '2. kahve %50 indirimli', type: 'referral', discount: 50, discountType: 'percent' as const, status: 'active' as const, endDate: '2026-12-31', totalAssigned: 150, totalUsed: 40, totalSavings: 800.00 },
+    { id: 9, name: 'Sabah Kahvesi', description: '08:00-10:00 arası', type: 'timebased', discount: 10, discountType: 'percent' as const, status: 'active' as const, endDate: '2026-05-15', totalAssigned: 300, totalUsed: 180, totalSavings: 1200.00 },
+    { id: 10, name: 'Bitki Çayı Şenliği', description: 'Tüm bitki çaylarında', type: 'product', discount: 15, discountType: 'percent' as const, status: 'paused' as const, endDate: '2026-04-01', totalAssigned: 80, totalUsed: 10, totalSavings: 150.00 },
 ];
 
 const mockStats = {
-    totalCampaigns: 6,
-    activeCampaigns: 4,
-    totalAssignments: 1823,
-    totalUsage: 1360,
-    usageRate: 74.6,
-    totalSavings: 24530.50
+    totalCampaigns: 10,
+    activeCampaigns: 8,
+    totalAssignments: 2823,
+    totalUsage: 1760,
+    usageRate: 62.3,
+    totalSavings: 28530.50
 };
 
 type FilterType = 'all' | 'active' | 'ended' | 'paused';
@@ -40,12 +45,39 @@ const filterOptions = [
 
 export function CampaignsPage() {
     const [filter, setFilter] = useState<FilterType>('all');
+    const [currentPage, setCurrentPage] = useState(0);
     const { colorMode } = useColorMode();
     const isDark = colorMode === 'dark';
+
+    const itemsPerPage = 6;
 
     const filteredCampaigns = filter === 'all'
         ? mockCampaigns
         : mockCampaigns.filter(c => c.status === filter);
+
+    const totalPages = Math.ceil(filteredCampaigns.length / itemsPerPage);
+
+    // Reset page on filter change
+    if (currentPage >= totalPages && totalPages > 0) {
+        setCurrentPage(0);
+    }
+
+    const currentCampaigns = filteredCampaigns.slice(
+        currentPage * itemsPerPage,
+        (currentPage + 1) * itemsPerPage
+    );
+
+    const handleNext = () => {
+        if (currentPage < totalPages - 1) {
+            setCurrentPage(p => p + 1);
+        }
+    };
+
+    const handlePrev = () => {
+        if (currentPage > 0) {
+            setCurrentPage(p => p - 1);
+        }
+    };
 
     const formatCurrency = (value: number) =>
         new Intl.NumberFormat('tr-TR', {
@@ -121,25 +153,106 @@ export function CampaignsPage() {
                     <FilterTabs
                         options={filterOptions}
                         activeFilter={filter}
-                        onChange={(key: string) => setFilter(key as FilterType)}
+                        onChange={(key: string) => {
+                            setFilter(key as FilterType);
+                            setCurrentPage(0);
+                        }}
                     />
                 </Box>
 
-                {/* Campaign Cards Grid */}
-                <Box flex={1} overflow="auto">
-                    <Grid
-                        templateColumns={{ base: '1fr', md: 'repeat(2, 1fr)', xl: 'repeat(3, 1fr)' }}
-                        gap={3}
-                    >
-                        {filteredCampaigns.map((campaign) => (
-                            <GridItem key={campaign.id}>
-                                <CampaignCard
-                                    campaign={campaign}
-                                    onClick={() => console.log('Campaign clicked:', campaign.id)}
+                {/* Campaign Cards Carousel */}
+                <Box flex={1} position="relative" display="flex" flexDirection="column" justifyContent="center">
+                    <Box position="relative">
+                        {/* Prev Button */}
+                        <IconButton
+                            aria-label="Previous"
+                            position="absolute"
+                            left={4}
+                            top="50%"
+                            transform="translateY(-50%)"
+                            zIndex={20}
+                            rounded="full"
+                            bg={isDark ? "whiteAlpha.200" : "blackAlpha.100"}
+                            backdropFilter="blur(10px)"
+                            shadow="lg"
+                            size="lg"
+                            disabled={currentPage === 0}
+                            opacity={currentPage === 0 ? 0 : 1}
+                            _hover={{ transform: 'translateY(-50%) scale(1.1)', bg: isDark ? "whiteAlpha.300" : "blackAlpha.200" }}
+                            transition="all 0.2s"
+                            onClick={handlePrev}
+                            display={{ base: 'none', md: 'flex' }}
+                        >
+                            <Icon as={LuChevronLeft} boxSize={6} />
+                        </IconButton>
+
+                        <Box
+                            mx={0}
+                            h="auto"
+                            overflowY="hidden"
+                            overflowX="auto"
+                            px={20}
+                            css={{
+                                '&::-webkit-scrollbar': { display: 'none' },
+                                scrollbarWidth: 'none',
+                                '-ms-overflow-style': 'none',
+                            }}
+                        >
+                            <Grid
+                                templateColumns={{ base: '1fr', md: 'repeat(2, 1fr)', xl: 'repeat(3, 1fr)' }}
+                                gap={6}
+                            >
+                                {currentCampaigns.map((campaign) => (
+                                    <GridItem key={campaign.id}>
+                                        <CampaignCard
+                                            campaign={campaign}
+                                            onClick={() => console.log('Campaign clicked:', campaign.id)}
+                                        />
+                                    </GridItem>
+                                ))}
+                            </Grid>
+                        </Box>
+
+                        {/* Next Button */}
+                        <IconButton
+                            aria-label="Next"
+                            position="absolute"
+                            right={4}
+                            top="50%"
+                            transform="translateY(-50%)"
+                            zIndex={20}
+                            rounded="full"
+                            bg={isDark ? "whiteAlpha.200" : "blackAlpha.100"}
+                            backdropFilter="blur(10px)"
+                            shadow="lg"
+                            size="lg"
+                            disabled={currentPage >= totalPages - 1}
+                            opacity={currentPage >= totalPages - 1 ? 0 : 1}
+                            _hover={{ transform: 'translateY(-50%) scale(1.1)', bg: isDark ? "whiteAlpha.300" : "blackAlpha.200" }}
+                            transition="all 0.2s"
+                            onClick={handleNext}
+                            display={{ base: 'none', md: 'flex' }}
+                        >
+                            <Icon as={LuChevronRight} boxSize={6} />
+                        </IconButton>
+                    </Box>
+
+                    {/* Pagination Dots (Optional, for visual cue) */}
+                    {totalPages > 1 && (
+                        <Flex justify="center" gap={2} mt={2}>
+                            {Array.from({ length: totalPages }).map((_, idx) => (
+                                <Box
+                                    key={idx}
+                                    w={2}
+                                    h={2}
+                                    borderRadius="full"
+                                    bg={idx === currentPage ? 'brand.500' : 'gray.300'}
+                                    cursor="pointer"
+                                    onClick={() => setCurrentPage(idx)}
                                 />
-                            </GridItem>
-                        ))}
-                    </Grid>
+                            ))}
+                        </Flex>
+                    )}
                 </Box>
             </Box>
         </Box>

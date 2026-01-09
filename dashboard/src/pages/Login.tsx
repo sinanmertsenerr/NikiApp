@@ -64,24 +64,23 @@ export function LoginPage() {
                 transition="all 0.2s"
             >
                 {/* Logo */}
-                <VStack mb={8}>
-                    <Flex
-                        w={16}
-                        h={16}
-                        align="center"
-                        justify="center"
-                        borderRadius="2xl"
-                        bgGradient="linear(to-br, brand.500, brand.600)"
-                        mb={2}
-                    >
-                        <Icon as={LuCat} boxSize={8} color="white" />
-                    </Flex>
-                    <Text fontWeight="bold" fontSize="2xl" color={isDark ? '#FFFFFF' : 'gray.900'}>
-                        NikiTheCat
-                    </Text>
-                    <Text fontSize="sm" color={isDark ? '#B0B0B0' : 'gray.500'}>
-                        Analytics Portal
-                    </Text>
+                <VStack mb={8} gap={3}>
+                    <img
+                        src="/images/brands/niki-logo.png"
+                        alt="NikiTheCat"
+                        style={{
+                            height: '64px',
+                            filter: isDark ? 'invert(1)' : 'none'
+                        }}
+                    />
+                    <VStack gap={0}>
+                        <Text fontWeight="bold" fontSize="2xl" color={isDark ? '#FFFFFF' : '#1A1A1A'}>
+                            NikiTheCat
+                        </Text>
+                        <Text fontSize="sm" color={isDark ? '#B0B0B0' : '#666666'}>
+                            Analytics Portal
+                        </Text>
+                    </VStack>
                 </VStack>
 
                 {/* Error */}
@@ -114,7 +113,7 @@ export function LoginPage() {
                                 borderRadius="lg"
                                 px={3}
                                 bg={isDark ? '#2D2D2D' : 'transparent'}
-                                _focusWithin={{ borderColor: 'brand.500', shadow: 'outline' }}
+                                _focusWithin={{ borderColor: isDark ? 'white' : 'black', shadow: 'outline' }}
                             >
                                 <Icon as={LuMail} color={isDark ? '#808080' : 'gray.400'} mr={2} />
                                 <Input
@@ -142,7 +141,7 @@ export function LoginPage() {
                                 borderRadius="lg"
                                 px={3}
                                 bg={isDark ? '#2D2D2D' : 'transparent'}
-                                _focusWithin={{ borderColor: 'brand.500', shadow: 'outline' }}
+                                _focusWithin={{ borderColor: isDark ? 'white' : 'black', shadow: 'outline' }}
                             >
                                 <Icon as={LuLock} color={isDark ? '#808080' : 'gray.400'} mr={2} />
                                 <Input
@@ -161,9 +160,15 @@ export function LoginPage() {
 
                         <Button
                             type="submit"
-                            colorPalette="purple"
                             size="lg"
                             w="full"
+                            bg={isDark ? 'white' : 'black'}
+                            color={isDark ? 'black' : 'white'}
+                            _hover={{
+                                bg: isDark ? 'gray.200' : 'gray.800',
+                                transform: 'translateY(-1px)'
+                            }}
+                            transition="all 0.2s"
                             loading={isLoading}
                             loadingText="Giriş yapılıyor..."
                         >

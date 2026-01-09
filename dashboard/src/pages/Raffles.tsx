@@ -2,17 +2,6 @@
 
 import { useState } from 'react';
 import {
-    Box,
-    Flex,
-    Text,
-    Grid,
-    GridItem,
-    Badge,
-    Icon,
-    Button,
-    Progress,
-} from '@chakra-ui/react';
-import {
     LuDices,
     LuGift,
     LuUsers,
@@ -23,7 +12,21 @@ import {
     LuTicket,
     LuSparkles,
     LuPercent,
+    LuChevronLeft,
+    LuChevronRight,
 } from 'react-icons/lu';
+import {
+    Box,
+    Flex,
+    Text,
+    Grid,
+    GridItem,
+    Badge,
+    Icon,
+    Button,
+    Progress,
+    IconButton,
+} from '@chakra-ui/react';
 import { Header } from '../components/layout';
 import { StatCard } from '../components/cards/StatCard';
 import { PageHeader } from '../components/shared/PageHeader';
@@ -45,6 +48,11 @@ const mockRaffles = [
     { id: 2, name: 'Kahve Severler Çekilişi', prize: '1 Yıllık Ücretsiz Kahve', status: 'active', endDate: '2026-01-31', participants: 567, maxParticipants: 1000, ticketPrice: 50, winner: null },
     { id: 3, name: 'Aralık Sürpriz Çekilişi', prize: 'AirPods Pro', status: 'completed', endDate: '2025-12-31', participants: 892, maxParticipants: 1000, ticketPrice: 75, winner: 'Ahmet Y.' },
     { id: 4, name: 'Black Friday Çekilişi', prize: '500₺ Hediye Çeki', status: 'completed', endDate: '2025-11-30', participants: 1500, maxParticipants: 1500, ticketPrice: 25, winner: 'Zeynep K.' },
+    // Extended Data
+    { id: 5, name: 'Sevgililer Günü Çekilişi', prize: 'Romantik Akşam Yemeği', status: 'active', endDate: '2026-02-14', participants: 200, maxParticipants: 500, ticketPrice: 150, winner: null },
+    { id: 6, name: 'Bahar Çekilişi', prize: 'Bisiklet', status: 'active', endDate: '2026-04-01', participants: 100, maxParticipants: 300, ticketPrice: 100, winner: null },
+    { id: 7, name: 'Yaz Tatili Çekilişi', prize: 'Antalya Tatili 1 Hafta', status: 'active', endDate: '2026-06-01', participants: 500, maxParticipants: 1000, ticketPrice: 250, winner: null },
+    { id: 8, name: 'Teknoloji Paketi', prize: 'iPad Air + Pencil', status: 'active', endDate: '2026-05-15', participants: 800, maxParticipants: 1200, ticketPrice: 200, winner: null },
 ];
 
 const mockRecentWinners = [
@@ -63,8 +71,32 @@ const statusConfig = {
 
 export function RafflesPage() {
     const [activeTab, setActiveTab] = useState<TabType>('wheel');
+    const [currentPage, setCurrentPage] = useState(0);
     const { colorMode } = useColorMode();
     const isDark = colorMode === 'dark';
+
+    // Use 4 items per page as requested
+    const itemsPerPage = 4;
+    const totalPages = Math.ceil(mockRaffles.length / itemsPerPage);
+
+    // Ensure current page is valid when switching tabs or data changes
+    if (currentPage >= totalPages && totalPages > 0) {
+        setCurrentPage(0);
+    }
+
+    const currentRaffles = mockRaffles.slice(currentPage * itemsPerPage, (currentPage + 1) * itemsPerPage);
+
+    const handleNext = () => {
+        if (currentPage < totalPages - 1) {
+            setCurrentPage(p => p + 1);
+        }
+    };
+
+    const handlePrev = () => {
+        if (currentPage > 0) {
+            setCurrentPage(p => p - 1);
+        }
+    };
 
     const formatCurrency = (value: number) =>
         new Intl.NumberFormat('tr-TR', {
@@ -341,154 +373,237 @@ export function RafflesPage() {
                         </Grid>
 
                         {/* Raffle Cards */}
-                        <Grid templateColumns={{ base: '1fr', md: 'repeat(2, 1fr)' }} gap={3}>
-                            {mockRaffles.map((raffle) => {
-                                const status = statusConfig[raffle.status as keyof typeof statusConfig];
-                                const participantPercent = (raffle.participants / raffle.maxParticipants) * 100;
+                        {/* Ramen Cards Paged Grid */}
+                        <Box flex={1} position="relative" display="flex" flexDirection="column" justifyContent="center">
+                            <Box position="relative">
+                                {/* Prev Button */}
+                                <IconButton
+                                    aria-label="Previous"
+                                    position="absolute"
+                                    left={4}
+                                    top="50%"
+                                    transform="translateY(-50%)"
+                                    zIndex={20}
+                                    rounded="full"
+                                    bg={isDark ? "whiteAlpha.200" : "blackAlpha.100"}
+                                    backdropFilter="blur(10px)"
+                                    shadow="lg"
+                                    size="lg"
+                                    disabled={currentPage === 0}
+                                    opacity={currentPage === 0 ? 0 : 1}
+                                    _hover={{ transform: 'translateY(-50%) scale(1.1)', bg: isDark ? "whiteAlpha.300" : "blackAlpha.200" }}
+                                    transition="all 0.2s"
+                                    onClick={handlePrev}
+                                    display={{ base: 'none', md: 'flex' }}
+                                >
+                                    <Icon as={LuChevronLeft} boxSize={6} />
+                                </IconButton>
 
-                                return (
-                                    <GridItem key={raffle.id}>
+                                <Box
+                                    mx={0}
+                                    h="auto"
+                                    overflowY="hidden"
+                                    overflowX="auto"
+                                    px={20}
+                                    css={{
+                                        '&::-webkit-scrollbar': { display: 'none' },
+                                        scrollbarWidth: 'none',
+                                        '-ms-overflow-style': 'none',
+                                    }}
+                                >
+                                    <Grid templateColumns={{ base: '1fr', md: 'repeat(2, 1fr)' }} gap={6}>
+                                        {currentRaffles.map((raffle) => {
+                                            const status = statusConfig[raffle.status as keyof typeof statusConfig];
+                                            const participantPercent = (raffle.participants / raffle.maxParticipants) * 100;
+
+                                            return (
+                                                <GridItem key={raffle.id}>
+                                                    <Box
+                                                        bg={isDark ? '#1E1E1E' : 'white'}
+                                                        borderRadius="xl"
+                                                        border="1px solid"
+                                                        borderColor={isDark ? '#333333' : '#E0E0E0'}
+                                                        p={4}
+                                                        _hover={{
+                                                            borderColor: isDark ? 'whiteAlpha.400' : '#BDBDBD',
+                                                            boxShadow: isDark ? '0 0 25px rgba(255, 255, 255, 0.15)' : 'lg',
+                                                            transform: 'none'
+                                                        }}
+                                                        transition="all 0.2s"
+                                                    >
+                                                        <Flex justify="space-between" align="flex-start" mb={2}>
+                                                            <Badge colorPalette={status.color} variant="subtle" fontSize="xs">
+                                                                <Flex align="center" gap={1}>
+                                                                    <Icon as={status.icon} boxSize={3} />
+                                                                    {status.label}
+                                                                </Flex>
+                                                            </Badge>
+                                                            <Flex
+                                                                bg={isDark ? '#2D2D2D' : '#F5F5F5'}
+                                                                borderRadius="lg"
+                                                                px={2}
+                                                                py={1}
+                                                                align="center"
+                                                                gap={1}
+                                                            >
+                                                                <Icon
+                                                                    as={LuTicket}
+                                                                    boxSize={3}
+                                                                    color={isDark ? 'white' : '#000000'}
+                                                                />
+                                                                <Text
+                                                                    fontWeight="bold"
+                                                                    color={isDark ? 'white' : '#000000'}
+                                                                    fontSize="xs"
+                                                                >
+                                                                    {formatCurrency(raffle.ticketPrice)}
+                                                                </Text>
+                                                            </Flex>
+                                                        </Flex>
+
+                                                        <Text
+                                                            fontWeight="semibold"
+                                                            color={isDark ? 'white' : '#1A1A1A'}
+                                                            fontSize="sm"
+                                                            mb={1}
+                                                        >
+                                                            {raffle.name}
+                                                        </Text>
+                                                        <Flex align="center" gap={2} mb={3}>
+                                                            <Icon as={LuGift} color="#FF9800" boxSize={4} />
+                                                            <Text color="#FF9800" fontWeight="medium" fontSize="xs">
+                                                                {raffle.prize}
+                                                            </Text>
+                                                        </Flex>
+
+                                                        <Box mb={3}>
+                                                            <Flex justify="space-between" mb={1}>
+                                                                <Text
+                                                                    fontSize="xs"
+                                                                    color={isDark ? '#808080' : '#666666'}
+                                                                >
+                                                                    Katılım
+                                                                </Text>
+                                                                <Text
+                                                                    fontSize="xs"
+                                                                    color={isDark ? '#B0B0B0' : '#666666'}
+                                                                >
+                                                                    {raffle.participants}/{raffle.maxParticipants}
+                                                                </Text>
+                                                            </Flex>
+                                                            <Progress.Root value={participantPercent} size="sm" borderRadius="full">
+                                                                <Progress.Track bg={isDark ? '#333333' : '#E0E0E0'}>
+                                                                    <Progress.Range
+                                                                        bg={raffle.status === 'active'
+                                                                            ? (isDark ? '#FFFFFF' : '#000000')
+                                                                            : '#9e9e9e'
+                                                                        }
+                                                                    />
+                                                                </Progress.Track>
+                                                            </Progress.Root>
+                                                        </Box>
+
+                                                        <Flex
+                                                            justify="space-between"
+                                                            pt={2}
+                                                            borderTop="1px solid"
+                                                            borderColor={isDark ? '#333333' : '#F0F0F0'}
+                                                            align="center"
+                                                        >
+                                                            <Box>
+                                                                <Text
+                                                                    fontSize="xs"
+                                                                    color={isDark ? '#666666' : '#999999'}
+                                                                >
+                                                                    {raffle.status === 'completed' ? 'Kazanan' : 'Bitiş'}
+                                                                </Text>
+                                                                {raffle.status === 'completed' && raffle.winner ? (
+                                                                    <Flex align="center" gap={1}>
+                                                                        <Icon as={LuTrophy} boxSize={3} color="#FF9800" />
+                                                                        <Text
+                                                                            fontSize="xs"
+                                                                            fontWeight="semibold"
+                                                                            color={isDark ? 'white' : '#1A1A1A'}
+                                                                        >
+                                                                            {raffle.winner}
+                                                                        </Text>
+                                                                    </Flex>
+                                                                ) : (
+                                                                    <Flex align="center" gap={1}>
+                                                                        <Icon
+                                                                            as={LuCalendar}
+                                                                            boxSize={3}
+                                                                            color={isDark ? '#808080' : '#666666'}
+                                                                        />
+                                                                        <Text
+                                                                            fontSize="xs"
+                                                                            color={isDark ? '#B0B0B0' : '#666666'}
+                                                                        >
+                                                                            {new Date(raffle.endDate).toLocaleDateString('tr-TR')}
+                                                                        </Text>
+                                                                    </Flex>
+                                                                )}
+                                                            </Box>
+                                                            <Box textAlign="right">
+                                                                <Text
+                                                                    fontSize="xs"
+                                                                    color={isDark ? '#666666' : '#999999'}
+                                                                >
+                                                                    Toplam
+                                                                </Text>
+                                                                <Text fontSize="xs" fontWeight="semibold" color="#4CAF50">
+                                                                    {formatCurrency(raffle.participants * raffle.ticketPrice)}
+                                                                </Text>
+                                                            </Box>
+                                                        </Flex>
+                                                    </Box>
+                                                </GridItem>
+                                            );
+                                        })}
+                                    </Grid>
+                                </Box>
+
+                                {/* Next Button */}
+                                <IconButton
+                                    aria-label="Next"
+                                    position="absolute"
+                                    right={4}
+                                    top="50%"
+                                    transform="translateY(-50%)"
+                                    zIndex={20}
+                                    rounded="full"
+                                    bg={isDark ? "whiteAlpha.200" : "blackAlpha.100"}
+                                    backdropFilter="blur(10px)"
+                                    shadow="lg"
+                                    size="lg"
+                                    disabled={currentPage >= totalPages - 1}
+                                    opacity={currentPage >= totalPages - 1 ? 0 : 1}
+                                    _hover={{ transform: 'translateY(-50%) scale(1.1)', bg: isDark ? "whiteAlpha.300" : "blackAlpha.200" }}
+                                    transition="all 0.2s"
+                                    onClick={handleNext}
+                                    display={{ base: 'none', md: 'flex' }}
+                                >
+                                    <Icon as={LuChevronRight} boxSize={6} />
+                                </IconButton>
+                            </Box>
+
+                            {/* Pagination Dots */}
+                            {totalPages > 1 && (
+                                <Flex justify="center" gap={2} mt={2}>
+                                    {Array.from({ length: totalPages }).map((_, idx) => (
                                         <Box
-                                            bg={isDark ? '#1E1E1E' : 'white'}
-                                            borderRadius="xl"
-                                            border="1px solid"
-                                            borderColor={isDark ? '#333333' : '#E0E0E0'}
-                                            p={4}
-                                            _hover={{
-                                                borderColor: isDark ? '#4A4A4A' : '#BDBDBD',
-                                                shadow: 'sm'
-                                            }}
-                                            transition="all 0.2s"
-                                        >
-                                            <Flex justify="space-between" align="flex-start" mb={2}>
-                                                <Badge colorPalette={status.color} variant="subtle" fontSize="xs">
-                                                    <Flex align="center" gap={1}>
-                                                        <Icon as={status.icon} boxSize={3} />
-                                                        {status.label}
-                                                    </Flex>
-                                                </Badge>
-                                                <Flex
-                                                    bg={isDark ? '#2D2D2D' : '#F5F5F5'}
-                                                    borderRadius="lg"
-                                                    px={2}
-                                                    py={1}
-                                                    align="center"
-                                                    gap={1}
-                                                >
-                                                    <Icon
-                                                        as={LuTicket}
-                                                        boxSize={3}
-                                                        color={isDark ? 'white' : '#000000'}
-                                                    />
-                                                    <Text
-                                                        fontWeight="bold"
-                                                        color={isDark ? 'white' : '#000000'}
-                                                        fontSize="xs"
-                                                    >
-                                                        {formatCurrency(raffle.ticketPrice)}
-                                                    </Text>
-                                                </Flex>
-                                            </Flex>
-
-                                            <Text
-                                                fontWeight="semibold"
-                                                color={isDark ? 'white' : '#1A1A1A'}
-                                                fontSize="sm"
-                                                mb={1}
-                                            >
-                                                {raffle.name}
-                                            </Text>
-                                            <Flex align="center" gap={2} mb={3}>
-                                                <Icon as={LuGift} color="#FF9800" boxSize={4} />
-                                                <Text color="#FF9800" fontWeight="medium" fontSize="xs">
-                                                    {raffle.prize}
-                                                </Text>
-                                            </Flex>
-
-                                            <Box mb={3}>
-                                                <Flex justify="space-between" mb={1}>
-                                                    <Text
-                                                        fontSize="xs"
-                                                        color={isDark ? '#808080' : '#666666'}
-                                                    >
-                                                        Katılım
-                                                    </Text>
-                                                    <Text
-                                                        fontSize="xs"
-                                                        color={isDark ? '#B0B0B0' : '#666666'}
-                                                    >
-                                                        {raffle.participants}/{raffle.maxParticipants}
-                                                    </Text>
-                                                </Flex>
-                                                <Progress.Root value={participantPercent} size="sm" borderRadius="full">
-                                                    <Progress.Track bg={isDark ? '#333333' : '#E0E0E0'}>
-                                                        <Progress.Range
-                                                            bg={raffle.status === 'active'
-                                                                ? (isDark ? '#FFFFFF' : '#000000')
-                                                                : '#9e9e9e'
-                                                            }
-                                                        />
-                                                    </Progress.Track>
-                                                </Progress.Root>
-                                            </Box>
-
-                                            <Flex
-                                                justify="space-between"
-                                                pt={2}
-                                                borderTop="1px solid"
-                                                borderColor={isDark ? '#333333' : '#F0F0F0'}
-                                            >
-                                                <Box>
-                                                    <Text
-                                                        fontSize="xs"
-                                                        color={isDark ? '#666666' : '#999999'}
-                                                    >
-                                                        {raffle.status === 'completed' ? 'Kazanan' : 'Bitiş'}
-                                                    </Text>
-                                                    {raffle.status === 'completed' && raffle.winner ? (
-                                                        <Flex align="center" gap={1}>
-                                                            <Icon as={LuTrophy} boxSize={3} color="#FF9800" />
-                                                            <Text
-                                                                fontSize="xs"
-                                                                fontWeight="semibold"
-                                                                color={isDark ? 'white' : '#1A1A1A'}
-                                                            >
-                                                                {raffle.winner}
-                                                            </Text>
-                                                        </Flex>
-                                                    ) : (
-                                                        <Flex align="center" gap={1}>
-                                                            <Icon
-                                                                as={LuCalendar}
-                                                                boxSize={3}
-                                                                color={isDark ? '#808080' : '#666666'}
-                                                            />
-                                                            <Text
-                                                                fontSize="xs"
-                                                                color={isDark ? '#B0B0B0' : '#666666'}
-                                                            >
-                                                                {new Date(raffle.endDate).toLocaleDateString('tr-TR')}
-                                                            </Text>
-                                                        </Flex>
-                                                    )}
-                                                </Box>
-                                                <Box textAlign="right">
-                                                    <Text
-                                                        fontSize="xs"
-                                                        color={isDark ? '#666666' : '#999999'}
-                                                    >
-                                                        Toplam
-                                                    </Text>
-                                                    <Text fontSize="xs" fontWeight="semibold" color="#4CAF50">
-                                                        {formatCurrency(raffle.participants * raffle.ticketPrice)}
-                                                    </Text>
-                                                </Box>
-                                            </Flex>
-                                        </Box>
-                                    </GridItem>
-                                );
-                            })}
-                        </Grid>
+                                            key={idx}
+                                            w={2}
+                                            h={2}
+                                            borderRadius="full"
+                                            bg={idx === currentPage ? 'brand.500' : 'gray.300'}
+                                            cursor="pointer"
+                                            onClick={() => setCurrentPage(idx)}
+                                        />
+                                    ))}
+                                </Flex>
+                            )}
+                        </Box>
                     </Box>
                 )}
             </Box>
