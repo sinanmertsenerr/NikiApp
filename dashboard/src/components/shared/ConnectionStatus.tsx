@@ -6,8 +6,8 @@ import { Box, Flex, Text, Icon } from '@chakra-ui/react';
 import { LuRefreshCw } from 'react-icons/lu';
 import { useSocketStore } from '../../store/socketStore';
 import { useColorMode } from '../ui/ColorModeProvider';
-import { useSocket } from '../../hooks/useSocket';
-import { getSocket } from '../../socket';
+import { useAuthStore } from '../../store';
+import { getSocket, connectSocket } from '../../socket';
 
 interface ConnectionStatusProps {
     showLabel?: boolean;
@@ -17,8 +17,9 @@ interface ConnectionStatusProps {
 export function ConnectionStatus({ showLabel = true, size = 'sm' }: ConnectionStatusProps) {
     const storeConnected = useSocketStore((state) => state.isConnected);
     const lastEvent = useSocketStore((state) => state.lastEvent);
+    const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+    const accessToken = useAuthStore((state) => state.accessToken);
     const { colorMode } = useColorMode();
-    const { refreshAll } = useSocket();
     const isDark = colorMode === 'dark';
 
     // Initialize with actual socket connection status
@@ -31,9 +32,22 @@ export function ConnectionStatus({ showLabel = true, size = 'sm' }: ConnectionSt
         setIsConnected(storeConnected);
     }, [storeConnected]);
 
+    // Reconnect handler
+    const handleReconnect = () => {
+        const token = accessToken || localStorage.getItem('accessToken');
+        if (token) {
+            connectSocket(token);
+        }
+    };
+
     const iconSize = size === 'sm' ? 3 : 4;
     const textSize = size === 'sm' ? 'xs' : 'sm';
     const dotSize = size === 'sm' ? '6px' : '8px';
+
+    // Don't show connection status if not authenticated
+    if (!isAuthenticated) {
+        return null;
+    }
 
     return (
         <Flex align="center" gap={2}>
@@ -53,7 +67,7 @@ export function ConnectionStatus({ showLabel = true, size = 'sm' }: ConnectionSt
                 </Text>
             )}
 
-            {/* Refresh button when disconnected */}
+            {/* Refresh button when disconnected - reconnects socket */}
             {!isConnected && (
                 <Icon
                     as={LuRefreshCw}
@@ -61,7 +75,7 @@ export function ConnectionStatus({ showLabel = true, size = 'sm' }: ConnectionSt
                     color={isDark ? '#B0B0B0' : '#666666'}
                     cursor="pointer"
                     _hover={{ color: isDark ? '#FFFFFF' : '#1A1A1A' }}
-                    onClick={refreshAll}
+                    onClick={handleReconnect}
                 />
             )}
 
@@ -79,4 +93,5 @@ export function ConnectionStatus({ showLabel = true, size = 'sm' }: ConnectionSt
 }
 
 export default ConnectionStatus;
+
 

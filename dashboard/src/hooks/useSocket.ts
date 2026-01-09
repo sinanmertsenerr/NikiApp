@@ -32,8 +32,8 @@ export function useSocket() {
     const queryClient = useQueryClient();
     const accessToken = useAuthStore((state) => state.accessToken);
     const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
-    const logout = useAuthStore((state) => state.logout);
-    const { setConnected, setLastEvent } = useSocketStore();
+    const setConnected = useSocketStore((state) => state.setConnected);
+    const setLastEvent = useSocketStore((state) => state.setLastEvent);
 
     // Connect socket when authenticated
     useEffect(() => {
@@ -60,7 +60,7 @@ export function useSocket() {
             // Handle force disconnect (logout from all devices)
             socket.on('force_disconnect', () => {
                 setLastEvent('force_disconnect', 'Tüm cihazlardan çıkış yapıldı');
-                logout();
+                useAuthStore.getState().logout(); // Call via getter, not hook
             });
 
             // Handle auth errors
@@ -111,7 +111,7 @@ export function useSocket() {
                 setConnected(false);
             };
         }
-    }, [isAuthenticated, accessToken, queryClient, logout, setConnected, setLastEvent]);
+    }, [isAuthenticated, accessToken, queryClient, setConnected, setLastEvent]);
 
     // Helper to emit events
     const emit = useCallback((event: string, data?: any) => {

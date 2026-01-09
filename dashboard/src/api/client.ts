@@ -1,5 +1,6 @@
 // Axios API Client with JWT Interceptor
 import axios, { type AxiosError, type InternalAxiosRequestConfig } from 'axios';
+import { useAuthStore } from '../store';
 
 // Backend uses /api/v1 prefix
 const API_URL = (import.meta.env.VITE_API_URL || 'http://localhost:3000') + '/api/v1';
@@ -59,10 +60,8 @@ apiClient.interceptors.response.use(
 
                 return apiClient(originalRequest);
             } catch (refreshError) {
-                // Refresh failed - logout
-                localStorage.removeItem('accessToken');
-                localStorage.removeItem('refreshToken');
-                window.location.href = '/login';
+                // Refresh failed - logout via Zustand (no page refresh)
+                useAuthStore.getState().logout();
                 return Promise.reject(refreshError);
             }
         }
