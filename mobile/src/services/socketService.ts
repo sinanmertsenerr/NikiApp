@@ -1,5 +1,6 @@
 import { io, Socket } from 'socket.io-client';
 import * as SecureStore from 'expo-secure-store';
+import { AppState, AppStateStatus } from 'react-native';
 import { API_BASE_URL, STORAGE_KEYS } from '@/constants/api';
 import { queryClient } from '@/services/queryClient';
 import api from '@/services/api';
@@ -77,8 +78,10 @@ export interface StatsUpdatedEvent {
 class SocketService {
     private socket: Socket | null = null;
     private reconnectAttempts = 0;
-    private maxReconnectAttempts = 5;
+    private maxReconnectAttempts = Infinity; // Never give up on reconnecting
     private isRefreshing = false;
+    private healthCheckInterval: ReturnType<typeof setInterval> | null = null;
+    private appStateSubscription: any = null;
 
     // External callback listeners for balance updates
     private balanceUpdateListeners: Set<(data: BalanceUpdateEvent) => void> = new Set();
@@ -186,8 +189,69 @@ class SocketService {
             });
 
             this.setupListeners();
+            this.startHealthCheck();
+            this.startAppStateListener();
         } catch (error) {
             console.error('[Socket] Connection error:', error);
+        }
+    }
+
+    /**
+     * Start periodic health check - reconnect if disconnected
+     */
+    private startHealthCheck(): void {
+        // Clear existing interval
+        if (this.healthCheckInterval) {
+            clearInterval(this.healthCheckInterval);
+        }
+
+        // Check connection every 30 seconds
+        this.healthCheckInterval = setInterval(async () => {
+            if (!this.socket?.connected) {
+                console.log('[Socket] Health check: disconnected, attempting reconnect...');
+                await this.connect();
+            }
+        }, 30000);
+    }
+
+    /**
+     * Stop health check interval
+     */
+    private stopHealthCheck(): void {
+        if (this.healthCheckInterval) {
+            clearInterval(this.healthCheckInterval);
+            this.healthCheckInterval = null;
+        }
+    }
+
+    /**
+     * Listen for app state changes - reconnect when app comes to foreground
+     */
+    private startAppStateListener(): void {
+        // Remove existing subscription
+        if (this.appStateSubscription) {
+            this.appStateSubscription.remove();
+        }
+
+        this.appStateSubscription = AppState.addEventListener('change', async (nextAppState: AppStateStatus) => {
+            if (nextAppState === 'active') {
+                // App came to foreground
+                console.log('[Socket] App came to foreground, checking connection...');
+                if (!this.socket?.connected) {
+                    console.log('[Socket] Reconnecting after foreground...');
+                    await this.connect();
+                }
+            }
+        });
+    }
+
+    /**
+     * Stop app state listener
+     */
+    private stopAppStateListener(): void {
+        if (this.appStateSubscription) {
+            this.appStateSubscription.remove();
+            this.appStateSubscription = null;
         }
     }
 
@@ -431,6 +495,8 @@ class SocketService {
             this.socket = null;
             this.reconnectAttempts = 0;
         }
+        this.stopHealthCheck();
+        this.stopAppStateListener();
     }
 
     isConnected(): boolean {

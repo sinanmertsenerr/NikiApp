@@ -8,14 +8,17 @@ interface SocketStore {
         message: string;
         timestamp: Date;
     } | null;
+    reconnectTrigger: number;
     setConnected: (connected: boolean) => void;
     setLastEvent: (type: string, message: string) => void;
     clearLastEvent: () => void;
+    triggerReconnect: () => void;
 }
 
 export const useSocketStore = create<SocketStore>((set) => ({
     isConnected: false,
     lastEvent: null,
+    reconnectTrigger: 0,
 
     setConnected: (connected) => set({ isConnected: connected }),
 
@@ -29,6 +32,8 @@ export const useSocketStore = create<SocketStore>((set) => ({
         }),
 
     clearLastEvent: () => set({ lastEvent: null }),
+
+    triggerReconnect: () => set((state) => ({ reconnectTrigger: state.reconnectTrigger + 1 })),
 }));
 
 export default useSocketStore;

@@ -232,7 +232,7 @@ function UserDetailModal({ user, onClose }: { user: User; onClose: () => void })
                         </Flex>
 
                         {/* Info Grid */}
-                        <Grid templateColumns="repeat(3, 1fr)" gap={3} flex={1}>
+                        <Grid templateColumns={{ base: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)' }} gap={3} flex={1}>
                             {/* Row 1 */}
                             <Box>
                                 <Text fontSize="xs" color="#888" mb={1}>Ad-Soyad</Text>

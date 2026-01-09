@@ -7,7 +7,7 @@ import { LuRefreshCw } from 'react-icons/lu';
 import { useSocketStore } from '../../store/socketStore';
 import { useColorMode } from '../ui/ColorModeProvider';
 import { useAuthStore } from '../../store';
-import { getSocket, connectSocket } from '../../socket';
+import { getSocket } from '../../socket';
 
 interface ConnectionStatusProps {
     showLabel?: boolean;
@@ -17,8 +17,8 @@ interface ConnectionStatusProps {
 export function ConnectionStatus({ showLabel = true, size = 'sm' }: ConnectionStatusProps) {
     const storeConnected = useSocketStore((state) => state.isConnected);
     const lastEvent = useSocketStore((state) => state.lastEvent);
+    const triggerReconnect = useSocketStore((state) => state.triggerReconnect);
     const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
-    const accessToken = useAuthStore((state) => state.accessToken);
     const { colorMode } = useColorMode();
     const isDark = colorMode === 'dark';
 
@@ -32,12 +32,9 @@ export function ConnectionStatus({ showLabel = true, size = 'sm' }: ConnectionSt
         setIsConnected(storeConnected);
     }, [storeConnected]);
 
-    // Reconnect handler
+    // Reconnect handler - triggers useSocket hook to reconnect
     const handleReconnect = () => {
-        const token = accessToken || localStorage.getItem('accessToken');
-        if (token) {
-            connectSocket(token);
-        }
+        triggerReconnect();
     };
 
     const iconSize = size === 'sm' ? 3 : 4;
@@ -79,8 +76,8 @@ export function ConnectionStatus({ showLabel = true, size = 'sm' }: ConnectionSt
                 />
             )}
 
-            {/* Last event indicator (fades out) */}
-            {lastEvent && (
+            {/* Last event indicator - only show for non-error events when connected */}
+            {lastEvent && isConnected && lastEvent.type !== 'auth_error' && lastEvent.type !== 'force_disconnect' && (
                 <Text
                     fontSize="xs"
                     color={isDark ? '#808080' : '#999999'}

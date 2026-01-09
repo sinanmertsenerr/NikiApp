@@ -5,6 +5,8 @@ import { io, Socket } from 'socket.io-client';
 const SOCKET_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
 let socket: Socket | null = null;
+let healthCheckInterval: ReturnType<typeof setInterval> | null = null;
+let visibilityHandler: (() => void) | null = null;
 
 // Event types from backend
 export interface SocketEvents {
@@ -35,10 +37,24 @@ export interface SocketEvents {
     };
 }
 
+// Store current token for reconnection
+let currentToken: string | null = null;
+
 export function connectSocket(token: string): Socket {
-    // If already connected, disconnect first
+    // Store token for reconnection
+    currentToken = token;
+
+    // If already connected with same token, return existing socket
     if (socket?.connected) {
-        socket.disconnect();
+        console.log('[Socket] Already connected, reusing existing socket');
+        return socket;
+    }
+
+    // If socket exists but disconnected, try to reconnect
+    if (socket && !socket.connected) {
+        console.log('[Socket] Socket exists but disconnected, reconnecting...');
+        socket.connect();
+        return socket;
     }
 
     // Create new socket connection with auth token
@@ -46,8 +62,9 @@ export function connectSocket(token: string): Socket {
         auth: { token },
         transports: ['websocket', 'polling'],
         reconnection: true,
-        reconnectionAttempts: 5,
+        reconnectionAttempts: Infinity, // Never give up
         reconnectionDelay: 1000,
+        reconnectionDelayMax: 5000, // Max 5 seconds between attempts
     });
 
     // Connection event handlers
@@ -77,10 +94,16 @@ export function connectSocket(token: string): Socket {
         console.error('[Socket] Connection error:', error.message);
     });
 
+    // Start health check and visibility listener
+    startHealthCheck();
+    startVisibilityListener();
+
     return socket;
 }
 
 export function disconnectSocket(): void {
+    stopHealthCheck();
+    stopVisibilityListener();
     if (socket) {
         socket.disconnect();
         socket = null;
@@ -98,10 +121,59 @@ export function isSocketConnected(): boolean {
 
 // Re-authenticate with new token (after token refresh)
 export function updateSocketAuth(newToken: string): void {
+    currentToken = newToken;
     if (socket) {
         socket.auth = { token: newToken };
         socket.disconnect().connect();
         console.log('[Socket] Re-authenticating with new token');
+    }
+}
+
+/**
+ * Start periodic health check - reconnect if disconnected
+ */
+function startHealthCheck(): void {
+    stopHealthCheck();
+
+    // Check every 30 seconds
+    healthCheckInterval = setInterval(() => {
+        if (!socket?.connected && currentToken) {
+            console.log('[Socket] Health check: disconnected, reconnecting...');
+            connectSocket(currentToken);
+        }
+    }, 30000);
+}
+
+function stopHealthCheck(): void {
+    if (healthCheckInterval) {
+        clearInterval(healthCheckInterval);
+        healthCheckInterval = null;
+    }
+}
+
+/**
+ * Listen for page visibility changes - reconnect when tab becomes visible
+ */
+function startVisibilityListener(): void {
+    stopVisibilityListener();
+
+    visibilityHandler = () => {
+        if (document.visibilityState === 'visible' && currentToken) {
+            console.log('[Socket] Tab became visible, checking connection...');
+            if (!socket?.connected) {
+                console.log('[Socket] Reconnecting after tab focus...');
+                connectSocket(currentToken);
+            }
+        }
+    };
+
+    document.addEventListener('visibilitychange', visibilityHandler);
+}
+
+function stopVisibilityListener(): void {
+    if (visibilityHandler) {
+        document.removeEventListener('visibilitychange', visibilityHandler);
+        visibilityHandler = null;
     }
 }
 

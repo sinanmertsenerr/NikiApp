@@ -205,6 +205,7 @@ export function RafflesPage() {
                                     border="1px solid"
                                     borderColor={isDark ? '#333333' : '#E0E0E0'}
                                     p={4}
+                                    h="100%"
                                 >
                                     <Text
                                         fontWeight="semibold"

@@ -61,25 +61,27 @@ export function Header() {
             as="header"
             align="center"
             justify="space-between"
-            px={6}
-            py={4}
+            px={{ base: 3, md: 6 }}
+            py={{ base: 3, md: 4 }}
             bg={isDark ? '#1E1E1E' : '#F5F5F5'}
             transition="background 0.2s"
         >
             {/* Left side - Connection Status */}
-            <Box w="180px">
-                <ConnectionStatus showLabel={true} size="sm" />
+            <Box w={{ base: 'auto', md: '180px' }} ml={{ base: 10, lg: 0 }}>
+                <ConnectionStatus showLabel={{ base: false, md: true } as any} size="sm" />
             </Box>
 
             {/* Center - Date & Time */}
-            <Flex align="center" gap={4}>
-                <Flex align="center" gap={2}>
+            <Flex align="center" gap={{ base: 2, md: 4 }}>
+                {/* Date - hidden on mobile */}
+                <Flex align="center" gap={2} display={{ base: 'none', md: 'flex' }}>
                     <Icon as={LuCalendar} boxSize={4} color={isDark ? '#B0B0B0' : '#666666'} />
                     <Text fontSize="sm" color={isDark ? '#FFFFFF' : '#1A1A1A'} fontWeight="medium">
                         {formatDate(currentTime)}
                     </Text>
                 </Flex>
-                <Text color={isDark ? '#333333' : '#E0E0E0'}>|</Text>
+                <Text color={isDark ? '#333333' : '#E0E0E0'} display={{ base: 'none', md: 'block' }}>|</Text>
+                {/* Time - always visible */}
                 <Flex align="center" gap={2}>
                     <Icon as={LuClock} boxSize={4} color={isDark ? '#B0B0B0' : '#666666'} />
                     <Text fontSize="sm" color={isDark ? '#FFFFFF' : '#1A1A1A'} fontWeight="semibold">
