@@ -54,12 +54,17 @@ const HEAD = `
       }
       html, body { margin: 0; overscroll-behavior: none; }
       #root { display: flex; flex-direction: column; }
-      /* Installed PWA only: pin the shell to the full dynamic viewport (definite
-         height, not just min-height) so the in-flow bottom tab bar reaches the
-         true screen bottom and its background fills the home-indicator area
-         instead of leaving a dark strip below it. Browser layout is untouched. */
+      /* Installed PWA only: pin the shell to a stable full-screen height and let
+         ONLY the inner ScrollView scroll. iOS standalone has no retracting toolbar,
+         so 100vh == the visible screen and is reliable from cold start (unlike
+         100dvh, which can initialize oversized on launch and make the shell taller
+         than the viewport — that overflow was offsetting content down, cutting off
+         the bottom, and leaving a dark strip above the tab bar). overflow:hidden on
+         html/body kills the stray document scroll. Browser is untouched: this media
+         query never matches in Safari, which keeps the base height:100% chain. */
       @media (display-mode: standalone) {
-        html, body, #root { height: 100dvh; }
+        html, body, #root { height: 100vh; min-height: 100vh; }
+        html, body { overflow: hidden; }
       }
     </style>
     <script src="/sw-register.js" defer></script>`;
