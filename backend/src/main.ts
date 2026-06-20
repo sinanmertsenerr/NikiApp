@@ -1,4 +1,5 @@
 import { NestFactory } from '@nestjs/core';
+import { NestExpressApplication } from '@nestjs/platform-express';
 import { ValidationPipe, Logger } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import helmet from 'helmet';
@@ -30,7 +31,13 @@ async function bootstrap() {
     });
   }
 
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+
+  // Behind nginx + Cloudflare: trust the proxy chain so req.ip is the REAL client
+  // (nginx restores it from CF-Connecting-IP). Without this the rate limiter keys
+  // on the proxy IP (127.0.0.1) and throttles ALL users together. Safe here
+  // because the origin firewall only accepts traffic from Cloudflare IPs.
+  app.set('trust proxy', true);
 
   // Global prefix
   app.setGlobalPrefix('api/v1');
