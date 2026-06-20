@@ -13,7 +13,7 @@ import {
   Platform,
 } from 'react-native';
 import { Alert } from '../../src/utils/alert';
-import { CameraView, useCameraPermissions } from 'expo-camera';
+import { CameraView, useCameraPermissions } from '../../src/components/ui/nativeCamera';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -26,6 +26,7 @@ import { walletService, ScannedUserWallet } from '../../src/services/walletServi
 import { campaignService } from '../../src/services/campaignService';
 import { getErrorMessage } from '../../src/services/api';
 import { WebQRScanner } from '../../src/components/ui/WebQRScanner';
+import { ScannerErrorBoundary } from '../../src/components/ui/ScannerErrorBoundary';
 
 type OperationType = 'payment' | 'topup' | null;
 
@@ -302,15 +303,17 @@ export default function ScanQRScreen() {
         // Camera View
         <>
           {Platform.OS === 'web' ? (
-            <View style={StyleSheet.absoluteFillObject}>
-              <WebQRScanner
-                onScan={(text) => {
-                  if (scanned) return;
-                  handleBarCodeScanned({ data: text });
-                }}
-                onError={() => {}}
-              />
-            </View>
+            <ScannerErrorBoundary>
+              <View style={StyleSheet.absoluteFillObject}>
+                <WebQRScanner
+                  onScan={(text) => {
+                    if (scanned) return;
+                    handleBarCodeScanned({ data: text });
+                  }}
+                  onError={() => {}}
+                />
+              </View>
+            </ScannerErrorBoundary>
           ) : (
             <CameraView
               style={StyleSheet.absoluteFillObject}
