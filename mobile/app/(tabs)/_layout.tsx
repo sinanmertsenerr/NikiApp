@@ -1,6 +1,5 @@
 import { Tabs } from 'expo-router';
 import { Platform, useColorScheme } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 
@@ -10,6 +9,9 @@ import { AuthGate } from '../../src/components/AuthGate';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
+const WEB_TAB_BAR_VISIBLE_HEIGHT = 56;
+const WEB_SAFE_AREA_BOTTOM = 'env(safe-area-inset-bottom, 0px)';
+
 export default function TabLayout() {
   const { t } = useTranslation();
   const colorScheme = useColorScheme();
@@ -17,7 +19,6 @@ export default function TabLayout() {
 
   const isDark = theme === 'dark' || (theme === 'system' && colorScheme === 'dark');
   const colors = isDark ? DarkColors : Colors;
-  const insets = useSafeAreaInsets();
 
   return (
     <AuthGate requireBrand>
@@ -27,9 +28,9 @@ export default function TabLayout() {
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.textTertiary,
         // Themed on ALL platforms (web had no case -> default white bar). On web
-        // we apply the bottom safe-area inset explicitly (home indicator / Safari
-        // bar) so the bar sits above it with its dark bg filling down; native is
-        // handled by react-navigation via SafeAreaProvider.
+        // we use CSS env() for the iOS PWA home-indicator area. The JS safe-area
+        // value is not reliable in Safari standalone mode and can leave a black
+        // strip below the bar or double-size the tab area on some phones.
         tabBarStyle: {
           backgroundColor: colors.card,
           borderTopColor: colors.border,
@@ -37,12 +38,17 @@ export default function TabLayout() {
           ...(Platform.OS === 'android' ? { elevation: 8 } : null),
           ...(Platform.OS === 'web'
             ? {
-                height: 58 + insets.bottom,
-                paddingBottom: insets.bottom + 6,
-                paddingTop: 6,
+                height: `calc(${WEB_TAB_BAR_VISIBLE_HEIGHT}px + ${WEB_SAFE_AREA_BOTTOM})` as any,
+                paddingBottom: WEB_SAFE_AREA_BOTTOM as any,
+                paddingTop: 4,
               }
             : null),
         },
+        tabBarItemStyle: Platform.OS === 'web'
+          ? {
+              height: WEB_TAB_BAR_VISIBLE_HEIGHT,
+            }
+          : undefined,
         tabBarLabelStyle: {
           fontSize: 11,
           fontWeight: '500',
