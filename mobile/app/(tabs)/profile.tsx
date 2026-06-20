@@ -26,7 +26,7 @@ import { screenWidth as SCREEN_WIDTH } from '../../src/utils/responsive';
 import { socketService } from '../../src/services/socketService';
 
 export default function ProfileScreen() {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const colorScheme = useColorScheme();
   const { user, logout, tokens } = useAuthStore();
   const { theme, setTheme, language, setLanguage, selectedBrand } = useSettingsStore();
@@ -103,8 +103,10 @@ export default function ProfileScreen() {
 
   const toggleLanguage = async () => {
     const newLang = language === 'tr' ? 'en' : 'tr';
+    // settingsStore is the single source of truth (syncs store + i18n + storage).
     await setLanguage(newLang);
-    i18n.changeLanguage(newLang);
+    // Persist to the account so the preference survives re-login / new devices.
+    userService.updateProfile({ language: newLang }).catch(() => {});
   };
 
   return (

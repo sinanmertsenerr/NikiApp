@@ -67,10 +67,11 @@ export const useSettingsStore = create<SettingsState>((set) => ({
         AsyncStorage.getItem(STORAGE_KEYS.SELECTED_BRAND),
       ]);
 
-      // No saved choice → keep the device-derived default already applied in i18n.
+      // settingsStore is the SINGLE source of truth for the active language.
+      // No saved choice → fall back to the default already applied in i18n ('tr').
       const savedLanguage = (language as Language) || (i18n.language as Language) || 'tr';
       if (['tr', 'en'].includes(savedLanguage)) {
-        i18n.changeLanguage(savedLanguage);
+        await i18n.changeLanguage(savedLanguage);
       }
 
       set({

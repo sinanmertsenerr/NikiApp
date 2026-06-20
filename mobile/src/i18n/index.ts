@@ -1,6 +1,5 @@
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
-import * as Localization from 'expo-localization';
 
 import tr from './tr.json';
 import en from './en.json';
@@ -10,10 +9,11 @@ const resources = {
   en: { translation: en },
 };
 
-// Default to the device language when it's one we support; otherwise Turkish
-// (primary audience). A persisted choice in settingsStore overrides this later.
-const deviceLanguage = Localization.getLocales()[0]?.languageCode;
-const defaultLanguage = deviceLanguage === 'en' ? 'en' : 'tr';
+// Default to Turkish for EVERYONE (primary audience) — deterministic across all
+// devices/browsers, and it matches settingsStore's default so the two never
+// diverge. The user's persisted choice (settingsStore, applied on initialize)
+// overrides this. This is the single source of truth; nothing else sets language.
+const defaultLanguage = 'tr';
 
 i18n.use(initReactI18next).init({
   resources,

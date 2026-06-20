@@ -29,7 +29,6 @@ import { userService } from '../../src/services/userService';
 import { BRANDS } from '../../src/constants/brands';
 import { Colors, DarkColors, Spacing, FontSizes, BorderRadius, RSpacing, RFontSizes, isSmallDevice } from '../../src/constants/theme';
 import { screenWidth as SCREEN_WIDTH } from '../../src/utils/responsive';
-import i18n from '../../src/i18n';
 import { COUNTRIES, DEFAULT_COUNTRY, Country } from '../../src/constants/countries';
 import { CountryPickerModal } from '../../src/components/ui/CountryPickerModal';
 
@@ -105,14 +104,18 @@ export default function LoginScreen() {
       });
       await login(result.user, result.tokens);
 
-      // Fetch user profile and apply their language preference
+      // Apply the account's saved language preference AFTER login. Route it through
+      // the store's setLanguage so store + i18n + storage stay in sync. (A bare
+      // i18n.changeLanguage here used to update i18n only, desyncing store.language
+      // vs i18n.language → "UI Turkish but Profile shows English".) settingsStore
+      // is the single source of truth.
       try {
         const profile = await userService.getProfile();
         if (profile?.language && ['tr', 'en'].includes(profile.language)) {
-          await i18n.changeLanguage(profile.language);
+          await useSettingsStore.getState().setLanguage(profile.language);
         }
       } catch {
-        // Non-critical - continue with default language
+        // Non-critical — keep the current language.
       }
 
       // Brand is auto-selected (single active brand) — go straight to home.
