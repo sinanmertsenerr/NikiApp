@@ -9,12 +9,12 @@ import { AuthGate } from '../../src/components/AuthGate';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
-const WEB_TAB_BAR_VISIBLE_HEIGHT = 56;
-// max() with an 8px floor keeps the browser bar at exactly 64px (56 + 8) while
-// the installed PWA gets only the real home-indicator inset (56 + 34 = 90px) —
-// no extra strip above the indicator, so the standalone bar sits flush like a
-// native iOS tab bar. The browser look is unchanged: the item is top-aligned, so
-// the label position depends only on paddingTop + total height, both unchanged.
+const WEB_TAB_BAR_VISIBLE_HEIGHT = 50;
+// Compact, native-height bar. With the 8px floor: browser bar = 58px (50 + 8),
+// installed PWA = 50 + home-indicator inset (~84px on a notched iPhone), matching
+// the native iOS tab bar (~83px) instead of leaving dead space above the icons.
+// The item is top-aligned with ~47px natural height and overflow:visible, so the
+// content box (50 - paddingTop) never clips even with little slack.
 const WEB_SAFE_AREA_BOTTOM = 'max(env(safe-area-inset-bottom, 0px), 8px)';
 
 export default function TabLayout() {
@@ -47,7 +47,7 @@ export default function TabLayout() {
             ? {
                 height: `calc(${WEB_TAB_BAR_VISIBLE_HEIGHT}px + ${WEB_SAFE_AREA_BOTTOM})` as any,
                 paddingBottom: WEB_SAFE_AREA_BOTTOM as any,
-                paddingTop: 6,
+                paddingTop: 2,
               }
             : null),
         },
