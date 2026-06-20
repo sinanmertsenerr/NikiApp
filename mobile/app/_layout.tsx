@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Stack } from 'expo-router';
+import { Stack, type ErrorBoundaryProps } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { QueryClientProvider } from '@tanstack/react-query';
@@ -11,7 +11,15 @@ import { useSettingsStore } from '@/stores/settingsStore';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
 import { queryClient } from '@/services/queryClient';
 import { socketService } from '@/services/socketService';
+import { MobileFrame } from '@/components/web/MobileFrame';
+import { OfflineBanner } from '@/components/OfflineBanner';
+import { AppErrorFallback } from '@/components/AppErrorBoundary';
 import '@/i18n';
+
+// expo-router renders this instead of a white screen if any route crashes.
+export function ErrorBoundary({ error, retry }: ErrorBoundaryProps) {
+  return <AppErrorFallback error={error} retry={retry} />;
+}
 
 
 // Keep the splash screen visible while we fetch resources
@@ -30,6 +38,7 @@ function RootLayoutContent() {
   return (
     <>
       <StatusBar style={isDark ? 'light' : 'dark'} />
+      <OfflineBanner />
       <Stack
         screenOptions={{
           headerShown: false,
@@ -92,7 +101,9 @@ export default function RootLayout() {
   return (
     <QueryClientProvider client={queryClient}>
       <GestureHandlerRootView style={styles.container}>
-        <RootLayoutContent />
+        <MobileFrame>
+          <RootLayoutContent />
+        </MobileFrame>
       </GestureHandlerRootView>
     </QueryClientProvider>
   );

@@ -1,9 +1,9 @@
 import { io, Socket } from 'socket.io-client';
-import * as SecureStore from 'expo-secure-store';
-import { AppState, AppStateStatus } from 'react-native';
+import { AppState, AppStateStatus, Platform } from 'react-native';
+import * as SecureStore from '@/services/secureStore';
 import { API_BASE_URL, STORAGE_KEYS } from '@/constants/api';
 import { queryClient } from '@/services/queryClient';
-import api from '@/services/api';
+import { refreshAccessToken } from '@/services/api';
 
 // Socket events types
 export interface BalanceUpdateEvent {
@@ -82,6 +82,7 @@ class SocketService {
     private isRefreshing = false;
     private healthCheckInterval: ReturnType<typeof setInterval> | null = null;
     private appStateSubscription: any = null;
+    private visibilityHandler: (() => void) | null = null;
 
     // External callback listeners for balance updates
     private balanceUpdateListeners: Set<(data: BalanceUpdateEvent) => void> = new Set();
@@ -181,13 +182,26 @@ class SocketService {
 
             this.socket = io(socketUrl, {
                 auth: { token },
-                transports: ['websocket'],
-                // Disable auto-reconnection - we handle it manually with fresh tokens
-                reconnection: false,
+                // Native: websocket only. Web: allow polling fallback for proxies
+                // that block the WS upgrade.
+                transports: Platform.OS === 'web' ? ['websocket', 'polling'] : ['websocket'],
+                // Native handles reconnection manually with fresh tokens. On web,
+                // background tabs throttle our setInterval health-check, so let
+                // socket.io retry too.
+                reconnection: Platform.OS === 'web',
+                reconnectionAttempts: Infinity,
+                reconnectionDelay: 1000,
+                reconnectionDelayMax: 5000,
             });
 
             this.setupListeners();
-            this.startHealthCheck();
+            // Native uses reconnection:false, so the 30s health-check IS its
+            // reconnect mechanism. On web socket.io's own reconnection handles it;
+            // running both would orphan the reconnecting socket (a new io() each
+            // 30s) and duplicate query invalidations, so skip it on web.
+            if (Platform.OS !== 'web') {
+                this.startHealthCheck();
+            }
             this.startAppStateListener();
         } catch (error) {
             console.error('[Socket] Connection error:', error);
@@ -226,6 +240,13 @@ class SocketService {
      * Listen for app state changes - reconnect when app comes to foreground
      */
     private startAppStateListener(): void {
+        // On web, AppState 'active'/'background' does not map to tab visibility,
+        // so foreground reconnect must be driven by the document visibility API.
+        if (Platform.OS === 'web') {
+            this.startWebVisibilityListener();
+            return;
+        }
+
         // Remove existing subscription
         if (this.appStateSubscription) {
             this.appStateSubscription.remove();
@@ -243,6 +264,24 @@ class SocketService {
     }
 
     /**
+     * Web equivalent of the AppState listener: refresh + reconnect when the tab
+     * becomes visible again (browsers freeze backgrounded tabs).
+     */
+    private startWebVisibilityListener(): void {
+        if (typeof document === 'undefined') return;
+        if (this.visibilityHandler) {
+            document.removeEventListener('visibilitychange', this.visibilityHandler);
+        }
+        this.visibilityHandler = () => {
+            if (document.visibilityState === 'visible') {
+                console.log('[Socket] Tab visible, refreshing token and checking connection...');
+                this.refreshTokenAndReconnect();
+            }
+        };
+        document.addEventListener('visibilitychange', this.visibilityHandler);
+    }
+
+    /**
      * Refresh token and reconnect socket
      * This ensures we always have a fresh token when reconnecting
      */
@@ -255,24 +294,12 @@ class SocketService {
         this.isRefreshing = true;
 
         try {
-            const refreshToken = await SecureStore.getItemAsync(STORAGE_KEYS.REFRESH_TOKEN);
+            // Delegate to the shared single-flight refresh in api.ts (correct
+            // response shape: response.data.data.tokens). This fixes the previous
+            // flat response.data.accessToken read which was always undefined.
+            const accessToken = await refreshAccessToken();
 
-            if (!refreshToken) {
-                console.log('[Socket] No refresh token available');
-                this.isRefreshing = false;
-                return;
-            }
-
-            console.log('[Socket] Refreshing token before reconnect...');
-            const response = await api.post('/auth/refresh', { refreshToken });
-
-            if (response.data?.accessToken) {
-                // Save new tokens
-                await SecureStore.setItemAsync(STORAGE_KEYS.ACCESS_TOKEN, response.data.accessToken);
-                if (response.data.refreshToken) {
-                    await SecureStore.setItemAsync(STORAGE_KEYS.REFRESH_TOKEN, response.data.refreshToken);
-                }
-
+            if (accessToken) {
                 console.log('[Socket] Token refreshed successfully, reconnecting...');
 
                 // Disconnect existing socket
@@ -286,7 +313,7 @@ class SocketService {
                 // Connect with new token
                 await this.connect();
             } else {
-                console.log('[Socket] Token refresh returned no access token');
+                console.log('[Socket] No refresh token available');
                 this.isRefreshing = false;
 
                 // Try connecting anyway with existing token
@@ -318,6 +345,10 @@ class SocketService {
         if (this.appStateSubscription) {
             this.appStateSubscription.remove();
             this.appStateSubscription = null;
+        }
+        if (this.visibilityHandler && typeof document !== 'undefined') {
+            document.removeEventListener('visibilitychange', this.visibilityHandler);
+            this.visibilityHandler = null;
         }
     }
 
@@ -357,32 +388,22 @@ class SocketService {
             this.isRefreshing = true;
 
             try {
-                // Try to refresh token
-                const refreshToken = await SecureStore.getItemAsync(STORAGE_KEYS.REFRESH_TOKEN);
+                // Shared single-flight refresh (correct response shape).
+                const accessToken = await refreshAccessToken();
 
-                if (refreshToken) {
-                    const response = await api.post('/auth/refresh', { refreshToken });
+                if (accessToken) {
+                    console.log('[Socket] Token refreshed, reconnecting...');
 
-                    if (response.data?.accessToken) {
-                        // Save new tokens
-                        await SecureStore.setItemAsync(STORAGE_KEYS.ACCESS_TOKEN, response.data.accessToken);
-                        if (response.data.refreshToken) {
-                            await SecureStore.setItemAsync(STORAGE_KEYS.REFRESH_TOKEN, response.data.refreshToken);
-                        }
+                    // Disconnect and reconnect with new token
+                    this.socket?.disconnect();
+                    this.socket = null;
+                    this.isRefreshing = false;
 
-                        console.log('[Socket] Token refreshed, reconnecting...');
-
-                        // Disconnect and reconnect with new token
-                        this.socket?.disconnect();
-                        this.socket = null;
-                        this.isRefreshing = false;
-
-                        // Wait a bit then reconnect
-                        setTimeout(() => {
-                            this.connect();
-                        }, 500);
-                        return;
-                    }
+                    // Wait a bit then reconnect
+                    setTimeout(() => {
+                        this.connect();
+                    }, 500);
+                    return;
                 }
             } catch (refreshError: any) {
                 console.error('[Socket] Token refresh failed:', refreshError);

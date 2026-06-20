@@ -7,9 +7,9 @@ import {
   useColorScheme,
   Pressable,
   TextInput,
-  Alert,
   ActivityIndicator,
 } from 'react-native';
+import { Alert } from '../../src/utils/alert';
 import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
@@ -27,6 +27,7 @@ import { formatPhoneNumber } from '../../src/utils/phoneFormat';
 import { Input } from '../../src/components/ui/Input';
 import { COUNTRIES, DEFAULT_COUNTRY, Country } from '../../src/constants/countries';
 import { CountryPickerModal } from '../../src/components/ui/CountryPickerModal';
+import { getErrorMessage } from '../../src/services/api';
 
 export default function ProfileEditScreen() {
   const { t } = useTranslation();
@@ -140,7 +141,7 @@ export default function ProfileEditScreen() {
           finalAvatarUrl = await uploadService.uploadAvatar(newAvatarUri);
         } catch (uploadError) {
           console.error('Avatar upload error:', uploadError);
-          Alert.alert(t('common.error'), t('profile.avatarError'));
+          Alert.alert(t('common.error'), getErrorMessage(uploadError));
           setIsUploadingAvatar(false);
           setIsLoading(false);
           return;
@@ -205,7 +206,7 @@ export default function ProfileEditScreen() {
       // User asked to just go to profile.
     } catch (error) {
       console.error('Profile update error:', error);
-      Alert.alert(t('common.error'), t('profile.updateError'));
+      Alert.alert(t('common.error'), getErrorMessage(error));
     } finally {
       setIsLoading(false);
     }

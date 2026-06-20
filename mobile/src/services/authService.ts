@@ -1,4 +1,5 @@
-import api, { getErrorMessage } from './api';
+import api, { getErrorMessage, getErrorCode } from './api';
+import { AppError } from './appError';
 import { API_ENDPOINTS } from '../constants/api';
 import type { User, AuthTokens } from '../stores/authStore';
 
@@ -43,7 +44,7 @@ class AuthService {
       const response = await api.post(API_ENDPOINTS.AUTH.REGISTER, data);
       return response.data.data;
     } catch (error) {
-      throw new Error(getErrorMessage(error));
+      throw new AppError(getErrorMessage(error), { code: getErrorCode(error) });
     }
   }
 
@@ -52,7 +53,7 @@ class AuthService {
       const response = await api.post(API_ENDPOINTS.AUTH.VERIFY_EMAIL, data);
       return response.data.data;
     } catch (error) {
-      throw new Error(getErrorMessage(error));
+      throw new AppError(getErrorMessage(error), { code: getErrorCode(error) });
     }
   }
 
@@ -60,7 +61,7 @@ class AuthService {
     try {
       await api.post(API_ENDPOINTS.AUTH.RESEND_VERIFICATION, { email });
     } catch (error) {
-      throw new Error(getErrorMessage(error));
+      throw new AppError(getErrorMessage(error), { code: getErrorCode(error) });
     }
   }
 
@@ -69,7 +70,7 @@ class AuthService {
       const response = await api.post(API_ENDPOINTS.AUTH.LOGIN, data);
       return response.data.data;
     } catch (error) {
-      throw new Error(getErrorMessage(error));
+      throw new AppError(getErrorMessage(error), { code: getErrorCode(error) });
     }
   }
 
@@ -77,7 +78,7 @@ class AuthService {
     try {
       await api.post(API_ENDPOINTS.AUTH.FORGOT_PASSWORD, data);
     } catch (error) {
-      throw new Error(getErrorMessage(error));
+      throw new AppError(getErrorMessage(error), { code: getErrorCode(error) });
     }
   }
 
@@ -85,7 +86,7 @@ class AuthService {
     try {
       await api.post(API_ENDPOINTS.AUTH.RESET_PASSWORD, data);
     } catch (error) {
-      throw new Error(getErrorMessage(error));
+      throw new AppError(getErrorMessage(error), { code: getErrorCode(error) });
     }
   }
 
@@ -103,16 +104,7 @@ class AuthService {
       const response = await api.get(API_ENDPOINTS.AUTH.ME);
       return response.data.data.user;
     } catch (error) {
-      throw new Error(getErrorMessage(error));
-    }
-  }
-
-  async refreshTokens(refreshToken: string): Promise<AuthTokens> {
-    try {
-      const response = await api.post(API_ENDPOINTS.AUTH.REFRESH, { refreshToken });
-      return response.data.data.tokens;
-    } catch (error) {
-      throw new Error(getErrorMessage(error));
+      throw new AppError(getErrorMessage(error), { code: getErrorCode(error) });
     }
   }
 
@@ -121,7 +113,7 @@ class AuthService {
       const response = await api.post(API_ENDPOINTS.AUTH.SEND_PHONE_CODE, { phone });
       return response.data;
     } catch (error) {
-      throw new Error(getErrorMessage(error));
+      throw new AppError(getErrorMessage(error), { code: getErrorCode(error) });
     }
   }
 
@@ -130,7 +122,7 @@ class AuthService {
       const response = await api.post(API_ENDPOINTS.AUTH.VERIFY_PHONE_CODE, { phone, code });
       return response.data;
     } catch (error) {
-      throw new Error(getErrorMessage(error));
+      throw new AppError(getErrorMessage(error), { code: getErrorCode(error) });
     }
   }
 }

@@ -19,11 +19,12 @@ import { useSettingsStore } from '../../src/stores/settingsStore';
 import { Colors, DarkColors, Spacing, FontSizes, BorderRadius, Shadows, RSpacing, RFontSizes, isSmallDevice } from '../../src/constants/theme';
 import { screenWidth as SCREEN_WIDTH } from '../../src/utils/responsive';
 import { notificationService, Notification } from '../../src/services/notificationService';
+import i18n from '../../src/i18n';
 
 // Notification types
 type NotificationType = 'reward' | 'campaign' | 'order' | 'system' | 'badge' | 'balance';
 
-// Format relative time
+// Format relative time (localized)
 const formatRelativeTime = (dateString: string): string => {
   const date = new Date(dateString);
   const now = new Date();
@@ -32,11 +33,11 @@ const formatRelativeTime = (dateString: string): string => {
   const diffHours = Math.floor(diffMs / 3600000);
   const diffDays = Math.floor(diffMs / 86400000);
 
-  if (diffMins < 1) return 'Az önce';
-  if (diffMins < 60) return `${diffMins} dk önce`;
-  if (diffHours < 24) return `${diffHours} saat önce`;
-  if (diffDays < 7) return `${diffDays} gün önce`;
-  return date.toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' });
+  if (diffMins < 1) return i18n.t('notifications.time.justNow');
+  if (diffMins < 60) return i18n.t('notifications.time.minutesAgo', { count: diffMins });
+  if (diffHours < 24) return i18n.t('notifications.time.hoursAgo', { count: diffHours });
+  if (diffDays < 7) return i18n.t('notifications.time.daysAgo', { count: diffDays });
+  return date.toLocaleDateString(i18n.language === 'tr' ? 'tr-TR' : 'en-US', { day: 'numeric', month: 'short' });
 };
 
 const getNotificationIcon = (type: NotificationType): string => {
@@ -147,7 +148,7 @@ export default function NotificationsScreen() {
         onPress={() => handleNotificationPress(item)}
       >
         <View style={[styles.iconContainer, { backgroundColor: iconColor + '20' }]}>
-          <Ionicons name={getNotificationIcon(item.type as NotificationType) as any} size={22} color={iconColor} />
+          <Ionicons name={getNotificationIcon(item.type as NotificationType) as any} size={22} color={iconColor} accessible={false} />
         </View>
         <View style={styles.notificationContent}>
           <View style={styles.notificationHeader}>
@@ -162,7 +163,7 @@ export default function NotificationsScreen() {
           <Text style={[styles.timestamp, { color: colors.textTertiary }]}>{formatRelativeTime(item.createdAt)}</Text>
         </View>
         {item.actionUrl && (
-          <Ionicons name="chevron-forward" size={18} color={colors.textTertiary} />
+          <Ionicons name="chevron-forward" size={18} color={colors.textTertiary} accessible={false} />
         )}
       </Pressable>
     );
@@ -182,7 +183,7 @@ export default function NotificationsScreen() {
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
       {/* Header */}
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} style={styles.backButton}>
+        <Pressable onPress={() => router.back()} style={styles.backButton} accessibilityRole="button" accessibilityLabel={t('common.back')}>
           <Ionicons name="arrow-back" size={24} color={colors.text} />
         </Pressable>
         <View style={styles.headerCenter}>
@@ -224,7 +225,7 @@ export default function NotificationsScreen() {
         }
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
-            <Ionicons name="notifications-off-outline" size={64} color={colors.textTertiary} />
+            <Ionicons name="notifications-off-outline" size={64} color={colors.textTertiary} accessible={false} />
             <Text style={[styles.emptyTitle, { color: colors.text }]}>{t('notifications.noNotifications')}</Text>
             <Text style={[styles.emptyMessage, { color: colors.textSecondary }]}>
               {t('notifications.noNotificationsDesc')}

@@ -24,6 +24,7 @@ import { Colors, DarkColors, Spacing, FontSizes, BorderRadius, Shadows, RSpacing
 import { campaignService, Campaign, UserCampaign } from '../../src/services/campaignService';
 import { getTranslatedContent } from '../../src/hooks/useTranslatedContent';
 import { screenWidth as SCREEN_WIDTH } from '../../src/utils/responsive';
+import { ErrorState } from '../../src/components/ErrorState';
 
 // Niki logo for Mystery Box campaigns
 const NIKI_LOGO = require('../../assets/images/brands/niki-logo.png');
@@ -293,6 +294,9 @@ export default function CampaignsScreen() {
       </View>
 
       {/* Campaigns List */}
+      {error && allCampaigns.length === 0 ? (
+        <ErrorState error={error} onRetry={() => refetch()} />
+      ) : (
       <FlatList
         data={campaigns}
         renderItem={renderCampaign}
@@ -318,6 +322,7 @@ export default function CampaignsScreen() {
           </View>
         }
       />
+      )}
 
       {/* QR Code Modal */}
       <Modal

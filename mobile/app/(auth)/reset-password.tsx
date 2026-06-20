@@ -9,9 +9,9 @@ import {
   TextInput,
   Pressable,
   useColorScheme,
-  Alert,
   Keyboard,
 } from 'react-native';
+import { Alert } from '../../src/utils/alert';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';

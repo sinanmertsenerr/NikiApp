@@ -26,6 +26,7 @@ import { Colors, DarkColors, Spacing, FontSizes, BorderRadius, Shadows, RSpacing
 import { walletService, Transaction } from '../../src/services/walletService';
 import { socketService, BalanceUpdateEvent } from '../../src/services/socketService';
 import { screenWidth as SCREEN_WIDTH } from '../../src/utils/responsive';
+import { ErrorState } from '../../src/components/ErrorState';
 
 // Card images
 const nikiCardImage = require('../../assets/images/niki-card.png');
@@ -141,6 +142,7 @@ export default function WalletScreen() {
     isLoading: walletLoading,
     refetch: refetchWallet,
     isError: walletError,
+    error: walletErrorObj,
   } = useQuery({
     queryKey: ['wallet'],
     queryFn: async () => {
@@ -296,6 +298,14 @@ export default function WalletScreen() {
     );
   }
 
+  if (walletError && !walletData) {
+    return (
+      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
+        <ErrorState error={walletErrorObj} onRetry={() => refetchWallet()} />
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
       <ScrollView
@@ -320,6 +330,8 @@ export default function WalletScreen() {
             <Pressable
               style={styles.walletArrow}
               onPress={() => handleArrowPress('prev')}
+              accessibilityRole="button"
+              accessibilityLabel="Önceki cüzdan"
             >
               <Ionicons name="chevron-back" size={32} color={colors.text} />
             </Pressable>
@@ -345,6 +357,7 @@ export default function WalletScreen() {
                 style={styles.balanceCardImage}
                 imageStyle={styles.cardImageStyle}
                 resizeMode="cover"
+                accessible={false}
               >
                 {/* Futuristic shine overlay */}
                 <LinearGradient
@@ -363,6 +376,7 @@ export default function WalletScreen() {
                 style={styles.balanceCardImage}
                 imageStyle={styles.cardImageStyle}
                 resizeMode="cover"
+                accessible={false}
               >
                 {/* Futuristic shine overlay */}
                 <LinearGradient
@@ -383,6 +397,8 @@ export default function WalletScreen() {
             <Pressable
               style={styles.walletArrow}
               onPress={() => handleArrowPress('next')}
+              accessibilityRole="button"
+              accessibilityLabel="Sonraki cüzdan"
             >
               <Ionicons name="chevron-forward" size={32} color={colors.text} />
             </Pressable>
@@ -551,6 +567,8 @@ export default function WalletScreen() {
               <Pressable
                 style={styles.modalClose}
                 onPress={() => setQrModalVisible(false)}
+                accessibilityRole="button"
+                accessibilityLabel={t('common.close')}
               >
                 <Ionicons name="close" size={28} color={colors.text} />
               </Pressable>

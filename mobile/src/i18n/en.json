@@ -34,7 +34,35 @@
     "uploading": "Uploading...",
     "or": "or",
     "add": "Add",
-    "campaign": "Campaign"
+    "campaign": "Campaign",
+    "errorOccurred": "An unexpected error occurred. Please try again.",
+    "unknown": "Unknown"
+  },
+  "errors": {
+    "title": "Something went wrong",
+    "network": "You appear to be offline. Please check your internet connection and try again.",
+    "serverUnreachable": "We can't reach our servers right now. Please try again in a moment.",
+    "timeout": "This is taking longer than expected. Please try again.",
+    "tooManyRequests": "Too many requests in a short time. Please wait a few seconds and try again.",
+    "sessionExpired": "Your session has expired. Please sign in again to continue.",
+    "forbidden": "You don't have permission to do this. Please contact us if you think this is a mistake.",
+    "notFound": "We couldn't find what you were looking for. It may have been moved or removed.",
+    "fileTooLarge": "This file is too large. Please choose a smaller file and try again.",
+    "server": "Something went wrong on our end. Please try again in a little while.",
+    "unknown": "An unexpected error occurred. Please try again, and let us know if it keeps happening.",
+    "cameraPermission": "We need permission to use your camera. You can enable it in your device settings.",
+    "cameraInsecure": "The camera only works over a secure (https) connection. Please open this page using https.",
+    "cameraNotFound": "No camera found.",
+    "cameraGeneric": "Could not start the camera. Please try again.",
+    "storageUnavailable": "We can't save your data on this device. If you're in private mode, please try again in a normal window.",
+    "offlineAction": "You need to be online to do this. Please reconnect and try again.",
+    "uploadFailed": "Your file couldn't be uploaded. Please check your connection and try again.",
+    "loginInvalid": "Your email or password is incorrect. Please check and try again.",
+    "tooManyRequestsWait": "Too many requests. Please try again in {{seconds}} seconds.",
+    "offlineBanner": "You're offline — check your connection.",
+    "accountLocked": "Too many failed attempts. Please try again later.",
+    "phoneNotVerified": "Please verify your phone number to continue.",
+    "reload": "Reload"
   },
   "auth": {
     "login": "Login",
@@ -155,7 +183,8 @@
     "creditInfo": "Get 15% discount when you pay with Niki Credits!",
     "showToStaff": "Show this code to the cashier",
     "seeAll": "See All",
-    "insufficientBalance": "Insufficient balance. Available: ₺{{amount}}"
+    "insufficientBalance": "Insufficient balance. Available: ₺{{amount}}",
+    "discount": "discount"
   },
   "mysteryBox": {
     "title": "Mystery Box",
@@ -223,7 +252,13 @@
   "notifications": {
     "markAllRead": "Mark All Read",
     "noNotifications": "No Notifications",
-    "noNotificationsDesc": "You don't have any notifications yet."
+    "noNotificationsDesc": "You don't have any notifications yet.",
+    "time": {
+      "justNow": "just now",
+      "minutesAgo": "{{count}} min ago",
+      "hoursAgo": "{{count}} h ago",
+      "daysAgo": "{{count}} d ago"
+    }
   },
   "menu": {
     "title": "Menu",
@@ -604,7 +639,11 @@
     "descriptionEnPlaceholder": "Enter description (English)",
     "descriptionTrPlaceholder": "Enter description (Turkish)",
     "fillRequiredFields": "Please fill in the required fields",
-    "hoursLeft": "hours left"
+    "hoursLeft": "hours left",
+    "deleteCampaignTitle": "Delete Campaign",
+    "outOfStock": "Out of Stock",
+    "payment": "Payment",
+    "topUp": "Top Up"
   },
   "groups": {
     "title": "Groups",
@@ -678,5 +717,9 @@
     "removeMemberError": "Error removing member",
     "addMemberError": "Error adding members",
     "importError": "Error importing file"
+  },
+  "countryPicker": {
+    "title": "Select Country",
+    "searchPlaceholder": "Search country..."
   }
 }

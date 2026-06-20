@@ -23,6 +23,7 @@ import { BRANDS } from '../../src/constants/brands';
 import { Colors, DarkColors, Spacing, FontSizes, BorderRadius, Shadows, RSpacing, RFontSizes, isSmallDevice } from '../../src/constants/theme';
 import { getTranslatedContent } from '../../src/hooks/useTranslatedContent';
 import { screenWidth as SCREEN_WIDTH } from '../../src/utils/responsive';
+import { ErrorState } from '../../src/components/ErrorState';
 
 const POINTS_FOR_FREE_COFFEE = 10;
 
@@ -37,7 +38,7 @@ export default function HomeScreen() {
   const brand = BRANDS[selectedBrand];
 
   // Fetch current user data
-  const { data: userData, refetch, isFetching } = useQuery({
+  const { data: userData, refetch, isFetching, isError, error } = useQuery({
     queryKey: ['currentUser'],
     queryFn: authService.getCurrentUser,
     enabled: !!user,
@@ -67,6 +68,16 @@ export default function HomeScreen() {
   const pointsToFree = Math.max(0, POINTS_FOR_FREE_COFFEE - (loyaltyPoints % POINTS_FOR_FREE_COFFEE));
   const progress = ((loyaltyPoints % POINTS_FOR_FREE_COFFEE) / POINTS_FOR_FREE_COFFEE) * 100;
 
+  // Main data failed to load and there's nothing usable to show: surface the
+  // error with a Retry button instead of a stuck/empty loyalty screen.
+  if (isError && !userData) {
+    return (
+      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
+        <ErrorState error={error} onRetry={() => refetch()} />
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
       <ScrollView
@@ -92,11 +103,14 @@ export default function HomeScreen() {
           <Pressable
             style={styles.notificationContainer}
             onPress={() => router.push('/(screens)/notifications')}
+            accessibilityRole="button"
+            accessibilityLabel="Bildirimler"
           >
             <Image
               source={brand.logo}
               style={[styles.headerLogo, isDark && { tintColor: '#FFFFFF' }]}
               contentFit="contain"
+              accessible={false}
             />
             {notificationCount > 0 && (
               <View style={[styles.notificationBadge, { backgroundColor: colors.error }]}>
@@ -135,6 +149,7 @@ export default function HomeScreen() {
                   style={styles.cupImage}
                   tintColor="#FFFFFF"
                   contentFit="contain"
+                  accessible={false}
                 />
               </View>
             ))}

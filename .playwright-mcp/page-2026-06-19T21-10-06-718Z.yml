@@ -1,0 +1,21 @@
+- generic [ref=e18]:
+  - generic [ref=e19]:
+    - img [ref=e21]
+    - generic [ref=e22]: Niki Coffee
+  - generic [ref=e23]: Tekrar Hoş Geldin!
+  - generic [ref=e24]: Hesabınıza giriş yapın
+  - generic [ref=e25]:
+    - generic [ref=e26]:
+      - generic [ref=e28] [cursor=pointer]: Email ile Giriş
+      - generic [ref=e30] [cursor=pointer]: Telefon ile Giriş
+    - generic [ref=e31]:
+      - generic [ref=e32]: E-posta
+      - textbox "ornek@email.com" [ref=e34]
+    - generic [ref=e35]:
+      - generic [ref=e36]: Şifre
+      - textbox "••••••••" [ref=e38]
+    - generic [ref=e41] [cursor=pointer]: Şifremi Unuttum
+    - generic [ref=e43] [cursor=pointer]: Giriş Yap
+  - generic [ref=e44]:
+    - generic [ref=e45]: Hesabın yok mu?
+    - generic [ref=e47] [cursor=pointer]: Kayıt Ol

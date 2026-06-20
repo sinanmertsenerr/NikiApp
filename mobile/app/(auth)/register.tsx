@@ -8,9 +8,9 @@ import {
   ScrollView,
   Pressable,
   useColorScheme,
-  Alert,
   TextInput,
 } from 'react-native';
+import { Alert } from '../../src/utils/alert';
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { useForm, Controller } from 'react-hook-form';

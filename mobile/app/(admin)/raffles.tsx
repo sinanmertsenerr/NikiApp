@@ -7,7 +7,6 @@ import {
     useColorScheme,
     Pressable,
     RefreshControl,
-    Alert,
     Modal,
     TextInput,
     ScrollView,
@@ -15,16 +14,19 @@ import {
     ActivityIndicator,
     KeyboardAvoidingView,
 } from 'react-native';
+import { Alert } from '../../src/utils/alert';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import { WebDateTimeField } from '../../src/components/ui/WebDateTimeField';
 
 import { useSettingsStore } from '../../src/stores/settingsStore';
 import { Colors, DarkColors, Spacing, FontSizes, BorderRadius, Shadows, RSpacing, RFontSizes, isSmallDevice } from '../../src/constants/theme';
 import { screenWidth as SCREEN_WIDTH } from '../../src/utils/responsive';
 import { getTranslatedContent } from '../../src/hooks/useTranslatedContent';
+import { getErrorMessage } from '../../src/services/api';
 import {
     Raffle,
     RaffleParticipant,
@@ -199,7 +201,7 @@ export default function AdminRafflesScreen() {
             resetForm();
             loadData();
         } catch (error: any) {
-            Alert.alert(t('common.error'), error?.response?.data?.message || t('common.errorOccurred'));
+            Alert.alert(t('common.error'), getErrorMessage(error));
         } finally {
             setSaving(false);
         }
@@ -219,7 +221,7 @@ export default function AdminRafflesScreen() {
                             await deleteRaffle(raffle.id);
                             loadData();
                         } catch (error: any) {
-                            Alert.alert(t('common.error'), error?.response?.data?.message || t('common.errorOccurred'));
+                            Alert.alert(t('common.error'), getErrorMessage(error));
                         }
                     },
                 },
@@ -260,7 +262,7 @@ export default function AdminRafflesScreen() {
                             Alert.alert(t('common.success'), response.message);
                             loadData();
                         } catch (error: any) {
-                            Alert.alert(t('common.error'), error?.response?.data?.message || t('common.errorOccurred'));
+                            Alert.alert(t('common.error'), getErrorMessage(error));
                         } finally {
                             setDrawing(false);
                         }
@@ -560,6 +562,10 @@ export default function AdminRafflesScreen() {
 
                                 {/* Start Date & Time */}
                                 <Text style={[styles.inputLabel, { color: colors.text }]}>{t('admin.startDateTime')}</Text>
+                                {Platform.OS === 'web' && (
+                                    <WebDateTimeField mode="datetime" value={startDate} onChange={setStartDate} />
+                                )}
+                                {Platform.OS !== 'web' && (
                                 <View style={styles.dateTimeRow}>
                                     <Pressable
                                         style={[styles.dateTimeButton, { backgroundColor: colors.backgroundSecondary, flex: 1 }]}
@@ -588,6 +594,7 @@ export default function AdminRafflesScreen() {
                                         </Text>
                                     </Pressable>
                                 </View>
+                                )}
 
                                 {/* Inline Start Date Picker for iOS */}
                                 {Platform.OS === 'ios' && showStartPicker && (
@@ -643,6 +650,10 @@ export default function AdminRafflesScreen() {
 
                                 {/* End Date & Time */}
                                 <Text style={[styles.inputLabel, { color: colors.text }]}>{t('admin.endDateTime')}</Text>
+                                {Platform.OS === 'web' && (
+                                    <WebDateTimeField mode="datetime" value={endDate} onChange={setEndDate} />
+                                )}
+                                {Platform.OS !== 'web' && (
                                 <View style={styles.dateTimeRow}>
                                     <Pressable
                                         style={[styles.dateTimeButton, { backgroundColor: colors.backgroundSecondary, flex: 1 }]}
@@ -671,6 +682,7 @@ export default function AdminRafflesScreen() {
                                         </Text>
                                     </Pressable>
                                 </View>
+                                )}
 
                                 {/* Inline End Date Picker for iOS */}
                                 {Platform.OS === 'ios' && showEndPicker && (

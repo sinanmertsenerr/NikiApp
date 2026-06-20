@@ -2,6 +2,7 @@ import { Stack } from 'expo-router';
 import { useColorScheme } from 'react-native';
 import { useSettingsStore } from '../../src/stores/settingsStore';
 import { Colors, DarkColors } from '../../src/constants/theme';
+import { AuthGate } from '../../src/components/AuthGate';
 
 export default function ScreensLayout() {
   const colorScheme = useColorScheme();
@@ -11,12 +12,14 @@ export default function ScreensLayout() {
   const colors = isDark ? DarkColors : Colors;
 
   return (
-    <Stack
-      screenOptions={{
-        headerShown: false,
-        contentStyle: { backgroundColor: colors.background },
-        animation: 'slide_from_right',
-      }}
-    />
+    <AuthGate requireBrand>
+      <Stack
+        screenOptions={{
+          headerShown: false,
+          contentStyle: { backgroundColor: colors.background },
+          animation: 'slide_from_right',
+        }}
+      />
+    </AuthGate>
   );
 }

@@ -1,9 +1,15 @@
 import { create } from 'zustand';
-import * as SecureStore from 'expo-secure-store';
-import { Alert } from 'react-native';
+import { Platform } from 'react-native';
+import * as SecureStore from '../services/secureStore';
+import { Alert } from '@/utils/alert';
 import { STORAGE_KEYS } from '../constants/api';
 import { socketService } from '../services/socketService';
 import i18n from '../i18n';
+
+// Web only: attach a cross-tab auth sync once. When tokens are cleared in another
+// browser tab (logout), localStorage fires a 'storage' event here so this tab
+// mirrors the logout instead of staying on authenticated screens with a dead session.
+let webStorageSyncAttached = false;
 
 export interface User {
   id: string;
@@ -93,6 +99,18 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   initialize: async () => {
     set({ isLoading: true });
+
+    // Web: mirror logout across tabs.
+    if (Platform.OS === 'web' && typeof window !== 'undefined' && !webStorageSyncAttached) {
+      webStorageSyncAttached = true;
+      window.addEventListener('storage', (e) => {
+        if (e.key === STORAGE_KEYS.ACCESS_TOKEN && e.newValue === null && get().isAuthenticated) {
+          socketService.disconnect();
+          set({ user: null, tokens: null, isAuthenticated: false });
+        }
+      });
+    }
+
     try {
       const accessToken = await SecureStore.getItemAsync(STORAGE_KEYS.ACCESS_TOKEN);
       const refreshToken = await SecureStore.getItemAsync(STORAGE_KEYS.REFRESH_TOKEN);

@@ -85,9 +85,20 @@ async function bootstrap() {
   const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:19006';
   const productionUrl = process.env.PRODUCTION_APP_URL;
   const dashboardUrl = process.env.DASHBOARD_URL || 'http://localhost:5173';
-  const allowedOrigins = [frontendUrl, dashboardUrl];
+  // Mobile web build (react-native-web). WEB_APP_URL = deployed web origin;
+  // http://localhost:8081 is the Expo web dev server (Metro bundler).
+  const webAppUrl = process.env.WEB_APP_URL;
+  const allowedOrigins = [
+    frontendUrl,
+    dashboardUrl,
+    'http://localhost:8081',
+    'http://localhost:19006',
+  ];
   if (productionUrl) {
     allowedOrigins.push(productionUrl);
+  }
+  if (webAppUrl) {
+    allowedOrigins.push(webAppUrl);
   }
 
   app.enableCors({

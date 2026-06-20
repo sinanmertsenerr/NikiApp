@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 
 import { useSettingsStore } from '../../src/stores/settingsStore';
 import { Colors, DarkColors } from '../../src/constants/theme';
+import { AuthGate } from '../../src/components/AuthGate';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
@@ -17,6 +18,7 @@ export default function TabLayout() {
   const colors = isDark ? DarkColors : Colors;
 
   return (
+    <AuthGate requireBrand>
     <Tabs
       screenOptions={{
         headerShown: false,
@@ -115,5 +117,6 @@ export default function TabLayout() {
         }}
       />
     </Tabs>
+    </AuthGate>
   );
 }

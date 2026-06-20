@@ -1,8 +1,19 @@
 import { Module } from '@nestjs/common';
 import { MulterModule } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
-import { extname, join } from 'path';
+import { join } from 'path';
 import { v4 as uuidv4 } from 'uuid';
+
+// Map the (allowlisted) declared mimetype to a safe stored extension. We NEVER
+// trust the user-supplied original filename extension, which could be .html and
+// turn an image/HTML polyglot into stored XSS when served from /uploads.
+const MIME_TO_EXT: Record<string, string> = {
+  'image/jpeg': 'jpg',
+  'image/jpg': 'jpg',
+  'image/png': 'png',
+  'image/gif': 'gif',
+  'image/webp': 'webp',
+};
 import { UploadController } from './upload.controller';
 import { UploadService } from './upload.service';
 import { PrismaModule } from '../prisma/prisma.module';
@@ -24,9 +35,9 @@ import { PrismaModule } from '../prisma/prisma.module';
           }
         },
         filename: (req, file, cb) => {
-          // Generate unique filename
-          const uniqueName = `${uuidv4()}${extname(file.originalname)}`;
-          cb(null, uniqueName);
+          // Extension comes from the allowlisted mimetype, never originalname.
+          const ext = MIME_TO_EXT[file.mimetype] || 'jpg';
+          cb(null, `${uuidv4()}.${ext}`);
         },
       }),
       fileFilter: (req, file, cb) => {

@@ -6,13 +6,13 @@ import {
   useColorScheme,
   Pressable,
   TextInput,
-  Alert,
   Modal,
   ActivityIndicator,
   KeyboardAvoidingView,
   ScrollView,
   Platform,
 } from 'react-native';
+import { Alert } from '../../src/utils/alert';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
@@ -24,6 +24,8 @@ import { Colors, DarkColors, Spacing, FontSizes, BorderRadius, Shadows, RSpacing
 import { screenWidth as SCREEN_WIDTH } from '../../src/utils/responsive';
 import { walletService, ScannedUserWallet } from '../../src/services/walletService';
 import { campaignService } from '../../src/services/campaignService';
+import { getErrorMessage } from '../../src/services/api';
+import { WebQRScanner } from '../../src/components/ui/WebQRScanner';
 
 type OperationType = 'payment' | 'topup' | null;
 
@@ -121,7 +123,7 @@ export default function ScanQRScreen() {
           discountRate: result.discountRate,
         });
       } catch (error: any) {
-        Alert.alert(t('common.error'), error.response?.data?.message || t('admin.invalidQrFormat'), [
+        Alert.alert(t('common.error'), getErrorMessage(error), [
           { text: t('common.retry'), onPress: () => setScanned(false) },
         ]);
       } finally {
@@ -144,7 +146,7 @@ export default function ScanQRScreen() {
           );
         }
       } catch (error: any) {
-        Alert.alert(t('common.error'), error.response?.data?.message || t('admin.invalidQrFormat'), [
+        Alert.alert(t('common.error'), getErrorMessage(error), [
           { text: t('common.retry'), onPress: () => setScanned(false) },
         ]);
       } finally {
@@ -215,7 +217,7 @@ export default function ScanQRScreen() {
       });
 
     } catch (error: any) {
-      Alert.alert(t('common.error'), error.response?.data?.message || t('admin.paymentFailed'));
+      Alert.alert(t('common.error'), getErrorMessage(error));
     } finally {
       setIsProcessing(false);
     }
@@ -250,7 +252,7 @@ export default function ScanQRScreen() {
       });
 
     } catch (error: any) {
-      Alert.alert(t('common.error'), error.response?.data?.message || t('admin.topUpFailed'));
+      Alert.alert(t('common.error'), getErrorMessage(error));
     } finally {
       setIsProcessing(false);
     }
@@ -266,7 +268,7 @@ export default function ScanQRScreen() {
     setIsFullPayment(true);
   };
 
-  if (!permission) {
+  if (Platform.OS !== 'web' && !permission) {
     return (
       <View style={[styles.container, { backgroundColor: colors.background }]}>
         <ActivityIndicator size="large" color={colors.primary} />
@@ -274,7 +276,7 @@ export default function ScanQRScreen() {
     );
   }
 
-  if (!permission.granted) {
+  if (Platform.OS !== 'web' && !permission?.granted) {
     return (
       <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
         <View style={styles.permissionContainer}>
@@ -299,13 +301,25 @@ export default function ScanQRScreen() {
       {!scannedUser && !scannedCampaign && !transactionResult ? (
         // Camera View
         <>
-          <CameraView
-            style={StyleSheet.absoluteFillObject}
-            barcodeScannerSettings={{
-              barcodeTypes: ['qr'],
-            }}
-            onBarcodeScanned={scanned ? undefined : handleBarCodeScanned}
-          />
+          {Platform.OS === 'web' ? (
+            <View style={StyleSheet.absoluteFillObject}>
+              <WebQRScanner
+                onScan={(text) => {
+                  if (scanned) return;
+                  handleBarCodeScanned({ data: text });
+                }}
+                onError={() => {}}
+              />
+            </View>
+          ) : (
+            <CameraView
+              style={StyleSheet.absoluteFillObject}
+              barcodeScannerSettings={{
+                barcodeTypes: ['qr'],
+              }}
+              onBarcodeScanned={scanned ? undefined : handleBarCodeScanned}
+            />
+          )}
           <View style={styles.overlay}>
             <View style={styles.scanFrame}>
               <View style={[styles.corner, styles.topLeft]} />

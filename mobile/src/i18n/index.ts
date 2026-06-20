@@ -10,11 +10,10 @@ const resources = {
   en: { translation: en },
 };
 
-// Get device language - default to English if not Turkish
+// Default to the device language when it's one we support; otherwise Turkish
+// (primary audience). A persisted choice in settingsStore overrides this later.
 const deviceLanguage = Localization.getLocales()[0]?.languageCode;
-// Force Turkish as default if that's the primary audience, or uncomment line below for dynamic
-// const defaultLanguage = deviceLanguage === 'tr' ? 'tr' : 'en';
-const defaultLanguage = 'tr';
+const defaultLanguage = deviceLanguage === 'en' ? 'en' : 'tr';
 
 i18n.use(initReactI18next).init({
   resources,

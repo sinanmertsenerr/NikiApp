@@ -1,32 +1,14 @@
 // API Configuration
-import Constants from 'expo-constants';
+import { Platform } from 'react-native';
 
-// ============================================================
-// AUTOMATIC IP DETECTION FOR DEVELOPMENT
-// ============================================================
-
-
-const getDevServerHost = (): string => {
-  // Try to get the debuggerHost from Expo Constants (works with expo start)
-  const debuggerHost = Constants.expoConfig?.hostUri || Constants.manifest2?.extra?.expoGo?.debuggerHost;
-
-  if (debuggerHost) {
-    // debuggerHost is like "192.168.1.5:8081", we just need the IP part
-    const host = debuggerHost.split(':')[0];
-    return `http://${host}:3000`;
-  }
-
-  // Fallback to localhost for simulators
-  return 'http://localhost:3000';
-};
-
-// ========== LIVE SERVER TESTING ==========
-const BACKEND_HOST = 'https://niki.ieu.app';
-
-// ========== LOCAL DEVELOPMENT ==========
-//const BACKEND_HOST = __DEV__
-//  ? getDevServerHost()
-//  : 'https://niki.ieu.app';
+// Native always resolves to the live host (byte-for-byte unchanged). The web
+// build may override it via EXPO_PUBLIC_API_URL (e.g. http://localhost:3000 in
+// dev); that origin must also be whitelisted in the backend REST CORS + the
+// websocket gateway allowlist. Both API_BASE_URL and getFullImageUrl derive from
+// this single host so API calls and /uploads images always share an origin.
+const LIVE_HOST = 'https://niki.ieu.app';
+const BACKEND_HOST =
+  Platform.OS === 'web' ? (process.env.EXPO_PUBLIC_API_URL || LIVE_HOST) : LIVE_HOST;
 
 export const API_BASE_URL = `${BACKEND_HOST}/api/v1`;
 
@@ -113,10 +95,8 @@ export const API_TIMEOUT = 30000; // 30 seconds
 export const STORAGE_KEYS = {
   ACCESS_TOKEN: 'access_token',
   REFRESH_TOKEN: 'refresh_token',
-  USER: 'user',
   THEME: 'theme',
   LANGUAGE: 'language',
   SELECTED_BRAND: 'selected_brand',
   HAS_SELECTED_BRAND: 'has_selected_brand',
-  ONBOARDING_COMPLETED: 'onboarding_completed',
 } as const;

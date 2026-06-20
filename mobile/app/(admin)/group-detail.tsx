@@ -7,20 +7,19 @@ import {
     FlatList,
     Pressable,
     useColorScheme,
-    Alert,
     TextInput,
     Modal,
     ActivityIndicator,
     KeyboardAvoidingView,
     Platform,
 } from 'react-native';
+import { Alert } from '../../src/utils/alert';
 import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import * as DocumentPicker from 'expo-document-picker';
-import * as XLSX from 'xlsx';
 import * as FileSystem from 'expo-file-system/legacy';
 
 import { useSettingsStore } from '../../src/stores/settingsStore';
@@ -28,6 +27,7 @@ import { Colors, DarkColors, Spacing, FontSizes, BorderRadius, Shadows, RSpacing
 import { screenWidth as SCREEN_WIDTH } from '../../src/utils/responsive';
 import { groupService, GroupMember } from '../../src/services/groupService';
 import { adminGetUsers } from '../../src/services/userService';
+import { getErrorMessage } from '../../src/services/api';
 import { formatPhoneOrEmail, formatPhoneNumber } from '../../src/utils/phoneFormat';
 
 // Types for import wizard
@@ -106,7 +106,7 @@ export default function AdminGroupDetailScreen() {
             Alert.alert(t('common.success'), t('groups.groupUpdated'));
         },
         onError: (error: any) => {
-            Alert.alert(t('common.error'), error.response?.data?.message || t('groups.updateError'));
+            Alert.alert(t('common.error'), getErrorMessage(error));
         },
     });
 
@@ -120,7 +120,7 @@ export default function AdminGroupDetailScreen() {
             Alert.alert(t('common.success'), t('groups.memberAdded'));
         },
         onError: (error: any) => {
-            Alert.alert(t('common.error'), error.response?.data?.message || t('groups.alreadyMember'));
+            Alert.alert(t('common.error'), getErrorMessage(error));
         },
     });
 
@@ -132,7 +132,7 @@ export default function AdminGroupDetailScreen() {
             Alert.alert(t('common.success'), t('groups.memberRemoved'));
         },
         onError: (error: any) => {
-            Alert.alert(t('common.error'), error.response?.data?.message || t('groups.removeMemberError'));
+            Alert.alert(t('common.error'), getErrorMessage(error));
         },
     });
 
@@ -202,6 +202,8 @@ export default function AdminGroupDetailScreen() {
                 encoding: 'base64',
             });
 
+            // Lazy-load xlsx (heavy, admin-only) so it isn't in the main bundle.
+            const XLSX = await import('xlsx');
             const workbook = XLSX.read(fileContent, { type: 'base64' });
             const sheetName = workbook.SheetNames[0];
             const worksheet = workbook.Sheets[sheetName];
@@ -294,7 +296,7 @@ export default function AdminGroupDetailScreen() {
         } catch (error: any) {
             setIsImporting(false);
             console.error('Excel import error:', error);
-            Alert.alert(t('common.error'), error.message || t('groups.importError'));
+            Alert.alert(t('common.error'), getErrorMessage(error));
         }
     };
 
@@ -330,7 +332,7 @@ export default function AdminGroupDetailScreen() {
             setShowAddModal(false);
             Alert.alert(t('common.success'), t('groups.membersAdded', { count: successCount }));
         } catch (error: any) {
-            Alert.alert(t('common.error'), error.message || t('groups.addMemberError'));
+            Alert.alert(t('common.error'), getErrorMessage(error));
         }
     };
 
@@ -490,7 +492,7 @@ export default function AdminGroupDetailScreen() {
             setShowAddModal(false);
             Alert.alert(t('common.success'), t('groups.membersAdded', { count: successCount }));
         } catch (error: any) {
-            Alert.alert(t('common.error'), error.message || t('groups.addMemberError'));
+            Alert.alert(t('common.error'), getErrorMessage(error));
         }
     };
 

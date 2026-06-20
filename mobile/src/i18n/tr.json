@@ -35,7 +35,34 @@
     "or": "veya",
     "add": "Ekle",
     "unknown": "Bilinmeyen",
-    "campaign": "Kampanya"
+    "campaign": "Kampanya",
+    "errorOccurred": "Beklenmeyen bir hata oluştu. Lütfen tekrar dene."
+  },
+  "errors": {
+    "title": "Bir sorun oluştu",
+    "network": "İnternet bağlantın kopmuş görünüyor. Bağlantını kontrol edip tekrar dene.",
+    "serverUnreachable": "Sunucumuza şu an ulaşamıyoruz. Birazdan tekrar dener misin?",
+    "timeout": "İşlem beklenenden uzun sürdü. Lütfen tekrar dene.",
+    "tooManyRequests": "Çok fazla istek gönderildi. Lütfen birkaç saniye bekleyip tekrar dene.",
+    "sessionExpired": "Oturumun sona erdi. Devam etmek için lütfen tekrar giriş yap.",
+    "forbidden": "Bu işlem için yetkin bulunmuyor. Yardıma ihtiyacın olursa bizimle iletişime geçebilirsin.",
+    "notFound": "Aradığın sayfa ya da içerik bulunamadı. Silinmiş ya da taşınmış olabilir.",
+    "fileTooLarge": "Bu dosya çok büyük. Daha küçük bir dosya seçip tekrar dener misin?",
+    "server": "Bir aksilik oldu, sorun bizden kaynaklanıyor. Kısa süre içinde tekrar dener misin?",
+    "unknown": "Beklenmeyen bir hata oluştu. Lütfen tekrar dene; sorun sürerse bize bildir.",
+    "cameraPermission": "Kameraya erişim izni gerekiyor. İzni cihazının ayarlarından açabilirsin.",
+    "cameraInsecure": "Kamera yalnızca güvenli bir bağlantıda (https) çalışır. Lütfen sayfayı https üzerinden aç.",
+    "cameraNotFound": "Kamera bulunamadı.",
+    "cameraGeneric": "Kamera başlatılamadı. Lütfen tekrar dene.",
+    "storageUnavailable": "Bilgilerini bu cihaza kaydedemiyoruz. Gizli moddaysan normal pencerede tekrar dener misin?",
+    "offlineAction": "Bu işlem için internet bağlantısı gerekiyor. Bağlandığında tekrar deneyebilirsin.",
+    "uploadFailed": "Dosya yüklenemedi. Bağlantını kontrol edip tekrar dener misin?",
+    "loginInvalid": "E-posta ya da şifre hatalı. Lütfen kontrol edip tekrar dene.",
+    "tooManyRequestsWait": "Çok fazla istek gönderildi. {{seconds}} saniye sonra tekrar dene.",
+    "offlineBanner": "Çevrimdışısın — bağlantını kontrol et.",
+    "accountLocked": "Çok fazla yanlış deneme. Lütfen biraz sonra tekrar dene.",
+    "phoneNotVerified": "Devam etmek için telefon numaranı doğrulaman gerekiyor.",
+    "reload": "Yeniden Yükle"
   },
   "auth": {
     "login": "Giriş Yap",
@@ -156,7 +183,8 @@
     "payment": "Ödeme",
     "refund": "İade",
     "reward": "Ödül",
-    "discount": "indirim"
+    "discount": "indirim",
+    "adminLoad": "Admin Yükleme"
   },
   "mysteryBox": {
     "title": "Gizemli Kutu",
@@ -224,7 +252,13 @@
   "notifications": {
     "markAllRead": "Tümünü Oku",
     "noNotifications": "Bildirim Yok",
-    "noNotificationsDesc": "Henüz bildiriminiz bulunmuyor."
+    "noNotificationsDesc": "Henüz bildiriminiz bulunmuyor.",
+    "time": {
+      "justNow": "az önce",
+      "minutesAgo": "{{count}} dk önce",
+      "hoursAgo": "{{count}} sa önce",
+      "daysAgo": "{{count}} gün önce"
+    }
   },
   "menu": {
     "title": "Menü",
@@ -257,7 +291,9 @@
     "showQrToStaff": "Kasiyere QR Kodu Gösterin",
     "qrInstructions": "Kampanyayı kullanmak için bu kodu kasada okutun",
     "requiredPoints": "{{points}} puan",
-    "use": "Kullan"
+    "use": "Kullan",
+    "rewardType": "Ödül Tipi",
+    "status": "Durum"
   },
   "quickActions": {
     "title": "Hızlı İşlemler",
@@ -681,5 +717,9 @@
     "removeMemberError": "Üye çıkarılırken hata oluştu",
     "addMemberError": "Üyeler eklenirken hata oluştu",
     "importError": "Dosya içe aktarılırken hata oluştu"
+  },
+  "countryPicker": {
+    "title": "Ülke Seçin",
+    "searchPlaceholder": "Ülke ara..."
   }
 }

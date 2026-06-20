@@ -1,5 +1,6 @@
 import {
   Controller,
+  UseGuards,
   Get,
   Post,
   Param,
@@ -16,6 +17,7 @@ import {
 import { UserRole } from '@prisma/client';
 import { WalletService } from './wallet.service';
 import { Roles, CurrentUser } from '../common/decorators';
+import { JwtAuthGuard, RolesGuard } from '../auth/guards';
 import {
   TopUpDto,
   PaymentDto,
@@ -31,6 +33,7 @@ import {
 
 @ApiTags('Admin - Wallet')
 @ApiBearerAuth()
+@UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('admin/wallet')
 @Roles(UserRole.admin, UserRole.super_admin)
 export class AdminWalletController {

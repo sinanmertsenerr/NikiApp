@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
 import { useSettingsStore } from '../../src/stores/settingsStore';
 import { Colors, DarkColors } from '../../src/constants/theme';
+import { AuthGate } from '../../src/components/AuthGate';
 
 export default function AdminLayout() {
   const colorScheme = useColorScheme();
@@ -13,6 +14,7 @@ export default function AdminLayout() {
   const colors = isDark ? DarkColors : Colors;
 
   return (
+    <AuthGate requireAdmin>
     <Stack
       screenOptions={{
         headerShown: true,
@@ -48,5 +50,6 @@ export default function AdminLayout() {
       <Stack.Screen name="user-detail" options={{ title: t('admin.userDetail') }} />
       <Stack.Screen name="raffles" options={{ title: t('admin.raffles') }} />
     </Stack>
+    </AuthGate>
   );
 }

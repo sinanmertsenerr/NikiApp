@@ -21,6 +21,7 @@ import { useSettingsStore } from '../../src/stores/settingsStore';
 import { Colors, DarkColors, Spacing, FontSizes, BorderRadius, Shadows, RSpacing, RFontSizes, isSmallDevice } from '../../src/constants/theme';
 import { screenWidth as SCREEN_WIDTH } from '../../src/utils/responsive';
 import { CategoryTabs } from '../../src/components/CategoryTabs';
+import { ErrorState } from '../../src/components/ErrorState';
 import { menuService, Category, Product } from '../../src/services/menuService';
 import { getImageUrl } from '../../src/services/uploadService';
 import { getTranslatedContent } from '../../src/hooks/useTranslatedContent';
@@ -57,6 +58,8 @@ export default function MenuScreen() {
   const {
     data: products = [],
     isLoading: productsLoading,
+    isError: productsError,
+    error: productsErrorObj,
     refetch: refetchProducts,
   } = useQuery({
     queryKey: ['products', selectedBrand],
@@ -114,7 +117,7 @@ export default function MenuScreen() {
           onChangeText={setSearchQuery}
         />
         {searchQuery.length > 0 && (
-          <Pressable onPress={() => setSearchQuery('')}>
+          <Pressable onPress={() => setSearchQuery('')} accessibilityRole="button" accessibilityLabel={t('common.close')}>
             <Ionicons name="close-circle" size={20} color={colors.textTertiary} />
           </Pressable>
         )}
@@ -175,12 +178,16 @@ export default function MenuScreen() {
           </Pressable>
         )}
         ListEmptyComponent={
-          <View style={styles.emptyContainer}>
-            <Ionicons name="cafe-outline" size={48} color={colors.textTertiary} />
-            <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
-              {t('menu.noProducts')}
-            </Text>
-          </View>
+          productsError && products.length === 0 ? (
+            <ErrorState error={productsErrorObj} onRetry={() => refetchProducts()} />
+          ) : (
+            <View style={styles.emptyContainer}>
+              <Ionicons name="cafe-outline" size={48} color={colors.textTertiary} />
+              <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
+                {t('menu.noProducts')}
+              </Text>
+            </View>
+          )
         }
       />
     </SafeAreaView>

@@ -1,5 +1,6 @@
 import {
   Controller,
+  UseGuards,
   Get,
   Post,
   Patch,
@@ -18,6 +19,7 @@ import {
 import { UserRole } from '@prisma/client';
 import { CampaignsService } from './campaigns.service';
 import { Roles, CurrentUser } from '../common/decorators';
+import { JwtAuthGuard, RolesGuard } from '../auth/guards';
 import {
   CreateCampaignDto,
   UpdateCampaignDto,
@@ -40,6 +42,7 @@ import {
 
 @ApiTags('Admin - Campaigns')
 @ApiBearerAuth()
+@UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('admin/campaigns')
 @Roles(UserRole.admin, UserRole.super_admin)
 export class AdminCampaignsController {

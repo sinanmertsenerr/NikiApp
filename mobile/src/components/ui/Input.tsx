@@ -65,6 +65,7 @@ export function Input({
             size={20}
             color={colors.textSecondary}
             style={styles.leftIcon}
+            accessible={false}
           />
         )}
         {prefix && (
@@ -95,6 +96,8 @@ export function Input({
           <Pressable
             onPress={() => setShowPassword(!showPassword)}
             style={styles.eyeButton}
+            accessibilityRole="button"
+            accessibilityLabel={showPassword ? 'Şifreyi gizle' : 'Şifreyi göster'}
           >
             <Ionicons
               name={showPassword ? 'eye-off-outline' : 'eye-outline'}

@@ -9,8 +9,10 @@ import {
     TextInput,
     TouchableWithoutFeedback,
     Platform,
+    useColorScheme,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { useSettingsStore } from '../../stores/settingsStore';
 import { Colors, DarkColors, BorderRadius, RSpacing, RFontSizes, isSmallDevice } from '../../constants/theme';
 import { COUNTRIES, Country } from '../../constants/countries';
@@ -29,8 +31,10 @@ export function CountryPickerModal({
     selectedCountryCode,
 }: CountryPickerModalProps) {
     const { theme } = useSettingsStore();
-    const isDark = theme === 'dark' || (theme === 'system' && false); // Simplified system check for modal
+    const colorScheme = useColorScheme();
+    const isDark = theme === 'dark' || (theme === 'system' && colorScheme === 'dark');
     const colors = isDark ? DarkColors : Colors;
+    const { t } = useTranslation();
 
     const [search, setSearch] = useState('');
 
@@ -75,8 +79,8 @@ export function CountryPickerModal({
                         <View style={[styles.modalContainer, { backgroundColor: colors.card }]}>
                             {/* Header */}
                             <View style={[styles.header, { borderBottomColor: colors.border }]}>
-                                <Text style={[styles.title, { color: colors.text }]}>Ülke Seçin</Text>
-                                <Pressable onPress={onClose} style={styles.closeButton}>
+                                <Text style={[styles.title, { color: colors.text }]}>{t('countryPicker.title')}</Text>
+                                <Pressable onPress={onClose} style={styles.closeButton} accessibilityRole="button" accessibilityLabel={t('common.close')}>
                                     <Ionicons name="close" size={24} color={colors.text} />
                                 </Pressable>
                             </View>
@@ -86,7 +90,7 @@ export function CountryPickerModal({
                                 <Ionicons name="search" size={20} color={colors.textSecondary} />
                                 <TextInput
                                     style={[styles.searchInput, { color: colors.text }]}
-                                    placeholder="Ülke ara..."
+                                    placeholder={t('countryPicker.searchPlaceholder')}
                                     placeholderTextColor={colors.textTertiary}
                                     value={search}
                                     onChangeText={setSearch}

@@ -35,11 +35,15 @@ interface AuthenticatedSocket extends Socket {
                 return;
             }
 
-            // Get allowed origins from environment
+            // Get allowed origins from environment. Kept in sync with the REST
+            // CORS allowlist in main.ts (incl. the mobile web build + dashboard).
             const allowedOrigins = [
                 process.env.FRONTEND_URL || 'http://localhost:19006',
                 process.env.PRODUCTION_APP_URL,
+                process.env.WEB_APP_URL,
+                process.env.DASHBOARD_URL || 'http://localhost:5173',
                 'http://localhost:3000',
+                'http://localhost:8081',
                 'http://localhost:19006',
             ].filter(Boolean);
 

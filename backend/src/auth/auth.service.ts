@@ -14,6 +14,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { PrismaService } from '../prisma';
 import { RedisService } from '../redis';
 import { EmailService } from '../email';
+import { hashRefreshToken } from './refresh-token.util';
 import {
   RegisterDto,
   LoginDto,
@@ -325,7 +326,7 @@ export class AuthService {
         this.logger.warn(`Account locked due to multiple failed attempts: ${identifier}`);
       }
 
-      throw new UnauthorizedException('Email veya şifre hatalı');
+      throw new UnauthorizedException('E-posta/telefon veya şifre hatalı');
     }
 
     // Check password
@@ -349,7 +350,7 @@ export class AuthService {
       const remaining = 5 - attempts;
       throw new UnauthorizedException({
         code: 'INVALID_CREDENTIALS',
-        message: `Email veya şifre hatalı. ${remaining} deneme hakkınız kaldı.`,
+        message: `E-posta/telefon veya şifre hatalı. ${remaining} deneme hakkınız kaldı.`,
         attemptsRemaining: remaining,
       });
     }
@@ -412,7 +413,7 @@ export class AuthService {
 
     // Delete old refresh token
     await this.prisma.refreshToken.deleteMany({
-      where: { token: refreshToken },
+      where: { token: { in: [hashRefreshToken(refreshToken), refreshToken] } },
     });
 
     // Generate new tokens
@@ -440,7 +441,7 @@ export class AuthService {
     if (refreshToken) {
       // Delete specific refresh token
       await this.prisma.refreshToken.deleteMany({
-        where: { token: refreshToken },
+        where: { token: { in: [hashRefreshToken(refreshToken), refreshToken] } },
       });
     } else {
       // Delete all refresh tokens for user
@@ -689,11 +690,11 @@ export class AuthService {
       refreshExpiresAt.setDate(refreshExpiresAt.getDate() + parseInt(daysMatch[1]));
     }
 
-    // Store refresh token in database
+    // Store only a hash of the refresh token at rest.
     await this.prisma.refreshToken.create({
       data: {
         userId: user.id,
-        token: refreshToken,
+        token: hashRefreshToken(refreshToken),
         expiresAt: refreshExpiresAt,
       },
     });

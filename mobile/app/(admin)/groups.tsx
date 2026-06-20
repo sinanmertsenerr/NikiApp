@@ -7,12 +7,12 @@ import {
     Pressable,
     useColorScheme,
     RefreshControl,
-    Alert,
     TextInput,
     Modal,
     KeyboardAvoidingView,
     Platform,
 } from 'react-native';
+import { Alert } from '../../src/utils/alert';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -23,6 +23,7 @@ import { useSettingsStore } from '../../src/stores/settingsStore';
 import { Colors, DarkColors, Spacing, FontSizes, BorderRadius, Shadows, RSpacing, RFontSizes, isSmallDevice } from '../../src/constants/theme';
 import { screenWidth as SCREEN_WIDTH } from '../../src/utils/responsive';
 import { groupService, Group } from '../../src/services/groupService';
+import { getErrorMessage } from '../../src/services/api';
 
 export default function AdminGroupsScreen() {
     const { t } = useTranslation();
@@ -52,7 +53,7 @@ export default function AdminGroupsScreen() {
             Alert.alert(t('common.success'), t('groups.groupCreated'));
         },
         onError: (error: any) => {
-            Alert.alert(t('common.error'), error.response?.data?.message || 'Error creating group');
+            Alert.alert(t('common.error'), getErrorMessage(error));
         },
     });
 
@@ -63,7 +64,7 @@ export default function AdminGroupsScreen() {
             Alert.alert(t('common.success'), t('groups.groupDeleted'));
         },
         onError: (error: any) => {
-            Alert.alert(t('common.error'), error.response?.data?.message || 'Error deleting group');
+            Alert.alert(t('common.error'), getErrorMessage(error));
         },
     });
 

@@ -7,7 +7,6 @@ import {
   useColorScheme,
   Pressable,
   RefreshControl,
-  Alert,
   Modal,
   TextInput,
   ScrollView,
@@ -16,6 +15,7 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
+import { Alert } from '../../src/utils/alert';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import { Ionicons } from '@expo/vector-icons';
@@ -32,6 +32,7 @@ import {
   Product as ApiProduct
 } from '../../src/services/menuService';
 import { uploadService } from '../../src/services/uploadService';
+import { getErrorMessage } from '../../src/services/api';
 import { CategoryTabs } from '../../src/components/CategoryTabs';
 import { getTranslatedContent } from '../../src/hooks/useTranslatedContent';
 
@@ -139,7 +140,7 @@ export default function AdminMenuManagementScreen() {
       setProducts(transformedProducts);
     } catch (error) {
       console.error('Error fetching menu data:', error);
-      Alert.alert(t('common.error'), t('admin.loadError'));
+      Alert.alert(t('common.error'), getErrorMessage(error));
     }
   }, [selectedBrand]);
 
@@ -265,7 +266,7 @@ export default function AdminMenuManagementScreen() {
       await fetchData(); // Refresh data
     } catch (error: any) {
       console.error('Error saving product:', error);
-      Alert.alert(t('common.error'), error.response?.data?.message || t('admin.saveError'));
+      Alert.alert(t('common.error'), getErrorMessage(error));
     } finally {
       setSaving(false);
     }
@@ -283,7 +284,7 @@ export default function AdminMenuManagementScreen() {
             await fetchData();
             Alert.alert(t('common.success'), t('admin.productDeleted'));
           } catch (error: any) {
-            Alert.alert(t('common.error'), error.response?.data?.message || t('admin.deleteError'));
+            Alert.alert(t('common.error'), getErrorMessage(error));
           }
         },
       },
@@ -295,7 +296,7 @@ export default function AdminMenuManagementScreen() {
       await menuService.toggleProductStatus(product.id, !product.isAvailable);
       await fetchData();
     } catch (error: any) {
-      Alert.alert(t('common.error'), error.response?.data?.message || t('admin.statusChangeError'));
+      Alert.alert(t('common.error'), getErrorMessage(error));
     }
   };
 
@@ -341,7 +342,7 @@ export default function AdminMenuManagementScreen() {
       await fetchData();
     } catch (error: any) {
       console.error('Error saving category:', error);
-      Alert.alert(t('common.error'), error.response?.data?.message || t('admin.saveError'));
+      Alert.alert(t('common.error'), getErrorMessage(error));
     } finally {
       setSaving(false);
     }
@@ -368,8 +369,7 @@ export default function AdminMenuManagementScreen() {
             Alert.alert(t('common.success'), t('admin.categoryDeleted'));
           } catch (error: any) {
             console.log('Delete error:', error?.response?.status, error?.response?.data, error?.message);
-            const errorMessage = error?.response?.data?.message || error?.message || t('admin.deleteError');
-            Alert.alert(t('common.error'), errorMessage);
+            Alert.alert(t('common.error'), getErrorMessage(error));
           }
         },
       },
@@ -473,7 +473,7 @@ export default function AdminMenuManagementScreen() {
       await menuService.reorderCategories(orderedIds);
     } catch (error: any) {
       console.error('Error reordering categories:', error);
-      Alert.alert(t('common.error'), error?.response?.data?.message || 'Kategoriler sıralanırken hata oluştu');
+      Alert.alert(t('common.error'), getErrorMessage(error));
       // Revert on error
       await fetchData();
     }

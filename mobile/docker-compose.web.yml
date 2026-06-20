@@ -1,0 +1,23 @@
+# Build + run the Niki web app (react-native-web SPA) container.
+#   EXPO_PUBLIC_API_URL is baked at BUILD time — set it to your backend origin.
+#
+#   EXPO_PUBLIC_API_URL=https://niki.ieu.app docker compose -f docker-compose.web.yml up -d --build
+#
+# Put nginx behind an HTTPS load balancer (GCP LB / Cloudflare) that forwards to
+# this service's port 80, or enable the 443 block in nginx.web.conf.
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.web
+      args:
+        EXPO_PUBLIC_API_URL: ${EXPO_PUBLIC_API_URL:-https://niki.ieu.app}
+    image: niki-web:latest
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3

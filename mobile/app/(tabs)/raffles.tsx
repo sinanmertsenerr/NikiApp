@@ -7,9 +7,9 @@ import {
     useColorScheme,
     Pressable,
     RefreshControl,
-    Alert,
     ActivityIndicator,
 } from 'react-native';
+import { Alert } from '../../src/utils/alert';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -26,6 +26,7 @@ import {
     getMyRaffles,
     joinRaffle,
 } from '../../src/services/raffleService';
+import { getErrorMessage } from '../../src/services/api';
 
 const getRewardLabel = (raffle: Raffle, t: any) => {
     // Show the custom reward text directly (new manual system)
@@ -83,7 +84,7 @@ export default function UserRafflesScreen() {
             Alert.alert(t('common.success'), t('raffles.joinedSuccess'));
         },
         onError: (error: any) => {
-            Alert.alert(t('common.error'), error?.response?.data?.message || t('common.errorOccurred'));
+            Alert.alert(t('common.error'), getErrorMessage(error));
         },
     });
 

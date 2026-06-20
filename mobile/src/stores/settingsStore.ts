@@ -39,6 +39,8 @@ export const useSettingsStore = create<SettingsState>((set) => ({
 
   setLanguage: async (language) => {
     await AsyncStorage.setItem(STORAGE_KEYS.LANGUAGE, language);
+    // Keep the store as the single source of truth for the active language.
+    i18n.changeLanguage(language);
     set({ language });
   },
 
@@ -65,19 +67,20 @@ export const useSettingsStore = create<SettingsState>((set) => ({
         AsyncStorage.getItem(STORAGE_KEYS.SELECTED_BRAND),
       ]);
 
-      const savedLanguage = (language as Language) || 'tr';
-
-      // Apply saved language to i18n
-      if (savedLanguage && ['tr', 'en'].includes(savedLanguage)) {
+      // No saved choice → keep the device-derived default already applied in i18n.
+      const savedLanguage = (language as Language) || (i18n.language as Language) || 'tr';
+      if (['tr', 'en'].includes(savedLanguage)) {
         i18n.changeLanguage(savedLanguage);
       }
 
-      // Always start with hasSelectedBrand: false - require brand selection on every app start
       set({
         theme: (theme as ThemeMode) || 'system',
         language: savedLanguage,
         selectedBrand: (brand as BrandType) || DEFAULT_BRAND,
-        hasSelectedBrand: false,
+        // Only one brand is active, so auto-select it and skip the brand-select
+        // wall (no friction). The screen stays reachable from Profile ("change
+        // brand") for the multi-brand future.
+        hasSelectedBrand: true,
         isInitialized: true,
       });
     } catch (error) {

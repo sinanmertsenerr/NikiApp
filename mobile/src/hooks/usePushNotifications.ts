@@ -47,13 +47,13 @@ export function usePushNotifications() {
         notificationListener.current = Notifications.addNotificationReceivedListener(
             (notification) => {
                 setNotification(notification);
-                console.log('Notification received:', notification);
+                console.log('Notification received');
             }
         );
 
         responseListener.current = Notifications.addNotificationResponseReceivedListener(
             (response) => {
-                console.log('Notification response:', response);
+                console.log('Notification response received');
                 handleNotificationPress(response.notification);
             }
         );
@@ -70,7 +70,6 @@ export function usePushNotifications() {
 
     const handleNotificationPress = (notification: Notifications.Notification) => {
         const data = notification.request.content.data;
-        console.log('Notification data:', data);
 
         // Handle navigation based on notification type
         // You can use router.push here based on data.type
@@ -145,7 +144,7 @@ async function registerForPushNotificationsAsync(): Promise<string | null> {
         });
 
         token = tokenData.data;
-        console.log('Expo Push Token:', token);
+        console.log('Expo Push Token acquired');
     } catch (error) {
         console.error('Failed to get push token:', error);
     }

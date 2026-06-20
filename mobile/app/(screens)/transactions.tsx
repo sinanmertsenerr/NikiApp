@@ -163,7 +163,7 @@ export default function TransactionsScreen() {
         <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
             {/* Fixed Header */}
             <View style={styles.header}>
-                <Pressable onPress={() => router.back()} style={styles.backButton}>
+                <Pressable onPress={() => router.back()} style={styles.backButton} accessibilityRole="button" accessibilityLabel={t('common.back')}>
                     <Ionicons name="chevron-back" size={28} color={colors.text} />
                 </Pressable>
                 <Text style={[styles.headerTitle, { color: colors.text }]}>
@@ -180,6 +180,7 @@ export default function TransactionsScreen() {
                         style={styles.balanceCardImage}
                         imageStyle={styles.cardImageStyle}
                         resizeMode="cover"
+                        accessible={false}
                     >
                         {/* Futuristic shine overlay */}
                         <LinearGradient

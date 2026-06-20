@@ -32,7 +32,8 @@
     },
     "web": {
       "favicon": "./assets/images/brands/niki-logo-full.png",
-      "bundler": "metro"
+      "bundler": "metro",
+      "output": "single"
     },
     "plugins": [
       "expo-router",

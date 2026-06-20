@@ -6,9 +6,9 @@ import {
   ScrollView,
   useColorScheme,
   Pressable,
-  Alert,
   Switch,
 } from 'react-native';
+import { Alert } from '../../src/utils/alert';
 import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
@@ -123,6 +123,7 @@ export default function ProfileScreen() {
                 source={{ uri: getFullImageUrl(user.avatarUrl)! }}
                 style={styles.avatarImage}
                 cachePolicy="none"
+                accessible={false}
               />
             ) : (
               <Text style={styles.avatarText}>
@@ -138,7 +139,12 @@ export default function ProfileScreen() {
               {user?.email}
             </Text>
           </View>
-          <Pressable style={styles.editButton} onPress={() => router.push('/(screens)/profile-edit')}>
+          <Pressable
+            style={styles.editButton}
+            onPress={() => router.push('/(screens)/profile-edit')}
+            accessibilityRole="button"
+            accessibilityLabel={t('common.edit')}
+          >
             <Ionicons name="create-outline" size={22} color={colors.primary} />
           </Pressable>
         </View>
@@ -204,6 +210,7 @@ export default function ProfileScreen() {
                 source={brand.logo}
                 style={[styles.brandLogoSmall, isDark && { tintColor: '#FFFFFF' }]}
                 contentFit="contain"
+                accessible={false}
               />
             </View>
             <View>

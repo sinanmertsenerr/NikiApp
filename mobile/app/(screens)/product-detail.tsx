@@ -45,12 +45,14 @@ export default function ProductDetailScreen() {
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
       {/* Header */}
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} style={styles.headerButton}>
+        <Pressable onPress={() => router.back()} style={styles.headerButton} accessibilityRole="button" accessibilityLabel={t('common.back')}>
           <Ionicons name="arrow-back" size={24} color={colors.text} />
         </Pressable>
         <Pressable
           onPress={() => setIsFavorite(!isFavorite)}
           style={styles.headerButton}
+          accessibilityRole="button"
+          accessibilityLabel={isFavorite ? 'Favorilerden çıkar' : 'Favorilere ekle'}
         >
           <Ionicons
             name={isFavorite ? 'heart' : 'heart-outline'}

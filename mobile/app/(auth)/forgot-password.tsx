@@ -7,8 +7,8 @@ import {
   Platform,
   Pressable,
   useColorScheme,
-  Alert,
 } from 'react-native';
+import { Alert } from '../../src/utils/alert';
 import { router } from 'expo-router';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';

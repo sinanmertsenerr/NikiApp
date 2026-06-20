@@ -7,7 +7,6 @@ import {
   useColorScheme,
   Pressable,
   RefreshControl,
-  Alert,
   Modal,
   TextInput,
   ScrollView,
@@ -16,9 +15,12 @@ import {
   ActivityIndicator,
   KeyboardAvoidingView,
 } from 'react-native';
+import { Alert } from '../../src/utils/alert';
+import { getErrorMessage } from '../../src/services/api';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import { WebDateTimeField } from '../../src/components/ui/WebDateTimeField';
 import { useTranslation } from 'react-i18next';
 
 import { useSettingsStore } from '../../src/stores/settingsStore';
@@ -125,7 +127,7 @@ export default function AdminCampaignsScreen() {
       setCampaigns(data.campaigns || []);
     } catch (error) {
       console.error('Error fetching campaigns:', error);
-      Alert.alert(t('common.error'), t('admin.loadError'));
+      Alert.alert(t('common.error'), getErrorMessage(error));
     }
   }, []);
 
@@ -303,7 +305,7 @@ export default function AdminCampaignsScreen() {
       await fetchCampaigns();
     } catch (error: any) {
       console.error('Error saving campaign:', error);
-      Alert.alert(t('common.error'), error.response?.data?.message || t('admin.saveError'));
+      Alert.alert(t('common.error'), getErrorMessage(error));
     } finally {
       setSaving(false);
     }
@@ -328,7 +330,7 @@ export default function AdminCampaignsScreen() {
           } catch (error: any) {
             // Rollback on error
             setCampaigns(previousCampaigns);
-            Alert.alert(t('common.error'), error.response?.data?.message || t('admin.deleteError'));
+            Alert.alert(t('common.error'), getErrorMessage(error));
           }
         },
       },
@@ -340,7 +342,7 @@ export default function AdminCampaignsScreen() {
       await campaignService.updateCampaign(campaign.id, { isActive: !campaign.isActive });
       await fetchCampaigns();
     } catch (error: any) {
-      Alert.alert(t('common.error'), error.response?.data?.message || t('admin.statusChangeError'));
+      Alert.alert(t('common.error'), getErrorMessage(error));
     }
   };
 
@@ -374,7 +376,7 @@ export default function AdminCampaignsScreen() {
         setSelectedGroupIds(assignedIds);
       } catch (error) {
         console.error('Error fetching groups:', error);
-        Alert.alert(t('common.error'), t('admin.errorFetchingGroups'));
+        Alert.alert(t('common.error'), getErrorMessage(error));
       } finally {
         setLoadingGroups(false);
       }
@@ -413,7 +415,7 @@ export default function AdminCampaignsScreen() {
         }
       } catch (error) {
         console.error('Error fetching users:', error);
-        Alert.alert(t('common.error'), t('admin.loadError'));
+        Alert.alert(t('common.error'), getErrorMessage(error));
         setAvailableUsers([]);
       } finally {
         setLoadingUsers(false);
@@ -449,7 +451,7 @@ export default function AdminCampaignsScreen() {
               );
               setShowAssignModal(false);
             } catch (error: any) {
-              Alert.alert(t('common.error'), error.response?.data?.message || t('admin.assignError'));
+              Alert.alert(t('common.error'), getErrorMessage(error));
             } finally {
               setAssigning(false);
             }
@@ -503,7 +505,7 @@ export default function AdminCampaignsScreen() {
       );
       setShowAssignModal(false);
     } catch (error: any) {
-      Alert.alert(t('common.error'), error.response?.data?.message || t('admin.assignError'));
+      Alert.alert(t('common.error'), getErrorMessage(error));
     } finally {
       setAssigning(false);
     }
@@ -1164,6 +1166,10 @@ export default function AdminCampaignsScreen() {
 
                   {/* Start Date & Time */}
                   <Text style={[styles.inputLabel, { color: colors.text }]}>{t('admin.startDateTime')}</Text>
+                  {Platform.OS === 'web' && (
+                    <WebDateTimeField mode="datetime" value={formStartDate} onChange={setFormStartDate} />
+                  )}
+                  {Platform.OS !== 'web' && (
                   <View style={styles.dateTimeRow}>
                     <Pressable
                       style={[styles.dateTimeButton, { backgroundColor: colors.backgroundSecondary }]}
@@ -1190,6 +1196,7 @@ export default function AdminCampaignsScreen() {
                       <Text style={[styles.dateTimeText, { color: colors.text }]}>{formatTime(formStartDate)}</Text>
                     </Pressable>
                   </View>
+                  )}
 
                   {/* Inline Start Date Picker for iOS */}
                   {Platform.OS === 'ios' && showStartDatePicker && (
@@ -1258,6 +1265,10 @@ export default function AdminCampaignsScreen() {
                   {formHasEndDate && (
                     <>
                       <Text style={[styles.inputLabel, { color: colors.text }]}>{t('admin.endDateTime')}</Text>
+                      {Platform.OS === 'web' && (
+                        <WebDateTimeField mode="datetime" value={formEndDate} onChange={setFormEndDate} />
+                      )}
+                      {Platform.OS !== 'web' && (
                       <View style={styles.dateTimeRow}>
                         <Pressable
                           style={[styles.dateTimeButton, { backgroundColor: colors.backgroundSecondary }]}
@@ -1284,6 +1295,7 @@ export default function AdminCampaignsScreen() {
                           <Text style={[styles.dateTimeText, { color: colors.text }]}>{formatTime(formEndDate)}</Text>
                         </Pressable>
                       </View>
+                      )}
 
                       {/* Inline End Date Picker for iOS */}
                       {Platform.OS === 'ios' && showEndDatePicker && (

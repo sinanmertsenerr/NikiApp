@@ -6,13 +6,13 @@ import {
   ScrollView,
   useColorScheme,
   Pressable,
-  Alert,
   TextInput,
   Modal,
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
+import { Alert } from '../../src/utils/alert';
 import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -23,6 +23,7 @@ import { Colors, DarkColors, Spacing, FontSizes, BorderRadius, Shadows, RSpacing
 import { screenWidth as SCREEN_WIDTH } from '../../src/utils/responsive';
 import { adminGetUser, adminUpdateUser, adminToggleIeuWallet, adminToggleNegativeBalance, AdminUser } from '../../src/services/userService';
 import { walletService } from '../../src/services/walletService';
+import { getErrorMessage } from '../../src/services/api';
 import { formatPhoneNumber } from '../../src/utils/phoneFormat';
 
 interface UserData {
@@ -109,7 +110,7 @@ export default function AdminUserDetailScreen() {
       });
     } catch (error) {
       console.error('Failed to load user:', error);
-      Alert.alert(t('common.error'), t('admin.userNotFound'));
+      Alert.alert(t('common.error'), getErrorMessage(error));
       router.back();
     } finally {
       setLoading(false);
@@ -135,7 +136,7 @@ export default function AdminUserDetailScreen() {
             } catch (error) {
               console.error('Failed to update user status:', error);
               setUser((prev) => prev ? { ...prev, isActive: !user.isActive } : null);
-              Alert.alert(t('common.error'), t('admin.updateFailed', 'Güncelleme başarısız oldu'));
+              Alert.alert(t('common.error'), getErrorMessage(error));
             }
           },
         },
@@ -169,7 +170,7 @@ export default function AdminUserDetailScreen() {
             } catch (error) {
               console.error('Failed to toggle IEU wallet:', error);
               setUser((prev) => prev ? { ...prev, ieuWalletActive: !newStatus } : null);
-              Alert.alert(t('common.error'), t('admin.updateFailed', 'Güncelleme başarısız oldu'));
+              Alert.alert(t('common.error'), getErrorMessage(error));
             }
           },
         },
@@ -228,7 +229,7 @@ export default function AdminUserDetailScreen() {
       Alert.alert(t('common.success'), t('admin.creditsAdded', { amount: amount, wallet: walletName }));
     } catch (error: any) {
       console.error('Failed to add credits:', error);
-      Alert.alert(t('common.error'), error.response?.data?.message || t('admin.creditLoadError', 'Kredi yüklenirken bir hata oluştu'));
+      Alert.alert(t('common.error'), getErrorMessage(error));
     }
   };
 
@@ -266,7 +267,7 @@ export default function AdminUserDetailScreen() {
       Alert.alert(t('common.success'), t('admin.creditDeductedSuccess', { amount: amount }));
     } catch (error: any) {
       console.error('Failed to deduct credits:', error);
-      Alert.alert(t('common.error'), error.response?.data?.message || t('admin.deductError'));
+      Alert.alert(t('common.error'), getErrorMessage(error));
     }
   };
 
@@ -739,7 +740,7 @@ export default function AdminUserDetailScreen() {
                     loadUser();
                   } catch (error) {
                     console.error('Failed to toggle negative balance:', error);
-                    Alert.alert(t('common.error'), t('admin.updateFailed'));
+                    Alert.alert(t('common.error'), getErrorMessage(error));
                   }
                 }}
               >
@@ -788,7 +789,7 @@ export default function AdminUserDetailScreen() {
                     setShowRoleModal(false);
                   } catch (error) {
                     console.error('Failed to update role:', error);
-                    Alert.alert(t('common.error'), t('admin.updateFailed'));
+                    Alert.alert(t('common.error'), getErrorMessage(error));
                   }
                 }}
               >

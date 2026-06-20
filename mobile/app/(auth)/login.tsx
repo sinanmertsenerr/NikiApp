@@ -8,10 +8,10 @@ import {
   ScrollView,
   Pressable,
   useColorScheme,
-  Alert,
   Keyboard,
   TouchableWithoutFeedback,
 } from 'react-native';
+import { Alert } from '../../src/utils/alert';
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { useForm, Controller } from 'react-hook-form';
@@ -143,25 +143,24 @@ export default function LoginScreen() {
         // Non-critical - continue with default language
       }
 
-      router.replace('/(auth)/brand-select');
+      // Brand is auto-selected (single active brand) — go straight to home.
+      router.replace('/(tabs)/home');
     } catch (error: any) {
-      // Check if email not verified
-      if (error.message?.includes('doğrulayın') || error.message?.includes('verify')) {
-        Alert.alert(
-          t('auth.emailNotVerified'),
-          t('auth.pleaseVerifyEmail'),
-          [
-            {
-              text: t('auth.verify'),
-              onPress: () =>
-                router.push({
-                  pathname: '/(auth)/verify-email',
-                  params: { email: data.identifier }, // Pass identifier as email if it looks like one, or handle verification flow differently
-                }),
-            },
-            { text: t('common.cancel'), style: 'cancel' },
-          ]
-        );
+      // Branch on the backend's stable error code, not a localized substring.
+      if (error?.code === 'PHONE_NOT_VERIFIED') {
+        Alert.alert(t('auth.phoneVerification'), error.message, [{ text: t('common.ok') }]);
+      } else if (error?.code === 'EMAIL_NOT_VERIFIED') {
+        Alert.alert(t('auth.emailNotVerified'), t('auth.pleaseVerifyEmail'), [
+          {
+            text: t('auth.verify'),
+            onPress: () =>
+              router.push({
+                pathname: '/(auth)/verify-email',
+                params: { email: data.identifier },
+              }),
+          },
+          { text: t('common.cancel'), style: 'cancel' },
+        ]);
       } else {
         Alert.alert(t('common.error'), error.message);
       }

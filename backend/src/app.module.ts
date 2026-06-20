@@ -37,7 +37,11 @@ import { AdminAuditInterceptor } from './common/interceptors/admin-audit.interce
     // Rate Limiting
     ThrottlerModule.forRoot([{
       ttl: 60000, // 60 seconds
-      limit: 10, // 10 requests per minute (global default)
+      // 100 req/min global default. A web SPA fires many parallel queries on load
+      // (profile, wallet, campaigns, menu, notifications, ...) plus socket-driven
+      // refetches; 10/min tripped 429 on first paint. Auth routes keep their own
+      // stricter overrides (e.g. login 5/min).
+      limit: 100,
     }]),
 
     // Task Scheduling (for cleanup jobs)

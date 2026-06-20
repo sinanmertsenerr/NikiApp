@@ -1,4 +1,5 @@
-import { View, Text, StyleSheet, useColorScheme, Pressable, Alert } from 'react-native';
+import { View, Text, StyleSheet, useColorScheme, Pressable } from 'react-native';
+import { Alert } from '../../src/utils/alert';
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';

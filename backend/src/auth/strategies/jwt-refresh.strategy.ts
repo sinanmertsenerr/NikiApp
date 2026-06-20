@@ -5,6 +5,7 @@ import { ConfigService } from '@nestjs/config';
 import { Request } from 'express';
 import { PrismaService } from '../../prisma';
 import { JwtPayload } from './jwt.strategy';
+import { hashRefreshToken } from '../refresh-token.util';
 
 @Injectable()
 export class JwtRefreshStrategy extends PassportStrategy(
@@ -51,10 +52,15 @@ export class JwtRefreshStrategy extends PassportStrategy(
       throw new UnauthorizedException('Hesabınız devre dışı bırakılmış');
     }
 
-    // Check if refresh token exists in database
-    const tokenRecord = await this.prisma.refreshToken.findUnique({
-      where: { token: refreshToken },
-    });
+    // Check if refresh token exists in database. New tokens are stored hashed;
+    // fall back to the raw value for any legacy (pre-hash) rows still valid.
+    const tokenRecord =
+      (await this.prisma.refreshToken.findUnique({
+        where: { token: hashRefreshToken(refreshToken) },
+      })) ??
+      (await this.prisma.refreshToken.findUnique({
+        where: { token: refreshToken },
+      }));
 
     if (!tokenRecord) {
       throw new UnauthorizedException('Geçersiz refresh token');

@@ -1,5 +1,6 @@
 import {
   Controller,
+  UseGuards,
   Get,
   Patch,
   Param,
@@ -16,6 +17,7 @@ import {
 import { UserRole } from '@prisma/client';
 import { UsersService } from './users.service';
 import { Roles, CurrentUser } from '../common/decorators';
+import { JwtAuthGuard, RolesGuard } from '../auth/guards';
 import {
   GetUsersQueryDto,
   UpdateUserStatusDto,
@@ -27,6 +29,7 @@ import {
 
 @ApiTags('Admin - Users')
 @ApiBearerAuth()
+@UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('admin/users')
 @Roles(UserRole.admin, UserRole.super_admin)
 export class AdminUsersController {

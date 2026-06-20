@@ -6,9 +6,9 @@ import {
   TextInput,
   Pressable,
   useColorScheme,
-  Alert,
   Keyboard,
 } from 'react-native';
+import { Alert } from '../../src/utils/alert';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { SafeAreaView } from 'react-native-safe-area-context';

@@ -6,10 +6,9 @@ import {
   useColorScheme,
   Pressable,
   Animated,
-  Alert,
-  Dimensions,
   ActivityIndicator,
 } from 'react-native';
+import { Alert } from '../../src/utils/alert';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -18,8 +17,11 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSettingsStore } from '../../src/stores/settingsStore';
 import { Colors, DarkColors, BorderRadius, Shadows, RSpacing, RFontSizes, isSmallDevice } from '../../src/constants/theme';
 import { wheelService } from '../../src/services/wheelService';
+import { getErrorMessage } from '../../src/services/api';
+import { screenWidth } from '../../src/utils/responsive';
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
+// Clamped to the phone frame on web (responsive.web.ts); real device width on native.
+const SCREEN_WIDTH = screenWidth;
 
 // Images
 const BLACK_CAT = require('../../assets/images/black-cat.png');
@@ -141,8 +143,8 @@ export default function WheelScreen() {
       setIsOpening(false);
       resetBox();
       Alert.alert(
-        'Hata',
-        error?.response?.data?.message || 'Bir hata oluştu, tekrar dene.',
+        t('common.error'),
+        getErrorMessage(error),
         [{ text: t('common.ok') }]
       );
     },
