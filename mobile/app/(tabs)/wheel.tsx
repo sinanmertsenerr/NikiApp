@@ -7,6 +7,7 @@ import {
   Pressable,
   Animated,
   ActivityIndicator,
+  ScrollView,
 } from 'react-native';
 import { Alert } from '../../src/utils/alert';
 import { Ionicons } from '@expo/vector-icons';
@@ -255,6 +256,11 @@ export default function WheelScreen() {
         </View>
       </View>
 
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
       {/* Main Area */}
       <View style={styles.main}>
         {/* CAT: positioned absolutely, comes from right */}
@@ -364,6 +370,7 @@ export default function WheelScreen() {
           ))}
         </View>
       </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }
@@ -381,14 +388,36 @@ const styles = StyleSheet.create({
   title: { fontSize: RFontSizes.xxl, fontWeight: '700' },
   badge: { paddingHorizontal: RSpacing.md, paddingVertical: RSpacing.xs, borderRadius: BorderRadius.full },
   badgeText: { color: '#FFF', fontSize: RFontSizes.sm, fontWeight: '600' },
-  main: { flex: 1, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
+  scroll: { flex: 1 },
+  // flexGrow lets the stage center the box+button in the leftover space on tall
+  // viewports (PWA), while minHeight guarantees the box+button always fit so the
+  // button can never be clipped on a short browser viewport (it scrolls instead).
+  scrollContent: { flexGrow: 1 },
+  main: {
+    flexGrow: 1,
+    minHeight: BOX_SIZE + 180,
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
+    paddingVertical: RSpacing.lg,
+  },
   btn: { marginTop: RSpacing.xl, paddingHorizontal: RSpacing.xxl * 1.5, paddingVertical: RSpacing.md, borderRadius: BorderRadius.full, ...Shadows.lg },
   btnText: { fontSize: RFontSizes.xl, fontWeight: '800' },
   info: { flexDirection: 'row', alignItems: 'center', marginVertical: RSpacing.lg, marginHorizontal: RSpacing.lg, padding: RSpacing.md, borderRadius: BorderRadius.lg, borderWidth: 1, gap: RSpacing.sm },
   infoText: { flex: 1, fontSize: RFontSizes.sm, fontWeight: '600' },
-  prizes: { paddingHorizontal: RSpacing.lg, paddingBottom: RSpacing.xl },
-  prizesTitle: { fontSize: RFontSizes.lg, fontWeight: '600', marginBottom: RSpacing.sm },
+  prizes: { paddingHorizontal: RSpacing.lg, paddingTop: RSpacing.md, paddingBottom: RSpacing.xl },
+  prizesTitle: { fontSize: RFontSizes.lg, fontWeight: '600', marginBottom: RSpacing.md },
   prizesGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: RSpacing.sm },
-  prizeCard: { width: '48%', flexDirection: 'row', alignItems: 'center', padding: RSpacing.sm, borderRadius: BorderRadius.md, borderWidth: 1, gap: RSpacing.sm },
-  prizeCardText: { fontSize: RFontSizes.sm, fontWeight: '500' },
+  prizeCard: {
+    width: '48%',
+    flexDirection: 'row',
+    alignItems: 'center',
+    minHeight: 52,
+    paddingVertical: RSpacing.sm,
+    paddingHorizontal: RSpacing.md,
+    borderRadius: BorderRadius.lg,
+    borderWidth: 1,
+    gap: RSpacing.sm,
+  },
+  prizeCardText: { flex: 1, fontSize: RFontSizes.sm, fontWeight: '500' },
 });
