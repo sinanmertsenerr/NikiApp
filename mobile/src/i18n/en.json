@@ -54,6 +54,7 @@
     "cameraInsecure": "The camera only works over a secure (https) connection. Please open this page using https.",
     "cameraNotFound": "No camera found.",
     "cameraGeneric": "Could not start the camera. Please try again.",
+    "cameraTapToStart": "Tap to start the camera",
     "storageUnavailable": "We can't save your data on this device. If you're in private mode, please try again in a normal window.",
     "offlineAction": "You need to be online to do this. Please reconnect and try again.",
     "uploadFailed": "Your file couldn't be uploaded. Please check your connection and try again.",

@@ -54,6 +54,7 @@
     "cameraInsecure": "Kamera yalnızca güvenli bir bağlantıda (https) çalışır. Lütfen sayfayı https üzerinden aç.",
     "cameraNotFound": "Kamera bulunamadı.",
     "cameraGeneric": "Kamera başlatılamadı. Lütfen tekrar dene.",
+    "cameraTapToStart": "Kamerayı başlatmak için dokun",
     "storageUnavailable": "Bilgilerini bu cihaza kaydedemiyoruz. Gizli moddaysan normal pencerede tekrar dener misin?",
     "offlineAction": "Bu işlem için internet bağlantısı gerekiyor. Bağlandığında tekrar deneyebilirsin.",
     "uploadFailed": "Dosya yüklenemedi. Bağlantını kontrol edip tekrar dener misin?",
