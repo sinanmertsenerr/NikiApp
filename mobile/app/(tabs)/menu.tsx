@@ -155,7 +155,7 @@ export default function MenuScreen() {
             style={[styles.productCard, { backgroundColor: colors.card }, Shadows.sm]}
             onPress={() => router.push({
               pathname: '/(screens)/product-detail',
-              params: { id: item.id, name: getTranslatedContent(item, 'name', i18n.language), price: item.price.toString() }
+              params: { id: item.id, name: getTranslatedContent(item, 'name', i18n.language), price: item.price.toString(), description: getTranslatedContent(item, 'description', i18n.language) }
             })}
           >
             <View style={[styles.productImage, { backgroundColor: colors.backgroundSecondary }]}>

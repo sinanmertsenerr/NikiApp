@@ -36,9 +36,6 @@ export default function ProductDetailScreen() {
     name: params.name || t('admin.defaultProductName', 'Ürün'),
     price: params.price ? parseInt(params.price) : 0,
     description: params.description || t('admin.defaultProductDesc', 'Ürün açıklaması'),
-    category: 'hot',
-    calories: 0,
-    preparationTime: '5-7 dk',
   };
 
   return (
@@ -80,29 +77,6 @@ export default function ProductDetailScreen() {
           <Text style={[styles.description, { color: colors.textSecondary }]}>
             {product.description}
           </Text>
-
-          {/* Quick Info */}
-          <View style={[styles.infoCard, { backgroundColor: colors.card }]}>
-            <View style={styles.infoItem}>
-              <Ionicons name="flame-outline" size={22} color={colors.textSecondary} />
-              <Text style={[styles.infoValue, { color: colors.text }]}>{product.calories}</Text>
-              <Text style={[styles.infoLabel, { color: colors.textTertiary }]}>{t('admin.calories', 'kcal')}</Text>
-            </View>
-            <View style={[styles.infoDivider, { backgroundColor: colors.border }]} />
-            <View style={styles.infoItem}>
-              <Ionicons name="time-outline" size={22} color={colors.textSecondary} />
-              <Text style={[styles.infoValue, { color: colors.text }]}>{product.preparationTime}</Text>
-              <Text style={[styles.infoLabel, { color: colors.textTertiary }]}>{t('admin.preparation', 'hazırlık')}</Text>
-            </View>
-            <View style={[styles.infoDivider, { backgroundColor: colors.border }]} />
-            <View style={styles.infoItem}>
-              <Ionicons name="cafe-outline" size={22} color={colors.textSecondary} />
-              <Text style={[styles.infoValue, { color: colors.text }]}>
-                {product.category === 'hot' ? t('admin.hot', 'Sıcak') : t('admin.cold', 'Soğuk')}
-              </Text>
-              <Text style={[styles.infoLabel, { color: colors.textTertiary }]}>{t('admin.serving', 'servis')}</Text>
-            </View>
-          </View>
 
         </View>
       </ScrollView>
@@ -155,28 +129,5 @@ const styles = StyleSheet.create({
     fontSize: RFontSizes.md,
     lineHeight: 22,
     marginBottom: RSpacing.lg,
-  },
-  infoCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-around',
-    padding: RSpacing.lg,
-    borderRadius: BorderRadius.xl,
-    marginBottom: RSpacing.lg,
-  },
-  infoItem: {
-    alignItems: 'center',
-    gap: 4,
-  },
-  infoValue: {
-    fontSize: RFontSizes.md,
-    fontWeight: '600',
-  },
-  infoLabel: {
-    fontSize: RFontSizes.xs,
-  },
-  infoDivider: {
-    width: 1,
-    height: 40,
   },
 });
