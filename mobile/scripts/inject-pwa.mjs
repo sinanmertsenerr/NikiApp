@@ -23,7 +23,8 @@ html = html.replace('<html lang="en">', '<html lang="tr">');
 // 2) PWA + iOS add-to-home-screen tags and the service-worker registration.
 const HEAD = `
     <link rel="manifest" href="/manifest.json" />
-    <meta name="theme-color" content="#000000" />
+    <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#121212" media="(prefers-color-scheme: dark)" />
     <meta name="application-name" content="Niki The Cat" />
     <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon-180.png" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -37,9 +38,15 @@ const HEAD = `
          app reaches the bottom with no empty strip. height:100% chain is required
          or the flex:1 app root collapses to content height and leaves a gap.
          Colour follows the system scheme so the filled area matches the app. */
-      html, body, #root { height: 100%; background-color: #ffffff; }
-      @media (prefers-color-scheme: dark) { html, body, #root { background-color: #000000; } }
-      html, body { margin: 0; min-height: 100%; overscroll-behavior: none; }
+      html, body, #root {
+        height: 100%;
+        min-height: 100dvh;
+        background-color: #ffffff;
+      }
+      @media (prefers-color-scheme: dark) {
+        html, body, #root { background-color: #121212; }
+      }
+      html, body { margin: 0; overscroll-behavior: none; }
       #root { display: flex; flex-direction: column; }
     </style>
     <script src="/sw-register.js" defer></script>`;

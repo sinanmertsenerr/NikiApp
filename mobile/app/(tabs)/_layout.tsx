@@ -9,7 +9,7 @@ import { AuthGate } from '../../src/components/AuthGate';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
-const WEB_TAB_BAR_VISIBLE_HEIGHT = 56;
+const WEB_TAB_BAR_VISIBLE_HEIGHT = 64;
 const WEB_SAFE_AREA_BOTTOM = 'env(safe-area-inset-bottom, 0px)';
 
 export default function TabLayout() {
@@ -28,9 +28,11 @@ export default function TabLayout() {
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.textTertiary,
         // Themed on ALL platforms (web had no case -> default white bar). On web
-        // we use CSS env() for the iOS PWA home-indicator area. The JS safe-area
-        // value is not reliable in Safari standalone mode and can leave a black
-        // strip below the bar or double-size the tab area on some phones.
+        // the iOS PWA home-indicator area is handled with CSS env() in calc():
+        // the browser resolves and re-resolves it at layout time (rotation,
+        // toolbar collapse), so no JS measurement or device sniffing is needed.
+        // The real clip fix is the taller bar + dropping the fixed item height,
+        // which let the label sit inside the bar instead of under the indicator.
         tabBarStyle: {
           backgroundColor: colors.card,
           borderTopColor: colors.border,
@@ -39,19 +41,17 @@ export default function TabLayout() {
           ...(Platform.OS === 'web'
             ? {
                 height: `calc(${WEB_TAB_BAR_VISIBLE_HEIGHT}px + ${WEB_SAFE_AREA_BOTTOM})` as any,
-                paddingBottom: WEB_SAFE_AREA_BOTTOM as any,
-                paddingTop: 4,
+                paddingBottom: `calc(${WEB_SAFE_AREA_BOTTOM} + 4px)` as any,
+                paddingTop: 6,
               }
             : null),
         },
-        tabBarItemStyle: Platform.OS === 'web'
-          ? {
-              height: WEB_TAB_BAR_VISIBLE_HEIGHT,
-            }
-          : undefined,
         tabBarLabelStyle: {
           fontSize: 11,
+          lineHeight: 14,
           fontWeight: '500',
+          marginTop: -2,
+          marginBottom: 0,
         },
       }}
     >
