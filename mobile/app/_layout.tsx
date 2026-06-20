@@ -11,6 +11,7 @@ import { useSettingsStore } from '@/stores/settingsStore';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
 import { queryClient } from '@/services/queryClient';
 import { socketService } from '@/services/socketService';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { MobileFrame } from '@/components/web/MobileFrame';
 import { OfflineBanner } from '@/components/OfflineBanner';
 import { AppErrorFallback } from '@/components/AppErrorBoundary';
@@ -101,9 +102,11 @@ export default function RootLayout() {
   return (
     <QueryClientProvider client={queryClient}>
       <GestureHandlerRootView style={styles.container}>
-        <MobileFrame>
-          <RootLayoutContent />
-        </MobileFrame>
+        <SafeAreaProvider>
+          <MobileFrame>
+            <RootLayoutContent />
+          </MobileFrame>
+        </SafeAreaProvider>
       </GestureHandlerRootView>
     </QueryClientProvider>
   );

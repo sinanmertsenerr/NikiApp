@@ -1,5 +1,6 @@
 import { Tabs } from 'expo-router';
 import { Platform, useColorScheme } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 
@@ -16,6 +17,7 @@ export default function TabLayout() {
 
   const isDark = theme === 'dark' || (theme === 'system' && colorScheme === 'dark');
   const colors = isDark ? DarkColors : Colors;
+  const insets = useSafeAreaInsets();
 
   return (
     <AuthGate requireBrand>
@@ -24,18 +26,23 @@ export default function TabLayout() {
         headerShown: false,
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.textTertiary,
-        tabBarStyle: Platform.select({
-          ios: {
-            backgroundColor: colors.card,
-            borderTopColor: colors.border,
-            borderTopWidth: 0.5,
-          },
-          android: {
-            backgroundColor: colors.card,
-            elevation: 8,
-            borderTopWidth: 0,
-          },
-        }),
+        // Themed on ALL platforms (web had no case -> default white bar). On web
+        // we apply the bottom safe-area inset explicitly (home indicator / Safari
+        // bar) so the bar sits above it with its dark bg filling down; native is
+        // handled by react-navigation via SafeAreaProvider.
+        tabBarStyle: {
+          backgroundColor: colors.card,
+          borderTopColor: colors.border,
+          borderTopWidth: Platform.OS === 'android' ? 0 : 0.5,
+          ...(Platform.OS === 'android' ? { elevation: 8 } : null),
+          ...(Platform.OS === 'web'
+            ? {
+                height: 58 + insets.bottom,
+                paddingBottom: insets.bottom + 6,
+                paddingTop: 6,
+              }
+            : null),
+        },
         tabBarLabelStyle: {
           fontSize: 11,
           fontWeight: '500',
