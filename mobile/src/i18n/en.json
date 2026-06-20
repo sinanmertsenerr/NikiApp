@@ -645,6 +645,7 @@
     "descriptionTrPlaceholder": "Enter description (Turkish)",
     "fillRequiredFields": "Please fill in the required fields",
     "hoursLeft": "hours left",
+    "daysLeft": "days left",
     "deleteCampaignTitle": "Delete Campaign",
     "outOfStock": "Out of Stock",
     "payment": "Payment",

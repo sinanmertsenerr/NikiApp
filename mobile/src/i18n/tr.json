@@ -648,7 +648,8 @@
     "descriptionEnPlaceholder": "Açıklama girin (İngilizce)",
     "descriptionTrPlaceholder": "Açıklama girin (Türkçe)",
     "fillRequiredFields": "Lütfen zorunlu alanları doldurun",
-    "hoursLeft": "saat kaldı"
+    "hoursLeft": "saat kaldı",
+    "daysLeft": "gün kaldı"
   },
   "groups": {
     "title": "Gruplar",
