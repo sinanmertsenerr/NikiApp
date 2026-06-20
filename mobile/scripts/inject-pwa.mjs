@@ -13,10 +13,14 @@ if (!existsSync(FILE)) {
 
 let html = readFileSync(FILE, 'utf8');
 
-// 1) viewport-fit=cover (notch-safe full-bleed) + lang=tr
+// 1) viewport-fit=cover (notch-safe full-bleed) + lang=tr.
+// maximum-scale=1, user-scalable=no disables whole-UI pinch-zoom — iOS Safari
+// IGNORES this in the browser (a11y zoom stays), but HONORS it in the installed
+// PWA, so the standalone app feels native and the visual/layout-viewport desync
+// (which re-opened the dark strip below the tab bar on zoom) can't happen.
 html = html.replace(
   '<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />',
-  '<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no, viewport-fit=cover" />',
+  '<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, shrink-to-fit=no, viewport-fit=cover" />',
 );
 html = html.replace('<html lang="en">', '<html lang="tr">');
 
