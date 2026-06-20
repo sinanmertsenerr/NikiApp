@@ -33,6 +33,11 @@ const HEAD = `
     <style>
       :focus-visible { outline: 2px solid #0a84ff; outline-offset: 2px; }
       [role="button"], a, button { cursor: pointer; }
+      /* Fill the entire viewport incl. the PWA safe-area / home-indicator so no
+         white strip shows behind the app. Follows the system colour scheme. */
+      html, body, #root { background-color: #ffffff; }
+      @media (prefers-color-scheme: dark) { html, body, #root { background-color: #000000; } }
+      html, body { min-height: 100%; overscroll-behavior: none; }
     </style>
     <script src="/sw-register.js" defer></script>`;
 

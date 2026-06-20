@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, Fragment } from 'react';
 import {
   View,
   Text,
@@ -169,9 +169,15 @@ export default function LoginScreen() {
     }
   };
 
+  // On web, TouchableWithoutFeedback+Keyboard.dismiss captures pointer events and
+  // breaks click/drag/selection inside inputs — so only wrap with it on native.
+  const DismissWrap: any = Platform.OS === 'web' ? Fragment : TouchableWithoutFeedback;
+  const dismissProps: any =
+    Platform.OS === 'web' ? {} : { onPress: Keyboard.dismiss, accessible: false };
+
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-      <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+      <DismissWrap {...dismissProps}>
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           style={styles.keyboardView}
@@ -183,8 +189,8 @@ export default function LoginScreen() {
             {/* Logo */}
             <View style={styles.logoContainer}>
               <Image
-                source={brand.logo}
-                style={[styles.logo, isDark && { tintColor: '#FFFFFF' }]}
+                source={isDark ? brand.logoLight : brand.logo}
+                style={styles.logo}
                 contentFit="contain"
               />
               <Text style={[styles.brandName, { color: colors.text }]}>
@@ -322,7 +328,7 @@ export default function LoginScreen() {
             </View>
           </ScrollView>
         </KeyboardAvoidingView>
-      </TouchableWithoutFeedback>
+      </DismissWrap>
 
       <CountryPickerModal
         visible={showCountryPicker}

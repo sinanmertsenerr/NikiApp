@@ -107,8 +107,8 @@ export default function HomeScreen() {
             accessibilityLabel="Bildirimler"
           >
             <Image
-              source={brand.logo}
-              style={[styles.headerLogo, isDark && { tintColor: '#FFFFFF' }]}
+              source={isDark ? brand.logoLight : brand.logo}
+              style={styles.headerLogo}
               contentFit="contain"
               accessible={false}
             />

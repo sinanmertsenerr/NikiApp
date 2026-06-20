@@ -18,7 +18,7 @@ export const BRANDS: Record<BrandType, BrandConfig> = {
     name: 'Niki Coffee',
     tagline: 'The Cat Coffee',
     logo: require('../../assets/images/brands/niki-logo.png'),
-    logoLight: require('../../assets/images/brands/niki-logo.png'), // Same image, will use tintColor
+    logoLight: require('../../assets/images/brands/niki-logo-white.png'), // White logo for dark mode
     primaryColor: '#000000',
     secondaryColor: '#6B4423',
   },
@@ -27,7 +27,7 @@ export const BRANDS: Record<BrandType, BrandConfig> = {
     name: 'Niki Sandwich',
     tagline: 'The Cat Sandwich',
     logo: require('../../assets/images/brands/niki-logo.png'),
-    logoLight: require('../../assets/images/brands/niki-logo.png'),
+    logoLight: require('../../assets/images/brands/niki-logo-white.png'),
     primaryColor: '#000000',
     secondaryColor: '#2E7D32',
   },

@@ -397,8 +397,8 @@ export default function RegisterScreen() {
           {/* Logo */}
           <View style={styles.logoContainer}>
             <Image
-              source={brand.logo}
-              style={[styles.logo, isDark && { tintColor: '#FFFFFF' }]}
+              source={isDark ? brand.logoLight : brand.logo}
+              style={styles.logo}
               contentFit="contain"
             />
           </View>

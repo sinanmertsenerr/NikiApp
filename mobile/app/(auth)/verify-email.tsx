@@ -4,9 +4,11 @@ import {
   Text,
   StyleSheet,
   TextInput,
+  ScrollView,
   Pressable,
   useColorScheme,
   Keyboard,
+  Platform,
 } from 'react-native';
 import { Alert } from '../../src/utils/alert';
 import { router, useLocalSearchParams } from 'expo-router';
@@ -119,6 +121,11 @@ export default function VerifyEmailScreen() {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+      <ScrollView
+        contentContainerStyle={{ flexGrow: 1 }}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
       {/* Back Button */}
       <Pressable onPress={() => router.back()} style={styles.backButton}>
         <Text style={[styles.backText, { color: colors.primary }]}>← {t('common.back')}</Text>
@@ -157,6 +164,14 @@ export default function VerifyEmailScreen() {
             keyboardType="number-pad"
             maxLength={1}
             selectTextOnFocus
+            onFocus={(e) => {
+              if (Platform.OS === 'web') {
+                const node: any = e?.target;
+                setTimeout(() => {
+                  try { node?.scrollIntoView?.({ block: 'center', behavior: 'smooth' }); } catch {}
+                }, 250);
+              }
+            }}
           />
         ))}
       </View>
@@ -195,6 +210,7 @@ export default function VerifyEmailScreen() {
           ⏱️ {t('auth.codeExpires', { minutes: 3 })}
         </Text>
       </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }

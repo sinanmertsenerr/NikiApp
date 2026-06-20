@@ -207,8 +207,8 @@ export default function ProfileScreen() {
           <View style={styles.brandSwitchLeft}>
             <View style={[styles.brandLogoContainer, { backgroundColor: isDark ? '#2D2D2D' : '#F5F5F5' }]}>
               <Image
-                source={brand.logo}
-                style={[styles.brandLogoSmall, isDark && { tintColor: '#FFFFFF' }]}
+                source={isDark ? brand.logoLight : brand.logo}
+                style={styles.brandLogoSmall}
                 contentFit="contain"
                 accessible={false}
               />

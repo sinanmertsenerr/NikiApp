@@ -4,6 +4,7 @@ import {
   Text,
   StyleSheet,
   KeyboardAvoidingView,
+  ScrollView,
   Platform,
   Pressable,
   useColorScheme,
@@ -83,6 +84,11 @@ export default function ForgotPasswordScreen() {
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardView}
       >
+        <ScrollView
+          contentContainerStyle={{ flexGrow: 1 }}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
         {/* Back Button */}
         <Pressable onPress={() => router.back()} style={styles.backButton}>
           <Text style={[styles.backText, { color: colors.primary }]}>← {t('common.back')}</Text>
@@ -139,6 +145,7 @@ export default function ForgotPasswordScreen() {
             </Text>
           </Pressable>
         </View>
+        </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );

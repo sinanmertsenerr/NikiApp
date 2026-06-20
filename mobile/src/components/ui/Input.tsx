@@ -7,6 +7,7 @@ import {
   Pressable,
   TextInputProps,
   useColorScheme,
+  Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, DarkColors, RSpacing, RFontSizes, BorderRadius } from '../../constants/theme';
@@ -88,9 +89,25 @@ export function Input({
           placeholderTextColor={colors.textTertiary}
           secureTextEntry={isPassword && !showPassword}
           textContentType={textContentType || (isPassword ? 'password' : undefined)}
-          onFocus={() => setIsFocused(true)}
-          onBlur={() => setIsFocused(false)}
           {...props}
+          onFocus={(e) => {
+            setIsFocused(true);
+            // Web: scroll the focused field above the on-screen keyboard so the
+            // user can see what they type (KeyboardAvoidingView is a no-op on web).
+            if (Platform.OS === 'web') {
+              const node: any = e?.target;
+              setTimeout(() => {
+                try {
+                  node?.scrollIntoView?.({ block: 'center', behavior: 'smooth' });
+                } catch {}
+              }, 250);
+            }
+            props.onFocus?.(e);
+          }}
+          onBlur={(e) => {
+            setIsFocused(false);
+            props.onBlur?.(e);
+          }}
         />
         {isPassword && (
           <Pressable

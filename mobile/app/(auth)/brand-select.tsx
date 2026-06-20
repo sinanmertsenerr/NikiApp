@@ -74,8 +74,8 @@ export default function BrandSelectScreen() {
                             >
                                 <View style={[styles.logoContainer, { backgroundColor: isDark ? '#2D2D2D' : '#F5F5F5' }]}>
                                     <Image
-                                        source={brand.logo}
-                                        style={[styles.brandLogo, isDark && { tintColor: '#FFFFFF' }]}
+                                        source={isDark ? brand.logoLight : brand.logo}
+                                        style={styles.brandLogo}
                                         contentFit="contain"
                                     />
                                 </View>
