@@ -27,10 +27,6 @@ const VIDEO_CONSTRAINTS: MediaStreamConstraints = {
   audio: false,
 };
 
-// TEMP: small build/mode marker so we can confirm the loaded bundle vs a stale
-// service-worker cache. Remove once the flow is confirmed working.
-const DEBUG_CAMERA = true;
-
 // Installed PWA launched from the home screen (standalone display mode).
 function isStandalonePWA(): boolean {
   if (typeof window === 'undefined') return false;
@@ -268,7 +264,6 @@ export function WebQRScanner({ onScan, onError, style }: WebQRScannerProps) {
           {busy ? '…' : i18n.t('errors.photoScan')}
         </button>
         {photoMsg ? <span style={{ fontSize: '13px', opacity: 0.9 }}>{photoMsg}</span> : null}
-        {DEBUG_CAMERA && <div style={tagStyle}>v7 PWA-photo</div>}
       </div>
     );
   }
@@ -314,7 +309,6 @@ export function WebQRScanner({ onScan, onError, style }: WebQRScannerProps) {
         }}
       />
       {hiddenInput}
-      {DEBUG_CAMERA && <div style={tagStyle}>v7 web-live</div>}
     </div>
   );
 }
@@ -339,19 +333,6 @@ const secondaryBtnStyle: React.CSSProperties = {
   fontSize: '15px',
   fontWeight: 600,
   cursor: 'pointer',
-};
-
-const tagStyle: React.CSSProperties = {
-  position: 'absolute',
-  top: 0,
-  left: 0,
-  padding: '4px 6px',
-  background: 'rgba(0,128,0,0.85)',
-  color: '#FFFFFF',
-  fontSize: '10px',
-  fontFamily: 'monospace',
-  zIndex: 10,
-  pointerEvents: 'none',
 };
 
 const errorContainerStyle: React.CSSProperties = {
