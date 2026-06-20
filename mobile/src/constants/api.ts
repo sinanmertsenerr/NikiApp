@@ -6,7 +6,7 @@ import { Platform } from 'react-native';
 // dev); that origin must also be whitelisted in the backend REST CORS + the
 // websocket gateway allowlist. Both API_BASE_URL and getFullImageUrl derive from
 // this single host so API calls and /uploads images always share an origin.
-const LIVE_HOST = 'https://niki.ieu.app';
+const LIVE_HOST = 'https://nikiapi.sinansener.com';
 const BACKEND_HOST =
   Platform.OS === 'web' ? (process.env.EXPO_PUBLIC_API_URL || LIVE_HOST) : LIVE_HOST;
 
