@@ -1,22 +1,19 @@
 // Web QR scanner — WEB.
-// expo-camera's onBarcodeScanned never fires on web, so the admin QR-scan flow
-// uses @zxing/browser to decode QR codes from a getUserMedia <video> stream and
-// feeds the decoded text to the same handler the native CameraView uses.
-// Requires a secure context (https or localhost) for camera access.
 //
-// iOS standalone PWA hardening (WebKit #252465 / #215884 / #179363):
-//   * We OWN getUserMedia (single acquisition) and hand the already-playing
-//     element to zxing for DECODE ONLY — a second getUserMedia would re-mute the
-//     first track and black the preview (#179363).
-//   * We set `muted` as the IDL PROPERTY (React's JSX `muted` and zxing only set
-//     the attribute, which WebKit does not reflect → autoplay can be blocked).
-//   * A freshly acquired track can arrive muted after an SPA route change and
-//     never deliver frames; we wait briefly for `unmute`, then re-acquire once.
-//   * If autoplay is rejected or no frames paint, we surface a one-tap overlay
-//     that restarts capture inside the user gesture (the reliable iOS fallback).
-//   * On returning to the foreground we restart if the track is muted/ended.
-// Browsers and Android PWA autoplay a muted video-only stream, so they never see
-// the tap overlay — the path is unchanged for them.
+// The QR LIBRARY (@zxing/browser) is NOT the problem here: every web QR library
+// reads frames from a getUserMedia <video>, and the installed iOS standalone-PWA
+// WebKit bug (#252465 / #212040) hands back a permanently-muted camera track that
+// delivers no frames — regardless of decoder. So this component does two things:
+//
+//   1. LIVE preview — a clean SINGLE getUserMedia acquisition (no teardown /
+//      double-acquire, which only makes the mute worse), attached with `muted` as
+//      the IDL property, with a persistent `unmute` listener. This works in normal
+//      browsers, Android PWA, and Safari tabs.
+//   2. PHOTO fallback — if no frames paint shortly (the iOS standalone case), we
+//      surface a "take a photo" button backed by <input capture="environment">.
+//      That uses the OS camera (not getUserMedia), so it works reliably in an
+//      installed iOS PWA. The still is decoded with zxing's decodeFromImageUrl and
+//      feeds the exact same onScan -> redeem flow.
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { BrowserMultiFormatReader, type IScannerControls } from '@zxing/browser';
 import i18n from '@/i18n';
@@ -32,16 +29,13 @@ const VIDEO_CONSTRAINTS: MediaStreamConstraints = {
   audio: false,
 };
 
-// If play() resolves but no frames paint within this window (a slipped-through
-// muted track), we re-offer the tap overlay. After MAX_RECOVERY_ATTEMPTS such
-// failures we surface a concrete error instead of looping on a black screen.
-const NO_FRAMES_TIMEOUT = 2000;
-const MAX_RECOVERY_ATTEMPTS = 3;
+// If the live preview paints no frames within this window we surface the photo
+// fallback (the iOS standalone muted-track case).
+const NO_FRAMES_TIMEOUT = 5000;
 
-// TEMP: on-screen diagnostics for the iOS-PWA black-camera investigation. The
-// installed PWA has no reachable console, so we surface live video/track state on
-// screen. The "v3" marker also confirms the new bundle actually loaded (vs a stale
-// service-worker cache). Remove once the camera is confirmed working.
+// TEMP: on-screen diagnostics for the iOS-PWA camera investigation. The installed
+// PWA has no reachable console. The "v4" marker also confirms the new bundle
+// loaded (vs a stale service-worker cache). Remove once confirmed working.
 const DEBUG_CAMERA = true;
 
 function describeError(err: unknown): string {
@@ -58,14 +52,24 @@ function describeError(err: unknown): string {
   return i18n.t('errors.cameraGeneric');
 }
 
-// True only when the element is actually rendering frames (matches zxing's
-// internal isVideoPlaying). A muted/black track stays paused or at currentTime 0.
+// True only when the element is actually rendering frames. A muted/black track
+// stays paused or at currentTime 0.
 function isPainting(v: HTMLVideoElement | null): boolean {
   return !!v && !v.paused && v.currentTime > 0 && v.readyState >= 2 && v.videoWidth > 0;
 }
 
+function stopTracks(stream: MediaStream | null) {
+  if (!stream) return;
+  try {
+    stream.getTracks().forEach((t) => t.stop());
+  } catch {
+    /* ignore */
+  }
+}
+
 export function WebQRScanner({ onScan, onError, style }: WebQRScannerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const onScanRef = useRef(onScan);
   onScanRef.current = onScan;
   const onErrorRef = useRef(onError);
@@ -77,12 +81,21 @@ export function WebQRScanner({ onScan, onError, style }: WebQRScannerProps) {
   const watchdogRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   // Bumped on every (re)start; in-flight async work checks it to self-abort.
   const genRef = useRef(0);
-  // Consecutive no-frames recoveries within one screen visit (reset on mount).
-  const attemptsRef = useRef(0);
 
   const [error, setError] = useState<string | null>(null);
-  const [needsTap, setNeedsTap] = useState(false);
+  // Live preview is delivering frames (vs muted/black).
+  const [livePainting, setLivePainting] = useState(false);
+  // Live preview failed to paint → offer the photo fallback prominently.
+  const [suggestPhoto, setSuggestPhoto] = useState(false);
+  // Decoding a captured photo.
+  const [busy, setBusy] = useState(false);
+  const [photoMsg, setPhotoMsg] = useState<string | null>(null);
   const [dbg, setDbg] = useState('starting…');
+
+  const reader = useCallback(
+    () => readerRef.current ?? (readerRef.current = new BrowserMultiFormatReader()),
+    [],
+  );
 
   const clearWatchdog = useCallback(() => {
     if (watchdogRef.current) {
@@ -99,14 +112,7 @@ export function WebQRScanner({ onScan, onError, style }: WebQRScannerProps) {
       /* ignore */
     }
     controlsRef.current = null;
-    const s = streamRef.current;
-    if (s) {
-      try {
-        s.getTracks().forEach((t) => t.stop());
-      } catch {
-        /* ignore */
-      }
-    }
+    stopTracks(streamRef.current);
     streamRef.current = null;
     const v = videoRef.current;
     if (v) {
@@ -118,230 +124,170 @@ export function WebQRScanner({ onScan, onError, style }: WebQRScannerProps) {
     }
   }, [clearWatchdog]);
 
-  // Resolves true once the track is delivering frames (unmuted), false on timeout.
-  const waitForUnmute = (track: MediaStreamTrack, ms: number) =>
-    new Promise<boolean>((resolve) => {
-      if (!track.muted) {
-        resolve(true);
-        return;
+  // Clean single-acquisition live preview. NO teardown-then-reacquire loop — that
+  // is what aggravates the WebKit mute. If frames never arrive we simply fall back
+  // to photo capture (the watchdog flips suggestPhoto).
+  const startLive = useCallback(async () => {
+    const myGen = ++genRef.current;
+    const isCurrent = () => genRef.current === myGen;
+
+    clearWatchdog();
+    setError(null);
+    setSuggestPhoto(false);
+    setLivePainting(false);
+
+    let stream: MediaStream;
+    try {
+      stream = await navigator.mediaDevices.getUserMedia(VIDEO_CONSTRAINTS);
+    } catch (e) {
+      if (isCurrent()) {
+        setError(describeError(e));
+        setSuggestPhoto(true);
+        onErrorRef.current?.(e);
       }
-      let done = false;
-      const finish = (val: boolean) => {
-        if (done) return;
-        done = true;
-        track.removeEventListener('unmute', onUnmute);
-        clearTimeout(timer);
-        resolve(val);
+      return;
+    }
+    if (!isCurrent()) {
+      stopTracks(stream);
+      return;
+    }
+    streamRef.current = stream;
+
+    const v = videoRef.current;
+    if (!v) {
+      stopTracks(stream);
+      return;
+    }
+    // muted MUST be the IDL property (not just the attribute) for gesture-less
+    // autoplay of a video-only stream on WebKit.
+    v.muted = true;
+    v.defaultMuted = true;
+    v.playsInline = true;
+    v.setAttribute('muted', '');
+    v.setAttribute('playsinline', '');
+    v.setAttribute('webkit-playsinline', '');
+    v.setAttribute('autoplay', '');
+    v.srcObject = stream;
+
+    // Persistent unmute listener: if the track ever starts delivering frames, the
+    // preview becomes live and we drop the photo suggestion.
+    const track = stream.getVideoTracks()[0];
+    if (track) {
+      const onUnmute = () => {
+        if (genRef.current === myGen) {
+          setLivePainting(true);
+          setSuggestPhoto(false);
+        }
       };
-      const onUnmute = () => finish(true);
       track.addEventListener('unmute', onUnmute);
-      const timer = setTimeout(() => finish(!track.muted), ms);
-    });
+    }
 
-  const acquire = useCallback(async (): Promise<MediaStream> => {
-    return navigator.mediaDevices.getUserMedia(VIDEO_CONSTRAINTS);
-  }, []);
+    try {
+      await v.play();
+    } catch {
+      /* autoplay may be blocked; the photo fallback still works */
+    }
+    if (!isCurrent()) return;
 
-  // Arm after every (re)start — including the gesture path — so a muted track
-  // that slips through play() never leaves a dead black screen: if no frames
-  // paint, re-offer the tap, and after MAX_RECOVERY_ATTEMPTS show a real error.
-  const armRecovery = useCallback(
-    (myGen: number) => {
-      clearWatchdog();
-      watchdogRef.current = setTimeout(() => {
-        if (genRef.current !== myGen) return;
-        if (isPainting(videoRef.current)) {
-          attemptsRef.current = 0;
-          setNeedsTap(false);
-          return;
-        }
-        attemptsRef.current += 1;
-        if (attemptsRef.current >= MAX_RECOVERY_ATTEMPTS) {
-          setNeedsTap(false);
-          setError(i18n.t('errors.cameraGeneric'));
-        } else {
-          setNeedsTap(true);
-        }
-      }, NO_FRAMES_TIMEOUT);
-    },
-    [clearWatchdog],
-  );
-
-  const start = useCallback(
-    async (viaGesture: boolean) => {
-      const myGen = ++genRef.current;
-      const isCurrent = () => genRef.current === myGen;
-      const dump = (s: MediaStream) => {
+    // Decode from the already-attached, playing element — zxing does NOT acquire a
+    // second stream (which would re-mute the first track, #179363).
+    try {
+      const controls = await reader().decodeFromVideoElement(v, (result) => {
+        if (genRef.current === myGen && result) onScanRef.current(result.getText());
+      });
+      if (!isCurrent()) {
         try {
-          s.getTracks().forEach((t) => t.stop());
+          controls.stop();
         } catch {
           /* ignore */
         }
-      };
-
-      clearWatchdog();
-      setError(null);
-      setNeedsTap(false);
-
-      // 1) Acquire the stream ourselves (single getUserMedia, reused by zxing).
-      let stream: MediaStream;
-      try {
-        stream = await acquire();
-      } catch (e) {
-        if (isCurrent()) {
-          setError(describeError(e));
-          onErrorRef.current?.(e);
-        }
         return;
       }
-      if (!isCurrent()) {
-        dump(stream);
-        return;
+      controlsRef.current = controls;
+    } catch (e) {
+      if (isCurrent()) {
+        setError(describeError(e));
+        setSuggestPhoto(true);
+        onErrorRef.current?.(e);
       }
-      streamRef.current = stream;
+      return;
+    }
 
-      // 2) Muted-track recovery (WebKit #252465 / #215884): a track acquired right
-      //    after an SPA route change can arrive muted and never paint. Wait for
-      //    `unmute`; if it stays muted, re-acquire once (the retry usually unmutes).
-      let track = stream.getVideoTracks()[0];
-      if (track && track.muted) {
-        const ok = await waitForUnmute(track, 1500);
-        if (!isCurrent()) {
-          dump(stream);
-          return;
-        }
-        if (!ok) {
-          dump(stream);
-          try {
-            stream = await acquire();
-          } catch (e) {
-            if (isCurrent()) {
-              setError(describeError(e));
-              onErrorRef.current?.(e);
-            }
-            return;
-          }
-          if (!isCurrent()) {
-            dump(stream);
-            return;
-          }
-          streamRef.current = stream;
-          track = stream.getVideoTracks()[0];
-        }
+    // Watchdog: no frames within the window → the iOS standalone muted-track case.
+    // Surface the photo fallback (live keeps trying in the background).
+    watchdogRef.current = setTimeout(() => {
+      if (genRef.current !== myGen) return;
+      if (isPainting(videoRef.current)) {
+        setLivePainting(true);
+        setSuggestPhoto(false);
+      } else {
+        setSuggestPhoto(true);
       }
+    }, NO_FRAMES_TIMEOUT);
+  }, [clearWatchdog, reader]);
 
-      // 3) Attach. Set muted as the PROPERTY (not just the attribute) so WebKit
-      //    allows gesture-less play of the video-only stream.
-      const v = videoRef.current;
-      if (!v) {
-        dump(stream);
-        return;
-      }
-      v.muted = true;
-      v.defaultMuted = true;
-      v.playsInline = true;
-      v.setAttribute('muted', '');
-      v.setAttribute('playsinline', '');
-      v.setAttribute('webkit-playsinline', '');
-      v.setAttribute('autoplay', '');
-      v.srcObject = stream;
+  // Photo fallback: decode a still captured by the OS camera (<input capture>).
+  const onPhotoSelected = useCallback(async (file: File | null | undefined) => {
+    if (!file) return;
+    setBusy(true);
+    setPhotoMsg(null);
+    const url = URL.createObjectURL(file);
+    try {
+      const result = await reader().decodeFromImageUrl(url);
+      if (result) onScanRef.current(result.getText());
+    } catch {
+      setPhotoMsg(i18n.t('errors.qrNotFound'));
+    } finally {
+      URL.revokeObjectURL(url);
+      setBusy(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  }, [reader]);
 
-      // 4) Play. Muted video-only autoplays in browsers + Android PWA; iOS
-      //    standalone may reject → show the one-tap restart overlay.
-      try {
-        await v.play();
-      } catch {
-        if (isCurrent()) setNeedsTap(true);
-        return;
-      }
-      if (!isCurrent()) return;
-      setNeedsTap(false);
-
-      // 5) DECODE ONLY via the already-playing element — no second getUserMedia.
-      try {
-        const reader =
-          readerRef.current ?? (readerRef.current = new BrowserMultiFormatReader());
-        const controls = await reader.decodeFromVideoElement(v, (result) => {
-          if (genRef.current === myGen && result) onScanRef.current(result.getText());
-        });
-        // A teardown/restart may have happened during the await — abort cleanly so
-        // we don't leave an orphaned zxing scan loop running.
-        if (!isCurrent()) {
-          try {
-            controls.stop();
-          } catch {
-            /* ignore */
-          }
-          return;
-        }
-        controlsRef.current = controls;
-      } catch (e) {
-        if (isCurrent()) {
-          setError(describeError(e));
-          onErrorRef.current?.(e);
-        }
-        return;
-      }
-
-      // 6) Watchdog (always, incl. the gesture path): play() can resolve while a
-      //    muted track still paints nothing (WebKit #252465). Re-check and recover
-      //    so the worst case is a tap affordance / error, never a dead black screen.
-      armRecovery(myGen);
-    },
-    [acquire, clearWatchdog, armRecovery],
-  );
+  const openPhotoCapture = useCallback(() => {
+    fileInputRef.current?.click();
+  }, []);
 
   // Start on mount; full teardown on unmount.
   useEffect(() => {
-    attemptsRef.current = 0;
-    start(false);
+    startLive();
     return () => {
       genRef.current++;
       stopCapture();
     };
-  }, [start, stopCapture]);
+  }, [startLive, stopCapture]);
 
-  // Foreground resume: iOS can mute/end the track while backgrounded. Restart if
-  // the stream is broken or the element isn't painting anymore.
+  // Foreground resume: restart live only when the track is genuinely broken.
   useEffect(() => {
     if (typeof document === 'undefined') return;
     const onVisibility = () => {
       if (document.visibilityState !== 'visible' || error) return;
-      // Only restart when the track is genuinely broken. A backgrounded desktop
-      // tab can report a paused-but-live element, so do NOT restart on !isPainting
-      // alone — that would cause an unnecessary teardown + re-acquire flicker.
       const track = streamRef.current?.getVideoTracks()[0];
-      const broken = !track || track.readyState === 'ended' || track.muted;
+      const broken = !track || track.readyState === 'ended';
       if (broken) {
         stopCapture();
-        start(false);
+        startLive();
       }
     };
     document.addEventListener('visibilitychange', onVisibility);
     return () => document.removeEventListener('visibilitychange', onVisibility);
-  }, [start, stopCapture, error]);
+  }, [startLive, stopCapture, error]);
 
-  // TEMP diagnostics: sample live video/track state for the on-screen readout.
+  // TEMP diagnostics readout.
   useEffect(() => {
     if (!DEBUG_CAMERA) return;
     const id = setInterval(() => {
       const v = videoRef.current;
       const tr = streamRef.current?.getVideoTracks()[0];
       setDbg(
-        `v3 paused=${v?.paused} rs=${v?.readyState} t=${v ? v.currentTime.toFixed(1) : '-'} ` +
+        `v4 paused=${v?.paused} rs=${v?.readyState} t=${v ? v.currentTime.toFixed(1) : '-'} ` +
           `${v?.videoWidth ?? '?'}x${v?.videoHeight ?? '?'} | trk muted=${tr?.muted} ` +
-          `st=${tr?.readyState} en=${tr?.enabled} | tap=${needsTap} err=${error ? 1 : 0} ` +
-          `stream=${streamRef.current ? 1 : 0}`,
+          `st=${tr?.readyState} | paint=${livePainting ? 1 : 0} photo=${suggestPhoto ? 1 : 0} ` +
+          `err=${error ? 1 : 0}`,
       );
     }, 400);
     return () => clearInterval(id);
-  }, [needsTap, error]);
-
-  const handleTap = useCallback(() => {
-    // Inside the user gesture — the most permissive state to (re)acquire + play.
-    stopCapture();
-    start(true);
-  }, [start, stopCapture]);
+  }, [livePainting, suggestPhoto, error]);
 
   if (error) {
     return (
@@ -365,25 +311,28 @@ export function WebQRScanner({ onScan, onError, style }: WebQRScannerProps) {
         }}
       >
         <span>{error}</span>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          capture="environment"
+          style={{ display: 'none' }}
+          onChange={(e) => onPhotoSelected(e.currentTarget.files?.[0])}
+        />
+        <button onClick={openPhotoCapture} style={primaryBtnStyle}>
+          {busy ? '…' : i18n.t('errors.photoScan')}
+        </button>
         <button
           onClick={() => {
             stopCapture();
             setError(null);
-            start(true);
+            startLive();
           }}
-          style={{
-            padding: '10px 24px',
-            borderRadius: '10px',
-            border: 'none',
-            background: '#FFFFFF',
-            color: '#000000',
-            fontSize: '15px',
-            fontWeight: 600,
-            cursor: 'pointer',
-          }}
+          style={secondaryBtnStyle}
         >
           {i18n.t('errors.reload')}
         </button>
+        {photoMsg ? <span style={{ fontSize: '13px' }}>{photoMsg}</span> : null}
       </div>
     );
   }
@@ -404,6 +353,15 @@ export function WebQRScanner({ onScan, onError, style }: WebQRScannerProps) {
           backgroundColor: '#000000',
         }}
       />
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        capture="environment"
+        style={{ display: 'none' }}
+        onChange={(e) => onPhotoSelected(e.currentTarget.files?.[0])}
+      />
+
       {DEBUG_CAMERA && (
         <div
           style={{
@@ -425,9 +383,10 @@ export function WebQRScanner({ onScan, onError, style }: WebQRScannerProps) {
           {dbg}
         </div>
       )}
-      {needsTap && (
-        <button
-          onClick={handleTap}
+
+      {/* Photo fallback: prominent when live failed to paint (iOS standalone). */}
+      {suggestPhoto && !livePainting && (
+        <div
           style={{
             position: 'absolute',
             inset: 0,
@@ -435,21 +394,47 @@ export function WebQRScanner({ onScan, onError, style }: WebQRScannerProps) {
             flexDirection: 'column',
             alignItems: 'center',
             justifyContent: 'center',
-            gap: '12px',
-            border: 'none',
-            background: 'rgba(0,0,0,0.55)',
+            gap: '14px',
+            padding: '24px',
+            boxSizing: 'border-box',
+            textAlign: 'center',
+            background: 'rgba(0,0,0,0.82)',
             color: '#FFFFFF',
-            fontSize: '16px',
-            fontWeight: 600,
-            cursor: 'pointer',
+            zIndex: 9,
           }}
         >
-          <span style={{ fontSize: '40px', lineHeight: 1 }}>📷</span>
-          <span>{i18n.t('errors.cameraTapToStart')}</span>
-        </button>
+          <span style={{ fontSize: '44px', lineHeight: 1 }}>📷</span>
+          <span style={{ fontSize: '15px', lineHeight: 1.5 }}>{i18n.t('errors.photoHint')}</span>
+          <button onClick={openPhotoCapture} style={primaryBtnStyle}>
+            {busy ? '…' : i18n.t('errors.photoScan')}
+          </button>
+          {photoMsg ? <span style={{ fontSize: '13px', opacity: 0.9 }}>{photoMsg}</span> : null}
+        </div>
       )}
     </div>
   );
 }
+
+const primaryBtnStyle: React.CSSProperties = {
+  padding: '12px 28px',
+  borderRadius: '12px',
+  border: 'none',
+  background: '#FFFFFF',
+  color: '#000000',
+  fontSize: '16px',
+  fontWeight: 600,
+  cursor: 'pointer',
+};
+
+const secondaryBtnStyle: React.CSSProperties = {
+  padding: '10px 24px',
+  borderRadius: '10px',
+  border: '1px solid rgba(255,255,255,0.5)',
+  background: 'transparent',
+  color: '#FFFFFF',
+  fontSize: '15px',
+  fontWeight: 600,
+  cursor: 'pointer',
+};
 
 export default WebQRScanner;
