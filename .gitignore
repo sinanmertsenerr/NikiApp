@@ -1,2 +1,21 @@
 backend/uploads/**/*.jpg
 backend/uploads/**/*.png
+
+# Playwright / MCP browser artifacts (screenshots, snapshots, traces)
+.playwright-mcp/
+**/.playwright-mcp/
+playwright-report/
+test-results/
+*-snapshots/
+
+# Build output (each app also ignores its own dist)
+dist/
+**/dist/
+
+# Local screenshots / scratch
+niki-web-*.png
+*.local.png
+
+# OS / editor
+.DS_Store
+
