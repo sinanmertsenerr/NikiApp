@@ -48,6 +48,13 @@ const HEAD = `
       }
       html, body { margin: 0; overscroll-behavior: none; }
       #root { display: flex; flex-direction: column; }
+      /* Installed PWA only: pin the shell to the full dynamic viewport (definite
+         height, not just min-height) so the in-flow bottom tab bar reaches the
+         true screen bottom and its background fills the home-indicator area
+         instead of leaving a dark strip below it. Browser layout is untouched. */
+      @media (display-mode: standalone) {
+        html, body, #root { height: 100dvh; }
+      }
     </style>
     <script src="/sw-register.js" defer></script>`;
 
