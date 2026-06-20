@@ -90,7 +90,10 @@ export function WebQRScanner({ onScan, onError, style }: WebQRScannerProps) {
   // Decoding a captured photo.
   const [busy, setBusy] = useState(false);
   const [photoMsg, setPhotoMsg] = useState<string | null>(null);
-  const [dbg, setDbg] = useState('starting…');
+  const [dbg, setDbg] = useState('idle');
+  // Gesture-first: the live camera is only acquired after the user taps "Start",
+  // inside the user gesture (the cleanest shot at an unmuted track on iOS standalone).
+  const [started, setStarted] = useState(false);
 
   const reader = useCallback(
     () => readerRef.current ?? (readerRef.current = new BrowserMultiFormatReader()),
@@ -182,39 +185,12 @@ export function WebQRScanner({ onScan, onError, style }: WebQRScannerProps) {
       track.addEventListener('unmute', onUnmute);
     }
 
-    try {
-      await v.play();
-    } catch {
-      /* autoplay may be blocked; the photo fallback still works */
-    }
-    if (!isCurrent()) return;
-
-    // Decode from the already-attached, playing element — zxing does NOT acquire a
-    // second stream (which would re-mute the first track, #179363).
-    try {
-      const controls = await reader().decodeFromVideoElement(v, (result) => {
-        if (genRef.current === myGen && result) onScanRef.current(result.getText());
-      });
-      if (!isCurrent()) {
-        try {
-          controls.stop();
-        } catch {
-          /* ignore */
-        }
-        return;
-      }
-      controlsRef.current = controls;
-    } catch (e) {
-      if (isCurrent()) {
-        setError(describeError(e));
-        setSuggestPhoto(true);
-        onErrorRef.current?.(e);
-      }
-      return;
-    }
-
-    // Watchdog: no frames within the window → the iOS standalone muted-track case.
-    // Surface the photo fallback (live keeps trying in the background).
+    // Arm the no-frames watchdog SYNCHRONOUSLY, BEFORE the awaits below. This is the
+    // critical fix: on a muted iOS track v.play() (and zxing's internal play wait)
+    // can stay PENDING FOREVER — the "playback started" signal never fires because
+    // no frames arrive. Awaiting them stalls this function, so the fallback would
+    // never surface. We schedule the watchdog first, then kick off play + decode
+    // fire-and-forget so a hung play() can't block the photo fallback.
     watchdogRef.current = setTimeout(() => {
       if (genRef.current !== myGen) return;
       if (isPainting(videoRef.current)) {
@@ -224,6 +200,33 @@ export function WebQRScanner({ onScan, onError, style }: WebQRScannerProps) {
         setSuggestPhoto(true);
       }
     }, NO_FRAMES_TIMEOUT);
+
+    // Fire-and-forget: the play() promise may never resolve for a muted track.
+    v.play().catch(() => {
+      /* autoplay blocked / never starts; the photo fallback still works */
+    });
+
+    // Fire-and-forget decode: zxing reads frames from the already-attached element.
+    // Its internal play wait can also hang on a muted track — fine, the watchdog
+    // already guarantees the fallback appears.
+    reader()
+      .decodeFromVideoElement(v, (result) => {
+        if (genRef.current === myGen && result) onScanRef.current(result.getText());
+      })
+      .then((controls) => {
+        if (genRef.current !== myGen) {
+          try {
+            controls.stop();
+          } catch {
+            /* ignore */
+          }
+          return;
+        }
+        controlsRef.current = controls;
+      })
+      .catch(() => {
+        /* decode failed to start; the watchdog surfaces the photo fallback */
+      });
   }, [clearWatchdog, reader]);
 
   // Photo fallback: decode a still captured by the OS camera (<input capture>).
@@ -248,20 +251,27 @@ export function WebQRScanner({ onScan, onError, style }: WebQRScannerProps) {
     fileInputRef.current?.click();
   }, []);
 
-  // Start on mount; full teardown on unmount.
-  useEffect(() => {
+  const handleStart = useCallback(() => {
+    setStarted(true);
     startLive();
+  }, [startLive]);
+
+  // NO auto-start: on iOS standalone the cold-start getUserMedia returns a muted
+  // track. Acquiring from an explicit user gesture (the Start button) in a fully
+  // active document is the cleanest shot at an unmuted track; if it still comes
+  // muted, the watchdog surfaces the photo fallback. Teardown on unmount.
+  useEffect(() => {
     return () => {
       genRef.current++;
       stopCapture();
     };
-  }, [startLive, stopCapture]);
+  }, [stopCapture]);
 
   // Foreground resume: restart live only when the track is genuinely broken.
   useEffect(() => {
     if (typeof document === 'undefined') return;
     const onVisibility = () => {
-      if (document.visibilityState !== 'visible' || error) return;
+      if (!started || document.visibilityState !== 'visible' || error) return;
       const track = streamRef.current?.getVideoTracks()[0];
       const broken = !track || track.readyState === 'ended';
       if (broken) {
@@ -271,7 +281,7 @@ export function WebQRScanner({ onScan, onError, style }: WebQRScannerProps) {
     };
     document.addEventListener('visibilitychange', onVisibility);
     return () => document.removeEventListener('visibilitychange', onVisibility);
-  }, [startLive, stopCapture, error]);
+  }, [startLive, stopCapture, error, started]);
 
   // TEMP diagnostics readout.
   useEffect(() => {
@@ -280,14 +290,14 @@ export function WebQRScanner({ onScan, onError, style }: WebQRScannerProps) {
       const v = videoRef.current;
       const tr = streamRef.current?.getVideoTracks()[0];
       setDbg(
-        `v4 paused=${v?.paused} rs=${v?.readyState} t=${v ? v.currentTime.toFixed(1) : '-'} ` +
+        `v6 started=${started ? 1 : 0} paused=${v?.paused} rs=${v?.readyState} t=${v ? v.currentTime.toFixed(1) : '-'} ` +
           `${v?.videoWidth ?? '?'}x${v?.videoHeight ?? '?'} | trk muted=${tr?.muted} ` +
           `st=${tr?.readyState} | paint=${livePainting ? 1 : 0} photo=${suggestPhoto ? 1 : 0} ` +
           `err=${error ? 1 : 0}`,
       );
     }, 400);
     return () => clearInterval(id);
-  }, [livePainting, suggestPhoto, error]);
+  }, [livePainting, suggestPhoto, error, started]);
 
   if (error) {
     return (
@@ -384,8 +394,38 @@ export function WebQRScanner({ onScan, onError, style }: WebQRScannerProps) {
         </div>
       )}
 
+      {/* Gesture-first start screen: acquire the camera only from this user tap. */}
+      {!started && (
+        <div
+          style={{
+            position: 'absolute',
+            inset: 0,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '16px',
+            padding: '24px',
+            boxSizing: 'border-box',
+            textAlign: 'center',
+            background: '#000000',
+            color: '#FFFFFF',
+            zIndex: 9,
+          }}
+        >
+          <span style={{ fontSize: '48px', lineHeight: 1 }}>📷</span>
+          <button onClick={handleStart} style={primaryBtnStyle}>
+            {i18n.t('errors.startCamera')}
+          </button>
+          <button onClick={openPhotoCapture} style={secondaryBtnStyle}>
+            {busy ? '…' : i18n.t('errors.photoScan')}
+          </button>
+          {photoMsg ? <span style={{ fontSize: '13px', opacity: 0.9 }}>{photoMsg}</span> : null}
+        </div>
+      )}
+
       {/* Photo fallback: prominent when live failed to paint (iOS standalone). */}
-      {suggestPhoto && !livePainting && (
+      {started && suggestPhoto && !livePainting && (
         <div
           style={{
             position: 'absolute',

@@ -55,6 +55,7 @@
     "cameraNotFound": "Kamera bulunamadı.",
     "cameraGeneric": "Kamera başlatılamadı. Lütfen tekrar dene.",
     "cameraTapToStart": "Kamerayı başlatmak için dokun",
+    "startCamera": "Kamerayı Başlat",
     "photoScan": "Fotoğraf çekerek tara",
     "photoHint": "Bu cihazda canlı kamera açılmadı. Bunun yerine QR kodun fotoğrafını çek.",
     "qrNotFound": "Fotoğrafta QR kod bulunamadı. Lütfen tekrar dene.",

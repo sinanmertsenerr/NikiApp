@@ -55,6 +55,7 @@
     "cameraNotFound": "No camera found.",
     "cameraGeneric": "Could not start the camera. Please try again.",
     "cameraTapToStart": "Tap to start the camera",
+    "startCamera": "Start Camera",
     "photoScan": "Scan by taking a photo",
     "photoHint": "The live camera didn't start on this device. Take a photo of the QR code instead.",
     "qrNotFound": "No QR code found in the photo. Please try again.",
