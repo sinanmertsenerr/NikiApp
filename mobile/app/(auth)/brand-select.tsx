@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, useColorScheme, Pressable } from 'react-native';
+import { View, Text, StyleSheet, useColorScheme, Pressable, ScrollView } from 'react-native';
 import { Alert } from '../../src/utils/alert';
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
@@ -38,7 +38,11 @@ export default function BrandSelectScreen() {
 
     return (
         <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-            <View style={styles.content}>
+            <ScrollView
+                style={styles.scroll}
+                contentContainerStyle={styles.content}
+                showsVerticalScrollIndicator={false}
+            >
                 {/* Header */}
                 <View style={styles.header}>
                     <Text style={[styles.greeting, { color: colors.textSecondary }]}>
@@ -103,7 +107,7 @@ export default function BrandSelectScreen() {
                         );
                     })}
                 </View>
-            </View>
+            </ScrollView>
         </SafeAreaView>
     );
 }
@@ -112,10 +116,17 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
     },
-    content: {
+    scroll: {
         flex: 1,
+    },
+    content: {
+        // Center vertically when there is room (tall viewport / PWA), but let the
+        // content scroll when the browser chrome shrinks the visible area so the
+        // bottom card is never clipped behind the toolbar.
+        flexGrow: 1,
+        justifyContent: 'center',
         paddingHorizontal: RSpacing.lg,
-        paddingTop: RSpacing.xl,
+        paddingVertical: RSpacing.xl,
     },
     header: {
         marginBottom: RSpacing.xxl,
@@ -136,9 +147,7 @@ const styles = StyleSheet.create({
         textAlign: 'center',
     },
     brandsContainer: {
-        flex: 1,
         gap: RSpacing.lg,
-        justifyContent: 'center',
     },
     brandCard: {
         borderRadius: BorderRadius.xl,
