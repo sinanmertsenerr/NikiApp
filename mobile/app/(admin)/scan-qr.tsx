@@ -92,6 +92,15 @@ export default function ScanQRScreen() {
   const { t } = useTranslation();
   const { i18n } = useTranslation();
 
+  // Installed web PWA: the scanner shows a photo-capture screen (live camera is
+  // unusable in iOS standalone), so hide the live-scan frame/hint overlay there.
+  const isWebStandalone =
+    Platform.OS === 'web' &&
+    typeof window !== 'undefined' &&
+    (((window as any).matchMedia &&
+      (window as any).matchMedia('(display-mode: standalone)').matches) ||
+      (window.navigator as any).standalone === true);
+
   const [scanned, setScanned] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [scannedUser, setScannedUser] = useState<ScannedUserDisplay | null>(null);
@@ -323,22 +332,24 @@ export default function ScanQRScreen() {
               onBarcodeScanned={scanned ? undefined : handleBarCodeScanned}
             />
           )}
-          <View style={styles.overlay} pointerEvents="none">
-            <View style={styles.scanFrame}>
-              <View style={[styles.corner, styles.topLeft]} />
-              <View style={[styles.corner, styles.topRight]} />
-              <View style={[styles.corner, styles.bottomLeft]} />
-              <View style={[styles.corner, styles.bottomRight]} />
-            </View>
-            {isLoading ? (
-              <View style={styles.loadingOverlay}>
-                <ActivityIndicator size="large" color="#FFFFFF" />
-                <Text style={styles.loadingText}>{t('common.loading')}</Text>
+          {!isWebStandalone && (
+            <View style={styles.overlay} pointerEvents="none">
+              <View style={styles.scanFrame}>
+                <View style={[styles.corner, styles.topLeft]} />
+                <View style={[styles.corner, styles.topRight]} />
+                <View style={[styles.corner, styles.bottomLeft]} />
+                <View style={[styles.corner, styles.bottomRight]} />
               </View>
-            ) : (
-              <Text style={styles.scanText}>{t('admin.scanQrHint')}</Text>
-            )}
-          </View>
+              {isLoading ? (
+                <View style={styles.loadingOverlay}>
+                  <ActivityIndicator size="large" color="#FFFFFF" />
+                  <Text style={styles.loadingText}>{t('common.loading')}</Text>
+                </View>
+              ) : (
+                <Text style={styles.scanText}>{t('admin.scanQrHint')}</Text>
+              )}
+            </View>
+          )}
         </>
       ) : scannedUser && !transactionResult ? (
         // User Found - Operation Selection

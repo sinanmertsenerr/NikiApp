@@ -57,7 +57,7 @@
     "cameraTapToStart": "Kamerayı başlatmak için dokun",
     "startCamera": "Kamerayı Başlat",
     "photoScan": "Fotoğraf çekerek tara",
-    "photoHint": "Bu cihazda canlı kamera açılmadı. Bunun yerine QR kodun fotoğrafını çek.",
+    "photoHint": "QR kodu taramak için fotoğrafını çek. (Fotoğraf galerine kaydedilmez.)",
     "qrNotFound": "Fotoğrafta QR kod bulunamadı. Lütfen tekrar dene.",
     "storageUnavailable": "Bilgilerini bu cihaza kaydedemiyoruz. Gizli moddaysan normal pencerede tekrar dener misin?",
     "offlineAction": "Bu işlem için internet bağlantısı gerekiyor. Bağlandığında tekrar deneyebilirsin.",

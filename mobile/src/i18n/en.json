@@ -57,7 +57,7 @@
     "cameraTapToStart": "Tap to start the camera",
     "startCamera": "Start Camera",
     "photoScan": "Scan by taking a photo",
-    "photoHint": "The live camera didn't start on this device. Take a photo of the QR code instead.",
+    "photoHint": "Take a photo of the QR code to scan it. (It won't be saved to your gallery.)",
     "qrNotFound": "No QR code found in the photo. Please try again.",
     "storageUnavailable": "We can't save your data on this device. If you're in private mode, please try again in a normal window.",
     "offlineAction": "You need to be online to do this. Please reconnect and try again.",
