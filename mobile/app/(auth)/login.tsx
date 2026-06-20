@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, Fragment } from 'react';
+import { useState, Fragment } from 'react';
 import {
   View,
   Text,
@@ -77,13 +77,11 @@ export default function LoginScreen() {
   };
 
   const loginSchema = createLoginSchema(t);
-  const hasAutoSubmitted = useRef(false);
 
   const {
     control,
     handleSubmit,
     formState: { errors },
-    watch,
   } = useForm<LoginForm>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
@@ -92,32 +90,6 @@ export default function LoginScreen() {
     },
   });
 
-  // Watch form values for autofill detection
-  const identifier = watch('identifier');
-  const password = watch('password');
-
-  // Auto-submit when both fields are filled (likely from autofill)
-  useEffect(() => {
-    // Check if both fields have valid values and we haven't auto-submitted yet
-    if (
-      identifier &&
-      password &&
-      identifier.length >= 3 &&
-      password.length >= 6 &&
-      !hasAutoSubmitted.current &&
-      !loading
-    ) {
-      // Small delay to ensure autofill has completed
-      const timer = setTimeout(() => {
-        if (!hasAutoSubmitted.current) {
-          hasAutoSubmitted.current = true;
-          Keyboard.dismiss();
-          handleSubmit(onSubmit)();
-        }
-      }, 500);
-      return () => clearTimeout(timer);
-    }
-  }, [identifier, password]);
 
   const onSubmit = async (data: LoginForm) => {
     setLoading(true);

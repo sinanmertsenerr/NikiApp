@@ -33,11 +33,14 @@ const HEAD = `
     <style>
       :focus-visible { outline: 2px solid #0a84ff; outline-offset: 2px; }
       [role="button"], a, button { cursor: pointer; }
-      /* Fill the entire viewport incl. the PWA safe-area / home-indicator so no
-         white strip shows behind the app. Follows the system colour scheme. */
-      html, body, #root { background-color: #ffffff; }
+      /* Fill the entire viewport (incl. the PWA safe-area / home-indicator) so the
+         app reaches the bottom with no empty strip. height:100% chain is required
+         or the flex:1 app root collapses to content height and leaves a gap.
+         Colour follows the system scheme so the filled area matches the app. */
+      html, body, #root { height: 100%; background-color: #ffffff; }
       @media (prefers-color-scheme: dark) { html, body, #root { background-color: #000000; } }
-      html, body { min-height: 100%; overscroll-behavior: none; }
+      html, body { margin: 0; min-height: 100%; overscroll-behavior: none; }
+      #root { display: flex; flex-direction: column; }
     </style>
     <script src="/sw-register.js" defer></script>`;
 
