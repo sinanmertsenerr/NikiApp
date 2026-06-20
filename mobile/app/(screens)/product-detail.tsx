@@ -104,29 +104,6 @@ export default function ProductDetailScreen() {
             </View>
           </View>
 
-          {/* Ingredients Section */}
-          <View style={styles.section}>
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('admin.ingredientsTitle', 'İçindekiler')}</Text>
-            <View style={styles.ingredientsList}>
-              <View style={[styles.ingredientTag, { backgroundColor: colors.backgroundSecondary }]}>
-                <Text style={[styles.ingredientText, { color: colors.text }]}>{t('admin.ingredientEspresso', 'Espresso')}</Text>
-              </View>
-              <View style={[styles.ingredientTag, { backgroundColor: colors.backgroundSecondary }]}>
-                <Text style={[styles.ingredientText, { color: colors.text }]}>{t('admin.ingredientMilk', 'Süt')}</Text>
-              </View>
-              <View style={[styles.ingredientTag, { backgroundColor: colors.backgroundSecondary }]}>
-                <Text style={[styles.ingredientText, { color: colors.text }]}>{t('admin.ingredientCaramelSyrup', 'Karamel Şurup')}</Text>
-              </View>
-            </View>
-          </View>
-
-          {/* Allergen Info */}
-          <View style={[styles.allergenCard, { backgroundColor: colors.warning + '15' }]}>
-            <Ionicons name="warning-outline" size={20} color={colors.warning} />
-            <Text style={[styles.allergenText, { color: colors.warning }]}>
-              {t('admin.allergenWarning', 'Süt içerir. Alerjen bilgisi için personele danışın.')}
-            </Text>
-          </View>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -201,37 +178,5 @@ const styles = StyleSheet.create({
   infoDivider: {
     width: 1,
     height: 40,
-  },
-  section: {
-    marginBottom: RSpacing.lg,
-  },
-  sectionTitle: {
-    fontSize: RFontSizes.lg,
-    fontWeight: '600',
-    marginBottom: RSpacing.sm,
-  },
-  ingredientsList: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: RSpacing.sm,
-  },
-  ingredientTag: {
-    paddingHorizontal: RSpacing.md,
-    paddingVertical: RSpacing.sm,
-    borderRadius: BorderRadius.full,
-  },
-  ingredientText: {
-    fontSize: RFontSizes.sm,
-  },
-  allergenCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: RSpacing.sm,
-    padding: RSpacing.md,
-    borderRadius: BorderRadius.lg,
-  },
-  allergenText: {
-    flex: 1,
-    fontSize: RFontSizes.sm,
   },
 });

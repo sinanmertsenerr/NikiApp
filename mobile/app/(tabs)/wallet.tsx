@@ -434,7 +434,10 @@ export default function WalletScreen() {
           </Pressable>
 
           {selectedWallet === 'niki' && (
-            <Pressable style={[styles.actionButton, { backgroundColor: colors.card }]}>
+            <Pressable
+              style={[styles.actionButton, { backgroundColor: colors.card }]}
+              onPress={() => setQrModalVisible(true)}
+            >
               <Ionicons name="add-circle" size={24} color={colors.text} />
               <Text style={[styles.actionButtonText, { color: colors.text }]}>{t('wallet.topUp')}</Text>
             </Pressable>
