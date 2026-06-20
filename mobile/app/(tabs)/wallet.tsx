@@ -6,7 +6,6 @@ import {
   ScrollView,
   useColorScheme,
   Pressable,
-  Modal,
   ActivityIndicator,
   RefreshControl,
   Animated,
@@ -49,6 +48,9 @@ export default function WalletScreen() {
   // Animation for success overlay
   const successScaleAnim = useRef(new Animated.Value(0)).current;
   const successOpacityAnim = useRef(new Animated.Value(0)).current;
+  // Entrance animation for the QR card overlay (replaces the flaky RN Modal,
+  // whose slide content failed to render on web — only the backdrop showed).
+  const qrAnim = useRef(new Animated.Value(0)).current;
 
   // Close success modal handler
   const closeSuccessModal = () => {
@@ -107,6 +109,14 @@ export default function WalletScreen() {
       socketService.offBalanceUpdate(handleBalanceUpdate);
     };
   }, [qrModalVisible, successScaleAnim, successOpacityAnim]);
+
+  // Animate the QR card in when the overlay opens.
+  useEffect(() => {
+    if (qrModalVisible) {
+      qrAnim.setValue(0);
+      Animated.spring(qrAnim, { toValue: 1, tension: 65, friction: 9, useNativeDriver: true }).start();
+    }
+  }, [qrModalVisible, qrAnim]);
 
   const isDark = theme === 'dark' || (theme === 'system' && colorScheme === 'dark');
   const colors = isDark ? DarkColors : Colors;
@@ -551,134 +561,139 @@ export default function WalletScreen() {
         }
       </ScrollView >
 
-      {/* QR Code Modal */}
-      <Modal
-        visible={qrModalVisible}
-        animationType="slide"
-        transparent
-        onRequestClose={() => paymentSuccess ? closeSuccessModal() : setQrModalVisible(false)}
-      >
-        <Pressable
-          style={styles.modalOverlay}
-          onPress={() => paymentSuccess ? closeSuccessModal() : setQrModalVisible(false)}
-        >
-          <Pressable style={{ flex: 0 }} onPress={(e) => e.stopPropagation()}>
-            <View style={[styles.modalContent, { backgroundColor: colors.card }]}>
-              <Pressable
-                style={styles.modalClose}
-                onPress={() => setQrModalVisible(false)}
-                accessibilityRole="button"
-                accessibilityLabel={t('common.close')}
-              >
-                <Ionicons name="close" size={28} color={colors.text} />
-              </Pressable>
+      {/* QR Code overlay (controlled Animated overlay — not RN Modal) */}
+      {qrModalVisible && (
+        <Animated.View style={[styles.qrOverlay, { opacity: qrAnim }]}>
+          {/* Tap the scrim to dismiss */}
+          <Pressable
+            style={StyleSheet.absoluteFill}
+            onPress={() => (paymentSuccess ? closeSuccessModal() : setQrModalVisible(false))}
+          />
 
-              <Text style={[styles.modalTitle, { color: colors.text }]}>
-                {t('wallet.qrCode')}
-              </Text>
-              <Text style={[styles.modalSubtitle, { color: colors.textSecondary }]}>
-                {t('wallet.showToStaff')}
-              </Text>
+          <Animated.View
+            style={[
+              styles.qrCard,
+              { backgroundColor: colors.card },
+              Shadows.lg,
+              { transform: [{ scale: qrAnim.interpolate({ inputRange: [0, 1], outputRange: [0.94, 1] }) }] },
+            ]}
+          >
+            <Pressable
+              style={styles.qrClose}
+              onPress={() => setQrModalVisible(false)}
+              accessibilityRole="button"
+              accessibilityLabel={t('common.close')}
+              hitSlop={8}
+            >
+              <Ionicons name="close" size={24} color={colors.textSecondary} />
+            </Pressable>
 
-              <View style={styles.qrContainer}>
-                <QRCode
-                  value={qrCode}
-                  size={SCREEN_WIDTH * 0.6}
-                  backgroundColor="#FFFFFF"
-                  color="#000000"
-                />
-              </View>
-
-              <Text style={[styles.qrCodeText, { color: colors.textSecondary }]}>
-                {qrCode}
-              </Text>
-
-              <Text style={[styles.userName, { color: colors.text }]}>
-                {user?.firstName} {user?.lastName}
-              </Text>
-
-              {/* Payment Success Overlay */}
-              {paymentSuccess && paymentData && (
-                <Animated.View
-                  style={[
-                    styles.successOverlay,
-                    {
-                      backgroundColor: isDark ? 'rgba(0,0,0,0.95)' : 'rgba(255,255,255,0.98)',
-                      opacity: successOpacityAnim,
-                      transform: [{ scale: successScaleAnim }],
-                    }
-                  ]}
-                >
-                  <View style={[styles.successIconContainer, { backgroundColor: colors.success + '20' }]}>
-                    <Ionicons name="checkmark-circle" size={72} color={colors.success} />
-                  </View>
-
-                  <Text style={[styles.successTitle, { color: colors.success }]}>
-                    {paymentData.transactionType === 'payment'
-                      ? (i18n.language === 'tr' ? 'Ödeme Başarılı!' : 'Payment Successful!')
-                      : paymentData.transactionType === 'topup'
-                        ? (i18n.language === 'tr' ? 'Bakiye Yüklendi!' : 'Balance Loaded!')
-                        : (i18n.language === 'tr' ? 'İade Yapıldı!' : 'Refund Completed!')}
-                  </Text>
-
-                  {/* Show discount info if available */}
-                  {paymentData.transactionType === 'payment' && paymentData.discountAmount && parseFloat(paymentData.discountAmount) > 0 && (
-                    <View style={[styles.discountBadge, { backgroundColor: colors.success + '20' }]}>
-                      <Ionicons name="pricetag" size={16} color={colors.success} />
-                      <Text style={[styles.discountBadgeText, { color: colors.success }]}>
-                        {i18n.language === 'tr'
-                          ? `%${paymentData.discountPercentage || 0} indirim uygulandı!`
-                          : `${paymentData.discountPercentage || 0}% discount applied!`}
-                      </Text>
-                    </View>
-                  )}
-
-                  <View style={styles.successAmountContainer}>
-                    <Text style={[styles.successAmountLabel, { color: colors.textSecondary }]}>
-                      {paymentData.transactionType === 'payment'
-                        ? (i18n.language === 'tr' ? 'Ödenen Tutar' : 'Amount Paid')
-                        : (i18n.language === 'tr' ? 'Yüklenen Tutar' : 'Amount Added')}
-                    </Text>
-                    <Text style={[
-                      styles.successAmount,
-                      { color: paymentData.transactionType === 'payment' ? colors.error : colors.success }
-                    ]}>
-                      {paymentData.transactionType === 'payment' ? '-' : '+'}₺{parseFloat(paymentData.amount).toFixed(2)}
-                    </Text>
-                    {/* Show original price if discount was applied */}
-                    {paymentData.transactionType === 'payment' && paymentData.originalAmount && paymentData.discountAmount && parseFloat(paymentData.discountAmount) > 0 && (
-                      <Text style={[styles.originalPrice, { color: colors.textTertiary }]}>
-                        {i18n.language === 'tr' ? 'Orijinal: ' : 'Original: '}₺{parseFloat(paymentData.originalAmount).toFixed(2)}
-                      </Text>
-                    )}
-                  </View>
-
-                  <View style={[styles.successDivider, { backgroundColor: colors.border }]} />
-
-                  <View style={styles.successBalanceContainer}>
-                    <Text style={[styles.successBalanceLabel, { color: colors.textSecondary }]}>
-                      {i18n.language === 'tr' ? 'Yeni Bakiye' : 'New Balance'}
-                    </Text>
-                    <Text style={[styles.successBalance, { color: colors.text }]}>
-                      ₺{parseFloat(paymentData.newBalance).toFixed(2)}
-                    </Text>
-                  </View>
-
-                  {/* OK Button */}
-                  <Pressable
-                    style={[styles.successButton, { backgroundColor: isDark ? '#FFFFFF' : '#000000' }]}
-                    onPress={closeSuccessModal}
-                  >
-                    <Text style={[styles.successButtonText, { color: colors.success }]}>
-                      {i18n.language === 'tr' ? 'Tamam' : 'OK'}
-                    </Text>
-                  </Pressable>
-                </Animated.View>
-              )}
+            {/* Wallet chip — lets staff confirm which wallet at a glance */}
+            <View style={[styles.qrChip, { backgroundColor: currentWallet.color + '1A' }]}>
+              <View style={[styles.qrChipDot, { backgroundColor: currentWallet.color }]} />
+              <Text style={[styles.qrChipText, { color: colors.text }]}>{currentWallet.name}</Text>
             </View>
-          </Pressable>
-        </Pressable>
-      </Modal>
+
+            <Text style={[styles.qrTitle, { color: colors.text }]}>{t('wallet.qrCode')}</Text>
+            <Text style={[styles.qrSubtitle, { color: colors.textSecondary }]}>
+              {t('wallet.showToStaff')}
+            </Text>
+
+            <View style={styles.qrPanel}>
+              <QRCode
+                value={qrCode}
+                size={Math.round(SCREEN_WIDTH * 0.56)}
+                backgroundColor="#FFFFFF"
+                color="#000000"
+              />
+            </View>
+
+            <View style={[styles.qrCodePill, { backgroundColor: colors.backgroundSecondary }]}>
+              <Text style={[styles.qrCodeText, { color: colors.textSecondary }]}>{qrCode}</Text>
+            </View>
+
+            <Text style={[styles.qrName, { color: colors.text }]}>
+              {user?.firstName} {user?.lastName}
+            </Text>
+
+            {/* Live payment result — crossfades in place over the card */}
+            {paymentSuccess && paymentData && (
+              <Animated.View
+                style={[
+                  styles.successOverlay,
+                  {
+                    backgroundColor: isDark ? 'rgba(18,18,18,0.97)' : 'rgba(255,255,255,0.98)',
+                    opacity: successOpacityAnim,
+                    transform: [{ scale: successScaleAnim }],
+                  },
+                ]}
+              >
+                <View style={[styles.successIconContainer, { backgroundColor: colors.success + '20' }]}>
+                  <Ionicons name="checkmark-circle" size={64} color={colors.success} />
+                </View>
+
+                <Text style={[styles.successTitle, { color: colors.success }]}>
+                  {paymentData.transactionType === 'payment'
+                    ? (i18n.language === 'tr' ? 'Ödeme Başarılı!' : 'Payment Successful!')
+                    : paymentData.transactionType === 'topup'
+                      ? (i18n.language === 'tr' ? 'Bakiye Yüklendi!' : 'Balance Loaded!')
+                      : (i18n.language === 'tr' ? 'İade Yapıldı!' : 'Refund Completed!')}
+                </Text>
+
+                {paymentData.transactionType === 'payment' && paymentData.discountAmount && parseFloat(paymentData.discountAmount) > 0 && (
+                  <View style={[styles.discountBadge, { backgroundColor: colors.success + '20' }]}>
+                    <Ionicons name="pricetag" size={16} color={colors.success} />
+                    <Text style={[styles.discountBadgeText, { color: colors.success }]}>
+                      {i18n.language === 'tr'
+                        ? `%${paymentData.discountPercentage || 0} indirim uygulandı!`
+                        : `${paymentData.discountPercentage || 0}% discount applied!`}
+                    </Text>
+                  </View>
+                )}
+
+                <View style={styles.successAmountContainer}>
+                  <Text style={[styles.successAmountLabel, { color: colors.textSecondary }]}>
+                    {paymentData.transactionType === 'payment'
+                      ? (i18n.language === 'tr' ? 'Ödenen Tutar' : 'Amount Paid')
+                      : (i18n.language === 'tr' ? 'Yüklenen Tutar' : 'Amount Added')}
+                  </Text>
+                  <Text style={[
+                    styles.successAmount,
+                    { color: paymentData.transactionType === 'payment' ? colors.error : colors.success },
+                  ]}>
+                    {paymentData.transactionType === 'payment' ? '-' : '+'}₺{parseFloat(paymentData.amount).toFixed(2)}
+                  </Text>
+                  {paymentData.transactionType === 'payment' && paymentData.originalAmount && paymentData.discountAmount && parseFloat(paymentData.discountAmount) > 0 && (
+                    <Text style={[styles.originalPrice, { color: colors.textTertiary }]}>
+                      {i18n.language === 'tr' ? 'Orijinal: ' : 'Original: '}₺{parseFloat(paymentData.originalAmount).toFixed(2)}
+                    </Text>
+                  )}
+                </View>
+
+                <View style={[styles.successDivider, { backgroundColor: colors.border }]} />
+
+                <View style={styles.successBalanceContainer}>
+                  <Text style={[styles.successBalanceLabel, { color: colors.textSecondary }]}>
+                    {i18n.language === 'tr' ? 'Yeni Bakiye' : 'New Balance'}
+                  </Text>
+                  <Text style={[styles.successBalance, { color: colors.text }]}>
+                    ₺{parseFloat(paymentData.newBalance).toFixed(2)}
+                  </Text>
+                </View>
+
+                <Pressable
+                  style={[styles.successButton, { backgroundColor: isDark ? '#FFFFFF' : '#000000' }]}
+                  onPress={closeSuccessModal}
+                >
+                  <Text style={[styles.successButtonText, { color: isDark ? '#000000' : '#FFFFFF' }]}>
+                    {i18n.language === 'tr' ? 'Tamam' : 'OK'}
+                  </Text>
+                </Pressable>
+              </Animated.View>
+            )}
+          </Animated.View>
+        </Animated.View>
+      )}
     </SafeAreaView >
   );
 }
@@ -882,74 +897,88 @@ const styles = StyleSheet.create({
     fontSize: RFontSizes.md,
     marginTop: RSpacing.md,
   },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'flex-end',
-  },
-  modalContent: {
-    borderTopLeftRadius: BorderRadius.xxl,
-    borderTopRightRadius: BorderRadius.xxl,
-    padding: RSpacing.lg,
-    paddingTop: RSpacing.xl,
+  qrOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.6)',
     alignItems: 'center',
+    justifyContent: 'center',
+    padding: RSpacing.lg,
+    zIndex: 1000,
   },
-  modalClose: {
+  qrCard: {
+    width: '100%',
+    maxWidth: 360,
+    borderRadius: BorderRadius.xxl,
+    paddingHorizontal: RSpacing.lg,
+    paddingTop: RSpacing.xl,
+    paddingBottom: RSpacing.lg,
+    alignItems: 'center',
+    overflow: 'hidden',
+  },
+  qrClose: {
     position: 'absolute',
     top: RSpacing.md,
     right: RSpacing.md,
-    padding: RSpacing.sm,
+    padding: RSpacing.xs,
+    zIndex: 2,
   },
-  modalTitle: {
-    fontSize: RFontSizes.xxl,
-    fontWeight: '700',
-    marginBottom: RSpacing.xs,
+  qrChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: RSpacing.xs,
+    paddingHorizontal: RSpacing.md,
+    paddingVertical: 6,
+    borderRadius: BorderRadius.full,
+    marginBottom: RSpacing.md,
   },
-  modalSubtitle: {
-    fontSize: RFontSizes.md,
-    marginBottom: RSpacing.xl,
-  },
-  qrContainer: {
-    padding: RSpacing.lg,
+  qrChipDot: { width: 8, height: 8, borderRadius: 4 },
+  qrChipText: { fontSize: RFontSizes.sm, fontWeight: '600' },
+  qrTitle: { fontSize: RFontSizes.xl, fontWeight: '700', marginBottom: 2 },
+  qrSubtitle: { fontSize: RFontSizes.sm, marginBottom: RSpacing.lg, textAlign: 'center' },
+  qrPanel: {
+    padding: RSpacing.md,
     backgroundColor: '#FFFFFF',
     borderRadius: BorderRadius.xl,
+    marginBottom: RSpacing.lg,
+    ...Shadows.md,
+  },
+  qrCodePill: {
+    paddingHorizontal: RSpacing.md,
+    paddingVertical: RSpacing.xs,
+    borderRadius: BorderRadius.full,
     marginBottom: RSpacing.md,
   },
   qrCodeText: {
-    fontSize: RFontSizes.md,
+    fontSize: RFontSizes.sm,
     fontFamily: 'monospace',
     letterSpacing: 2,
-    marginBottom: RSpacing.sm,
   },
-  userName: {
+  qrName: {
     fontSize: RFontSizes.lg,
-    fontWeight: '600',
-    marginBottom: RSpacing.xl,
+    fontWeight: '700',
   },
   // Payment success overlay styles
   successOverlay: {
     ...StyleSheet.absoluteFillObject,
-    borderTopLeftRadius: BorderRadius.xxl,
-    borderTopRightRadius: BorderRadius.xxl,
-    justifyContent: 'flex-end',
+    borderRadius: BorderRadius.xxl,
+    justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: RSpacing.xl,
-    paddingTop: RSpacing.xl,
-    paddingBottom: RSpacing.xxl + 20,
+    paddingVertical: RSpacing.xl,
     zIndex: 100,
   },
   successIconContainer: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
+    width: 96,
+    height: 96,
+    borderRadius: 48,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: RSpacing.lg,
+    marginBottom: RSpacing.md,
   },
   successTitle: {
-    fontSize: RFontSizes.xxl,
+    fontSize: RFontSizes.xl,
     fontWeight: '700',
-    marginBottom: RSpacing.xl,
+    marginBottom: RSpacing.lg,
     textAlign: 'center',
   },
   successAmountContainer: {
@@ -1007,17 +1036,14 @@ const styles = StyleSheet.create({
   // Success modal OK button styles
   successButton: {
     paddingVertical: RSpacing.md,
-    paddingHorizontal: RSpacing.xxl,
     borderRadius: BorderRadius.lg,
-    marginTop: RSpacing.sm,
-    marginBottom: RSpacing.md,
-    minWidth: 120,
+    marginTop: RSpacing.lg,
+    alignSelf: 'stretch',
     alignItems: 'center',
     justifyContent: 'center',
   },
   successButtonText: {
-    color: '#000000',
     fontSize: RFontSizes.lg,
-    fontWeight: '600',
+    fontWeight: '700',
   },
 });
