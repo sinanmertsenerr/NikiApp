@@ -38,6 +38,12 @@ const VIDEO_CONSTRAINTS: MediaStreamConstraints = {
 const NO_FRAMES_TIMEOUT = 2000;
 const MAX_RECOVERY_ATTEMPTS = 3;
 
+// TEMP: on-screen diagnostics for the iOS-PWA black-camera investigation. The
+// installed PWA has no reachable console, so we surface live video/track state on
+// screen. The "v3" marker also confirms the new bundle actually loaded (vs a stale
+// service-worker cache). Remove once the camera is confirmed working.
+const DEBUG_CAMERA = true;
+
 function describeError(err: unknown): string {
   const name = (err as { name?: string })?.name;
   if (typeof window !== 'undefined' && !window.isSecureContext) {
@@ -76,6 +82,7 @@ export function WebQRScanner({ onScan, onError, style }: WebQRScannerProps) {
 
   const [error, setError] = useState<string | null>(null);
   const [needsTap, setNeedsTap] = useState(false);
+  const [dbg, setDbg] = useState('starting…');
 
   const clearWatchdog = useCallback(() => {
     if (watchdogRef.current) {
@@ -314,6 +321,22 @@ export function WebQRScanner({ onScan, onError, style }: WebQRScannerProps) {
     return () => document.removeEventListener('visibilitychange', onVisibility);
   }, [start, stopCapture, error]);
 
+  // TEMP diagnostics: sample live video/track state for the on-screen readout.
+  useEffect(() => {
+    if (!DEBUG_CAMERA) return;
+    const id = setInterval(() => {
+      const v = videoRef.current;
+      const tr = streamRef.current?.getVideoTracks()[0];
+      setDbg(
+        `v3 paused=${v?.paused} rs=${v?.readyState} t=${v ? v.currentTime.toFixed(1) : '-'} ` +
+          `${v?.videoWidth ?? '?'}x${v?.videoHeight ?? '?'} | trk muted=${tr?.muted} ` +
+          `st=${tr?.readyState} en=${tr?.enabled} | tap=${needsTap} err=${error ? 1 : 0} ` +
+          `stream=${streamRef.current ? 1 : 0}`,
+      );
+    }, 400);
+    return () => clearInterval(id);
+  }, [needsTap, error]);
+
   const handleTap = useCallback(() => {
     // Inside the user gesture — the most permissive state to (re)acquire + play.
     stopCapture();
@@ -381,6 +404,27 @@ export function WebQRScanner({ onScan, onError, style }: WebQRScannerProps) {
           backgroundColor: '#000000',
         }}
       />
+      {DEBUG_CAMERA && (
+        <div
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            padding: '6px 8px',
+            background: 'rgba(0,128,0,0.85)',
+            color: '#FFFFFF',
+            fontSize: '11px',
+            lineHeight: 1.3,
+            fontFamily: 'monospace',
+            zIndex: 10,
+            pointerEvents: 'none',
+            wordBreak: 'break-all',
+          }}
+        >
+          {dbg}
+        </div>
+      )}
       {needsTap && (
         <button
           onClick={handleTap}

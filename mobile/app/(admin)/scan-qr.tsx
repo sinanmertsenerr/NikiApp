@@ -323,7 +323,7 @@ export default function ScanQRScreen() {
               onBarcodeScanned={scanned ? undefined : handleBarCodeScanned}
             />
           )}
-          <View style={styles.overlay}>
+          <View style={styles.overlay} pointerEvents="none">
             <View style={styles.scanFrame}>
               <View style={[styles.corner, styles.topLeft]} />
               <View style={[styles.corner, styles.topRight]} />
